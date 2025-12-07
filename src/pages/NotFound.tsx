@@ -1,5 +1,8 @@
-import { useLocation } from "react-router-dom";
+import { useLocation, Link } from "react-router-dom";
 import { useEffect } from "react";
+import { Home, ArrowRight } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { Layout } from "@/components/layout/Layout";
 
 const NotFound = () => {
   const location = useLocation();
@@ -9,15 +12,36 @@ const NotFound = () => {
   }, [location.pathname]);
 
   return (
-    <div className="flex min-h-screen items-center justify-center bg-muted">
-      <div className="text-center">
-        <h1 className="mb-4 text-4xl font-bold">404</h1>
-        <p className="mb-4 text-xl text-muted-foreground">Oops! Page not found</p>
-        <a href="/" className="text-primary underline hover:text-primary/90">
-          Return to Home
-        </a>
+    <Layout>
+      <div className="section-padding">
+        <div className="container-library">
+          <div className="flex flex-col items-center justify-center text-center py-16">
+            <div className="text-8xl mb-6">📖</div>
+            <h1 className="text-6xl font-bold text-gradient mb-4">404</h1>
+            <p className="text-xl text-muted-foreground mb-8">
+              عذراً، الصفحة التي تبحث عنها غير موجودة
+            </p>
+            <div className="flex flex-wrap gap-4 justify-center">
+              <Link to="/">
+                <Button variant="gold" size="lg" className="gap-2">
+                  <Home className="h-5 w-5" />
+                  العودة للرئيسية
+                </Button>
+              </Link>
+              <Button
+                variant="outline"
+                size="lg"
+                className="gap-2"
+                onClick={() => window.history.back()}
+              >
+                <ArrowRight className="h-5 w-5" />
+                الرجوع للخلف
+              </Button>
+            </div>
+          </div>
+        </div>
       </div>
-    </div>
+    </Layout>
   );
 };
 
