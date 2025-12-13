@@ -1,16 +1,39 @@
 import { useParams, Link } from 'react-router-dom';
-import { ArrowRight, BookOpen, Download, Share2 } from 'lucide-react';
+import { ArrowRight, BookOpen, Download, Share2, WifiOff, Check } from 'lucide-react';
 import { Layout } from '@/components/layout/Layout';
 import { Button } from '@/components/ui/button';
-import { mockBooks, categories } from '@/lib/mockData';
-import { addToReadingHistory, addToDownloads } from '@/lib/storage';
+import { categories } from '@/lib/mockData';
+import { addToReadingHistory, saveBookOffline, isBookAvailableOffline } from '@/lib/storage';
 import { useToast } from '@/hooks/use-toast';
+import { useBook } from '@/hooks/useBooks';
+import { useState, useEffect } from 'react';
 
 const BookDetail = () => {
   const { id } = useParams<{ id: string }>();
   const { toast } = useToast();
-  const book = mockBooks.find((b) => b.id === id);
+  const { data: book, isLoading } = useBook(id || '');
+  const [isDownloading, setIsDownloading] = useState(false);
+  const [isOffline, setIsOffline] = useState(false);
+  
   const category = book ? categories.find((c) => c.name === book.category) : null;
+
+  useEffect(() => {
+    if (id) {
+      setIsOffline(isBookAvailableOffline(id));
+    }
+  }, [id]);
+
+  if (isLoading) {
+    return (
+      <Layout>
+        <div className="section-padding">
+          <div className="container-library text-center py-20">
+            <div className="h-8 w-8 border-4 border-primary/30 border-t-primary rounded-full animate-spin mx-auto" />
+          </div>
+        </div>
+      </Layout>
+    );
+  }
 
   if (!book) {
     return (
@@ -37,7 +60,7 @@ const BookDetail = () => {
       bookId: book.id,
       title: book.title,
       author: book.author,
-      coverUrl: book.coverUrl,
+      coverUrl: book.cover_url || '/placeholder.svg',
       lastRead: new Date().toISOString(),
     });
     toast({
@@ -46,21 +69,43 @@ const BookDetail = () => {
     });
   };
 
-  const handleDownload = () => {
-    addToDownloads({
-      bookId: book.id,
-      title: book.title,
-      author: book.author,
-      coverUrl: book.coverUrl,
-      pdfUrl: book.pdfUrl,
-      downloadedAt: new Date().toISOString(),
-    });
-    toast({
-      title: 'تم التحميل',
-      description: 'تمت إضافة الكتاب للتحميلات',
-    });
-    // Trigger actual download
-    window.open(book.pdfUrl, '_blank');
+  const handleDownload = async () => {
+    setIsDownloading(true);
+    
+    try {
+      const success = await saveBookOffline(
+        book.id,
+        book.title,
+        book.author,
+        book.cover_url || '/placeholder.svg',
+        book.file_url,
+        book.file_type || 'pdf'
+      );
+
+      if (success) {
+        setIsOffline(true);
+        toast({
+          title: 'تم التحميل',
+          description: 'تم حفظ الكتاب للقراءة بدون إنترنت',
+        });
+      } else {
+        // Fallback to direct download
+        window.open(book.file_url, '_blank');
+        toast({
+          title: 'جاري التحميل',
+          description: 'سيتم تحميل الملف مباشرة',
+        });
+      }
+    } catch {
+      // Fallback to direct download
+      window.open(book.file_url, '_blank');
+      toast({
+        title: 'جاري التحميل',
+        description: 'سيتم تحميل الملف مباشرة',
+      });
+    } finally {
+      setIsDownloading(false);
+    }
   };
 
   const handleShare = async () => {
@@ -111,12 +156,18 @@ const BookDetail = () => {
           <div className="grid md:grid-cols-3 gap-8 lg:gap-12">
             {/* Cover */}
             <div className="md:col-span-1">
-              <div className="aspect-[3/4] rounded-2xl overflow-hidden book-shadow sticky top-24">
-                <img
-                  src={book.coverUrl}
-                  alt={book.title}
-                  className="w-full h-full object-cover"
-                />
+              <div className="aspect-[3/4] rounded-2xl overflow-hidden book-shadow sticky top-24 bg-secondary">
+                {book.cover_url ? (
+                  <img
+                    src={book.cover_url}
+                    alt={book.title}
+                    className="w-full h-full object-cover"
+                  />
+                ) : (
+                  <div className="w-full h-full flex items-center justify-center">
+                    <BookOpen className="h-16 w-16 text-muted-foreground" />
+                  </div>
+                )}
               </div>
             </div>
 
@@ -144,11 +195,21 @@ const BookDetail = () => {
               </p>
 
               {/* Description */}
-              <div className="prose prose-lg max-w-none mb-8">
-                <p className="text-foreground/80 leading-relaxed">
-                  {book.description}
-                </p>
-              </div>
+              {book.description && (
+                <div className="prose prose-lg max-w-none mb-8">
+                  <p className="text-foreground/80 leading-relaxed">
+                    {book.description}
+                  </p>
+                </div>
+              )}
+
+              {/* Offline Badge */}
+              {isOffline && (
+                <div className="inline-flex items-center gap-2 px-3 py-2 rounded-lg bg-green-500/10 text-green-600 mb-6">
+                  <WifiOff className="h-4 w-4" />
+                  <span className="text-sm font-medium">متاح للقراءة بدون إنترنت</span>
+                </div>
+              )}
 
               {/* Actions */}
               <div className="flex flex-wrap gap-4">
@@ -163,9 +224,16 @@ const BookDetail = () => {
                   size="xl"
                   className="gap-3"
                   onClick={handleDownload}
+                  disabled={isDownloading}
                 >
-                  <Download className="h-5 w-5" />
-                  تحميل PDF
+                  {isDownloading ? (
+                    <div className="h-5 w-5 border-2 border-foreground/30 border-t-foreground rounded-full animate-spin" />
+                  ) : isOffline ? (
+                    <Check className="h-5 w-5 text-green-600" />
+                  ) : (
+                    <Download className="h-5 w-5" />
+                  )}
+                  {isOffline ? 'تم الحفظ' : 'تحميل للقراءة لاحقاً'}
                 </Button>
                 <Button
                   variant="ghost"
@@ -184,7 +252,7 @@ const BookDetail = () => {
                   <div>
                     <p className="text-sm text-muted-foreground">تاريخ الإضافة</p>
                     <p className="font-medium text-foreground">
-                      {new Date(book.createdAt).toLocaleDateString('ar-MR')}
+                      {new Date(book.created_at).toLocaleDateString('ar-MR')}
                     </p>
                   </div>
                   <div>
@@ -194,8 +262,10 @@ const BookDetail = () => {
                     </p>
                   </div>
                   <div>
-                    <p className="text-sm text-muted-foreground">الحالة</p>
-                    <p className="font-medium text-foreground">متاح للقراءة</p>
+                    <p className="text-sm text-muted-foreground">نوع الملف</p>
+                    <p className="font-medium text-foreground uppercase">
+                      {book.file_type || 'PDF'}
+                    </p>
                   </div>
                 </div>
               </div>
