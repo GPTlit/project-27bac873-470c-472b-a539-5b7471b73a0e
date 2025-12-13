@@ -8,6 +8,8 @@ import { Textarea } from '@/components/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { categories } from '@/lib/mockData';
 import { useToast } from '@/hooks/use-toast';
+import { supabase } from '@/integrations/supabase/client';
+import { useAuth } from '@/contexts/AuthContext';
 
 const Upload = () => {
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -20,6 +22,7 @@ const Upload = () => {
   });
   const [pdfFile, setPdfFile] = useState<File | null>(null);
   const { toast } = useToast();
+  const { user } = useAuth();
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -35,18 +38,67 @@ const Upload = () => {
 
     setIsSubmitting(true);
 
-    // Simulate submission (in production, this would upload to storage and send to WhatsApp)
-    await new Promise((resolve) => setTimeout(resolve, 2000));
+    try {
+      // Upload file to submissions bucket
+      const fileName = `${Date.now()}-${pdfFile.name}`;
+      const { error: uploadError } = await supabase.storage
+        .from('submissions')
+        .upload(fileName, pdfFile);
 
-    setIsSubmitting(false);
-    setIsSuccess(true);
+      if (uploadError) throw uploadError;
 
-    // Reset form after showing success
-    setTimeout(() => {
-      setFormData({ title: '', author: '', category: '', note: '' });
-      setPdfFile(null);
-      setIsSuccess(false);
-    }, 5000);
+      const { data: urlData } = supabase.storage
+        .from('submissions')
+        .getPublicUrl(fileName);
+
+      // Save submission to database
+      const { error: dbError } = await supabase
+        .from('book_submissions')
+        .insert({
+          user_id: user?.id,
+          title: formData.title,
+          author: formData.author,
+          category: formData.category,
+          file_url: urlData.publicUrl,
+          message: formData.note || null,
+        });
+
+      if (dbError) throw dbError;
+
+      // Call edge function to generate WhatsApp link
+      const { data: whatsappData } = await supabase.functions.invoke('send-whatsapp', {
+        body: {
+          title: formData.title,
+          author: formData.author,
+          category: formData.category,
+          message: formData.note,
+          fileUrl: urlData.publicUrl,
+        },
+      });
+
+      setIsSuccess(true);
+
+      // Open WhatsApp if URL is returned
+      if (whatsappData?.whatsappUrl) {
+        window.open(whatsappData.whatsappUrl, '_blank');
+      }
+
+      // Reset form after showing success
+      setTimeout(() => {
+        setFormData({ title: '', author: '', category: '', note: '' });
+        setPdfFile(null);
+        setIsSuccess(false);
+      }, 5000);
+    } catch (error) {
+      console.error('Submission error:', error);
+      toast({
+        title: 'خطأ',
+        description: 'حدث خطأ أثناء إرسال الكتاب',
+        variant: 'destructive',
+      });
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
   if (isSuccess) {
@@ -98,9 +150,7 @@ const Upload = () => {
                   id="title"
                   placeholder="أدخل عنوان الكتاب"
                   value={formData.title}
-                  onChange={(e) =>
-                    setFormData({ ...formData, title: e.target.value })
-                  }
+                  onChange={(e) => setFormData({ ...formData, title: e.target.value })}
                   required
                 />
               </div>
@@ -112,9 +162,7 @@ const Upload = () => {
                   id="author"
                   placeholder="أدخل اسم المؤلف"
                   value={formData.author}
-                  onChange={(e) =>
-                    setFormData({ ...formData, author: e.target.value })
-                  }
+                  onChange={(e) => setFormData({ ...formData, author: e.target.value })}
                   required
                 />
               </div>
@@ -124,9 +172,7 @@ const Upload = () => {
                 <Label htmlFor="category">التصنيف *</Label>
                 <Select
                   value={formData.category}
-                  onValueChange={(value) =>
-                    setFormData({ ...formData, category: value })
-                  }
+                  onValueChange={(value) => setFormData({ ...formData, category: value })}
                 >
                   <SelectTrigger>
                     <SelectValue placeholder="اختر التصنيف" />
@@ -143,12 +189,12 @@ const Upload = () => {
 
               {/* PDF Upload */}
               <div className="space-y-2">
-                <Label htmlFor="pdf">ملف PDF *</Label>
+                <Label htmlFor="pdf">ملف الكتاب *</Label>
                 <div className="relative">
                   <input
                     type="file"
                     id="pdf"
-                    accept=".pdf"
+                    accept=".pdf,.txt,.epub,.doc,.docx"
                     className="hidden"
                     onChange={(e) => setPdfFile(e.target.files?.[0] || null)}
                   />
@@ -159,16 +205,12 @@ const Upload = () => {
                     {pdfFile ? (
                       <div className="flex items-center gap-3">
                         <FileText className="h-6 w-6 text-primary" />
-                        <span className="text-foreground font-medium">
-                          {pdfFile.name}
-                        </span>
+                        <span className="text-foreground font-medium">{pdfFile.name}</span>
                       </div>
                     ) : (
                       <div className="text-center">
                         <UploadIcon className="h-6 w-6 text-muted-foreground mx-auto mb-2" />
-                        <span className="text-sm text-muted-foreground">
-                          اضغط لرفع ملف PDF
-                        </span>
+                        <span className="text-sm text-muted-foreground">اضغط لرفع ملف الكتاب</span>
                       </div>
                     )}
                   </label>
@@ -182,9 +224,7 @@ const Upload = () => {
                   id="note"
                   placeholder="أضف ملاحظة أو وصف للكتاب..."
                   value={formData.note}
-                  onChange={(e) =>
-                    setFormData({ ...formData, note: e.target.value })
-                  }
+                  onChange={(e) => setFormData({ ...formData, note: e.target.value })}
                   rows={3}
                 />
               </div>

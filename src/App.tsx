@@ -3,7 +3,10 @@ import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route } from "react-router-dom";
+import { AuthProvider } from "@/contexts/AuthContext";
+import { ProtectedRoute } from "@/components/ProtectedRoute";
 import Index from "./pages/Index";
+import Auth from "./pages/Auth";
 import Categories from "./pages/Categories";
 import Category from "./pages/Category";
 import BookDetail from "./pages/BookDetail";
@@ -20,26 +23,29 @@ const queryClient = new QueryClient();
 
 const App = () => (
   <QueryClientProvider client={queryClient}>
-    <TooltipProvider>
-      <Toaster />
-      <Sonner />
-      <BrowserRouter>
-        <Routes>
-          <Route path="/" element={<Index />} />
-          <Route path="/categories" element={<Categories />} />
-          <Route path="/category/:name" element={<Category />} />
-          <Route path="/book/:id" element={<BookDetail />} />
-          <Route path="/book/:id/read" element={<BookReader />} />
-          <Route path="/history" element={<History />} />
-          <Route path="/downloads" element={<Downloads />} />
-          <Route path="/upload" element={<Upload />} />
-          <Route path="/admin-upload-mrt" element={<AdminUpload />} />
-          <Route path="/about" element={<About />} />
-          <Route path="/search" element={<Search />} />
-          <Route path="*" element={<NotFound />} />
-        </Routes>
-      </BrowserRouter>
-    </TooltipProvider>
+    <AuthProvider>
+      <TooltipProvider>
+        <Toaster />
+        <Sonner />
+        <BrowserRouter>
+          <Routes>
+            <Route path="/auth" element={<Auth />} />
+            <Route path="/" element={<ProtectedRoute><Index /></ProtectedRoute>} />
+            <Route path="/categories" element={<ProtectedRoute><Categories /></ProtectedRoute>} />
+            <Route path="/category/:name" element={<ProtectedRoute><Category /></ProtectedRoute>} />
+            <Route path="/book/:id" element={<ProtectedRoute><BookDetail /></ProtectedRoute>} />
+            <Route path="/book/:id/read" element={<ProtectedRoute><BookReader /></ProtectedRoute>} />
+            <Route path="/history" element={<ProtectedRoute><History /></ProtectedRoute>} />
+            <Route path="/downloads" element={<ProtectedRoute><Downloads /></ProtectedRoute>} />
+            <Route path="/upload" element={<ProtectedRoute><Upload /></ProtectedRoute>} />
+            <Route path="/admin-upload-mrt" element={<ProtectedRoute requireAdmin><AdminUpload /></ProtectedRoute>} />
+            <Route path="/about" element={<ProtectedRoute><About /></ProtectedRoute>} />
+            <Route path="/search" element={<ProtectedRoute><Search /></ProtectedRoute>} />
+            <Route path="*" element={<NotFound />} />
+          </Routes>
+        </BrowserRouter>
+      </TooltipProvider>
+    </AuthProvider>
   </QueryClientProvider>
 );
 
