@@ -1,13 +1,13 @@
 import { useParams, Link } from 'react-router-dom';
-import { ArrowRight, Download, ZoomIn, ZoomOut, Maximize2 } from 'lucide-react';
+import { ArrowRight, Download, ZoomIn, ZoomOut, Maximize2, Loader2 } from 'lucide-react';
 import { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
-import { mockBooks } from '@/lib/mockData';
+import { useBook } from '@/hooks/useBooks';
 import { addToReadingHistory } from '@/lib/storage';
 
 const BookReader = () => {
   const { id } = useParams<{ id: string }>();
-  const book = mockBooks.find((b) => b.id === id);
+  const { data: book, isLoading } = useBook(id || '');
   const [zoom, setZoom] = useState(100);
   const [isFullscreen, setIsFullscreen] = useState(false);
 
@@ -17,7 +17,7 @@ const BookReader = () => {
         bookId: book.id,
         title: book.title,
         author: book.author,
-        coverUrl: book.coverUrl,
+        coverUrl: book.cover_url || '/placeholder.svg',
         lastRead: new Date().toISOString(),
       });
     }
@@ -35,6 +35,14 @@ const BookReader = () => {
       setIsFullscreen(false);
     }
   };
+
+  if (isLoading) {
+    return (
+      <div className="min-h-screen bg-background flex items-center justify-center">
+        <Loader2 className="h-8 w-8 animate-spin text-primary" />
+      </div>
+    );
+  }
 
   if (!book) {
     return (
@@ -94,7 +102,7 @@ const BookReader = () => {
                 variant="outline"
                 size="sm"
                 className="gap-2"
-                onClick={() => window.open(book.pdfUrl, '_blank')}
+                onClick={() => window.open(book.file_url, '_blank')}
               >
                 <Download className="h-4 w-4" />
                 <span className="hidden sm:inline">تحميل</span>
@@ -106,27 +114,13 @@ const BookReader = () => {
 
       {/* PDF Viewer */}
       <div className="flex-1 p-4">
-        <div
-          className="w-full h-full min-h-[80vh] bg-card rounded-xl border border-border shadow-sm overflow-hidden"
-          style={{ transform: `scale(${zoom / 100})`, transformOrigin: 'top center' }}
-        >
-          {/* Placeholder for PDF viewer - In production, use react-pdf or similar */}
-          <div className="w-full h-full flex flex-col items-center justify-center text-muted-foreground p-8">
-            <div className="text-6xl mb-6">📖</div>
-            <h2 className="text-xl font-bold text-foreground mb-2">{book.title}</h2>
-            <p className="text-muted-foreground mb-6">{book.author}</p>
-            <p className="text-sm text-center max-w-md mb-6">
-              لعرض ملف PDF، قم بتوصيل المكتبة بخدمة التخزين السحابي
-            </p>
-            <Button
-              variant="gold"
-              onClick={() => window.open(book.pdfUrl, '_blank')}
-              className="gap-2"
-            >
-              <Download className="h-4 w-4" />
-              فتح في نافذة جديدة
-            </Button>
-          </div>
+        <div className="w-full h-full min-h-[80vh] bg-card rounded-xl border border-border shadow-sm overflow-hidden">
+          <iframe
+            src={book.file_url}
+            className="w-full h-full min-h-[80vh]"
+            style={{ transform: `scale(${zoom / 100})`, transformOrigin: 'top center' }}
+            title={book.title}
+          />
         </div>
       </div>
     </div>
