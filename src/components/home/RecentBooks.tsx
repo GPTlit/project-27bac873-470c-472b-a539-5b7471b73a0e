@@ -1,13 +1,28 @@
 import { Link } from 'react-router-dom';
-import { ArrowLeft, Clock } from 'lucide-react';
+import { ArrowLeft, Clock, Loader2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { BookCard } from '@/components/books/BookCard';
-import { mockBooks } from '@/lib/mockData';
+import { useBooks } from '@/hooks/useBooks';
 
 export const RecentBooks = () => {
-  const recentBooks = [...mockBooks].sort(
-    (a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
-  ).slice(0, 8);
+  const { data: books, isLoading } = useBooks();
+  
+  // Books are already sorted by created_at desc from the hook, take first 8
+  const recentBooks = books?.slice(0, 8) || [];
+
+  if (isLoading) {
+    return (
+      <section className="section-padding bg-background">
+        <div className="container-library flex justify-center py-12">
+          <Loader2 className="h-8 w-8 animate-spin text-primary" />
+        </div>
+      </section>
+    );
+  }
+
+  if (recentBooks.length === 0) {
+    return null;
+  }
 
   return (
     <section className="section-padding bg-background">
@@ -38,7 +53,20 @@ export const RecentBooks = () => {
         {/* Books Grid */}
         <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-6">
           {recentBooks.map((book, index) => (
-            <BookCard key={book.id} book={book} index={index} />
+            <BookCard 
+              key={book.id} 
+              book={{
+                id: book.id,
+                title: book.title,
+                author: book.author,
+                description: book.description || '',
+                category: book.category,
+                coverUrl: book.cover_url || '/placeholder.svg',
+                pdfUrl: book.file_url,
+                createdAt: book.created_at || '',
+              }} 
+              index={index} 
+            />
           ))}
         </div>
       </div>

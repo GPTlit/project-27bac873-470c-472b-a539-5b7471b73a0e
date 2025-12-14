@@ -1,11 +1,28 @@
 import { Link } from 'react-router-dom';
-import { ArrowLeft, Sparkles } from 'lucide-react';
+import { ArrowLeft, Sparkles, Loader2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { BookCard } from '@/components/books/BookCard';
-import { mockBooks } from '@/lib/mockData';
+import { useBooks } from '@/hooks/useBooks';
 
 export const FeaturedBooks = () => {
-  const featuredBooks = mockBooks.filter((book) => book.featured);
+  const { data: books, isLoading } = useBooks();
+  
+  // Show first 5 books as featured
+  const featuredBooks = books?.slice(0, 5) || [];
+
+  if (isLoading) {
+    return (
+      <section className="section-padding bg-secondary/30">
+        <div className="container-library flex justify-center py-12">
+          <Loader2 className="h-8 w-8 animate-spin text-primary" />
+        </div>
+      </section>
+    );
+  }
+
+  if (featuredBooks.length === 0) {
+    return null;
+  }
 
   return (
     <section className="section-padding bg-secondary/30">
@@ -36,7 +53,20 @@ export const FeaturedBooks = () => {
         {/* Books Grid */}
         <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-6">
           {featuredBooks.map((book, index) => (
-            <BookCard key={book.id} book={book} index={index} />
+            <BookCard 
+              key={book.id} 
+              book={{
+                id: book.id,
+                title: book.title,
+                author: book.author,
+                description: book.description || '',
+                category: book.category,
+                coverUrl: book.cover_url || '/placeholder.svg',
+                pdfUrl: book.file_url,
+                createdAt: book.created_at || '',
+              }} 
+              index={index} 
+            />
           ))}
         </div>
       </div>
