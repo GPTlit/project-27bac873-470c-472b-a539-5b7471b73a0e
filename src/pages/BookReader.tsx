@@ -1,5 +1,5 @@
 import { useParams, Link } from 'react-router-dom';
-import { ArrowRight, Download, ZoomIn, ZoomOut, ChevronLeft, ChevronRight, Loader2 } from 'lucide-react';
+import { ArrowRight, Download, ZoomIn, ZoomOut, Loader2 } from 'lucide-react';
 import { useState, useEffect } from 'react';
 import { Document, Page, pdfjs } from 'react-pdf';
 import 'react-pdf/dist/Page/AnnotationLayer.css';
@@ -15,9 +15,7 @@ const BookReader = () => {
   const { id } = useParams<{ id: string }>();
   const { data: book, isLoading } = useBook(id || '');
   const [numPages, setNumPages] = useState<number>(0);
-  const [pageNumber, setPageNumber] = useState(1);
   const [scale, setScale] = useState(1.0);
-  const [pdfLoading, setPdfLoading] = useState(true);
 
   useEffect(() => {
     if (book) {
@@ -33,11 +31,8 @@ const BookReader = () => {
 
   const onDocumentLoadSuccess = ({ numPages }: { numPages: number }) => {
     setNumPages(numPages);
-    setPdfLoading(false);
   };
 
-  const goToPrevPage = () => setPageNumber((prev) => Math.max(prev - 1, 1));
-  const goToNextPage = () => setPageNumber((prev) => Math.min(prev + 1, numPages));
   const handleZoomIn = () => setScale((prev) => Math.min(prev + 0.2, 3));
   const handleZoomOut = () => setScale((prev) => Math.max(prev - 0.2, 0.5));
 
@@ -90,16 +85,10 @@ const BookReader = () => {
 
             {/* Controls */}
             <div className="flex items-center gap-1 sm:gap-2">
-              {/* Page Navigation */}
-              <Button variant="ghost" size="icon" onClick={goToPrevPage} disabled={pageNumber <= 1}>
-                <ChevronRight className="h-4 w-4" />
-              </Button>
-              <span className="text-sm text-muted-foreground min-w-[4rem] text-center">
-                {pageNumber} / {numPages}
+              {/* Page count */}
+              <span className="text-sm text-muted-foreground">
+                {numPages} صفحة
               </span>
-              <Button variant="ghost" size="icon" onClick={goToNextPage} disabled={pageNumber >= numPages}>
-                <ChevronLeft className="h-4 w-4" />
-              </Button>
               
               <div className="h-6 w-px bg-border mx-1 sm:mx-2" />
               
@@ -127,7 +116,7 @@ const BookReader = () => {
         </div>
       </div>
 
-      {/* PDF Viewer */}
+      {/* PDF Viewer - Scrollable */}
       <div className="flex-1 overflow-auto p-4">
         <div className="flex justify-center">
           <Document
@@ -149,17 +138,18 @@ const BookReader = () => {
                 </a>
               </div>
             }
-            className="flex flex-col items-center"
+            className="flex flex-col items-center gap-4"
           >
-            {pdfLoading ? null : (
+            {Array.from(new Array(numPages), (_, index) => (
               <Page
-                pageNumber={pageNumber}
+                key={`page_${index + 1}`}
+                pageNumber={index + 1}
                 scale={scale}
                 className="shadow-xl rounded-lg overflow-hidden"
                 renderTextLayer={true}
                 renderAnnotationLayer={true}
               />
-            )}
+            ))}
           </Document>
         </div>
       </div>
