@@ -1,14 +1,15 @@
 import { useParams, Link } from 'react-router-dom';
-import { ArrowRight } from 'lucide-react';
+import { ArrowRight, Loader2 } from 'lucide-react';
 import { Layout } from '@/components/layout/Layout';
 import { BookCard } from '@/components/books/BookCard';
 import { Button } from '@/components/ui/button';
-import { categories, mockBooks } from '@/lib/mockData';
+import { categories } from '@/lib/mockData';
+import { useBooksByCategory } from '@/hooks/useBooks';
 
 const Category = () => {
   const { name } = useParams<{ name: string }>();
   const category = categories.find((c) => c.name === name);
-  const books = mockBooks.filter((book) => book.category === name);
+  const { data: books, isLoading } = useBooksByCategory(name || '');
 
   if (!category) {
     return (
@@ -55,16 +56,33 @@ const Category = () => {
                 {category.nameAr}
               </h1>
               <p className="text-muted-foreground">
-                {books.length} كتاب في هذا التصنيف
+                {books?.length || 0} كتاب في هذا التصنيف
               </p>
             </div>
           </div>
 
           {/* Books Grid */}
-          {books.length > 0 ? (
+          {isLoading ? (
+            <div className="flex justify-center py-16">
+              <Loader2 className="h-8 w-8 animate-spin text-primary" />
+            </div>
+          ) : books && books.length > 0 ? (
             <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-6">
               {books.map((book, index) => (
-                <BookCard key={book.id} book={book} index={index} />
+                <BookCard 
+                  key={book.id} 
+                  book={{
+                    id: book.id,
+                    title: book.title,
+                    author: book.author,
+                    description: book.description || '',
+                    category: book.category,
+                    coverUrl: book.cover_url || '/placeholder.svg',
+                    pdfUrl: book.file_url,
+                    createdAt: book.created_at || '',
+                  }} 
+                  index={index} 
+                />
               ))}
             </div>
           ) : (
