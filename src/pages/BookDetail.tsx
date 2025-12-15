@@ -7,6 +7,8 @@ import { addToReadingHistory, saveBookOffline, isBookAvailableOffline } from '@/
 import { useToast } from '@/hooks/use-toast';
 import { useBook } from '@/hooks/useBooks';
 import { useState, useEffect } from 'react';
+import { CommentsSection } from '@/components/books/CommentsSection';
+import { LikeButton } from '@/components/books/LikeButton';
 
 const BookDetail = () => {
   const { id } = useParams<{ id: string }>();
@@ -235,6 +237,7 @@ const BookDetail = () => {
                   )}
                   {isOffline ? 'تم الحفظ' : 'تحميل للقراءة لاحقاً'}
                 </Button>
+                <LikeButton bookId={book.id} size="lg" />
                 <Button
                   variant="ghost"
                   size="xl"
@@ -266,12 +269,17 @@ const BookDetail = () => {
                     <p className="font-medium text-foreground uppercase">
                       {book.file_type || 'PDF'}
                     </p>
-                  </div>
                 </div>
+              </div>
+
+              {/* Comments Section */}
+              <div className="mt-12 pt-8 border-t border-border">
+                <CommentsSection bookId={book.id} />
               </div>
             </div>
           </div>
         </div>
+      </div>
       </div>
     </Layout>
   );

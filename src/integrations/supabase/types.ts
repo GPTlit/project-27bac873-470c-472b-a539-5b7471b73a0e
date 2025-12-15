@@ -14,6 +14,86 @@ export type Database = {
   }
   public: {
     Tables: {
+      admin_ai_chats: {
+        Row: {
+          created_at: string | null
+          id: string
+          messages: Json | null
+          updated_at: string | null
+          user_id: string
+        }
+        Insert: {
+          created_at?: string | null
+          id?: string
+          messages?: Json | null
+          updated_at?: string | null
+          user_id: string
+        }
+        Update: {
+          created_at?: string | null
+          id?: string
+          messages?: Json | null
+          updated_at?: string | null
+          user_id?: string
+        }
+        Relationships: []
+      }
+      app_config: {
+        Row: {
+          description: string | null
+          id: string
+          key: string
+          updated_at: string | null
+          updated_by: string | null
+          value: Json
+        }
+        Insert: {
+          description?: string | null
+          id?: string
+          key: string
+          updated_at?: string | null
+          updated_by?: string | null
+          value?: Json
+        }
+        Update: {
+          description?: string | null
+          id?: string
+          key?: string
+          updated_at?: string | null
+          updated_by?: string | null
+          value?: Json
+        }
+        Relationships: []
+      }
+      book_likes: {
+        Row: {
+          book_id: string
+          created_at: string | null
+          id: string
+          user_id: string
+        }
+        Insert: {
+          book_id: string
+          created_at?: string | null
+          id?: string
+          user_id: string
+        }
+        Update: {
+          book_id?: string
+          created_at?: string | null
+          id?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "book_likes_book_id_fkey"
+            columns: ["book_id"]
+            isOneToOne: false
+            referencedRelation: "books"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       book_submissions: {
         Row: {
           author: string
@@ -60,6 +140,8 @@ export type Database = {
           file_type: string | null
           file_url: string
           id: string
+          is_premium: boolean | null
+          premium_price: number | null
           title: string
           updated_at: string | null
         }
@@ -72,6 +154,8 @@ export type Database = {
           file_type?: string | null
           file_url: string
           id?: string
+          is_premium?: boolean | null
+          premium_price?: number | null
           title: string
           updated_at?: string | null
         }
@@ -84,7 +168,193 @@ export type Database = {
           file_type?: string | null
           file_url?: string
           id?: string
+          is_premium?: boolean | null
+          premium_price?: number | null
           title?: string
+          updated_at?: string | null
+        }
+        Relationships: []
+      }
+      comment_likes: {
+        Row: {
+          comment_id: string
+          created_at: string | null
+          id: string
+          user_id: string
+        }
+        Insert: {
+          comment_id: string
+          created_at?: string | null
+          id?: string
+          user_id: string
+        }
+        Update: {
+          comment_id?: string
+          created_at?: string | null
+          id?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "comment_likes_comment_id_fkey"
+            columns: ["comment_id"]
+            isOneToOne: false
+            referencedRelation: "comments"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      comments: {
+        Row: {
+          book_id: string
+          content: string
+          created_at: string | null
+          id: string
+          updated_at: string | null
+          user_id: string
+        }
+        Insert: {
+          book_id: string
+          content: string
+          created_at?: string | null
+          id?: string
+          updated_at?: string | null
+          user_id: string
+        }
+        Update: {
+          book_id?: string
+          content?: string
+          created_at?: string | null
+          id?: string
+          updated_at?: string | null
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "comments_book_id_fkey"
+            columns: ["book_id"]
+            isOneToOne: false
+            referencedRelation: "books"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      feature_toggles: {
+        Row: {
+          config: Json | null
+          created_at: string | null
+          description: string | null
+          enabled: boolean | null
+          feature_key: string
+          id: string
+          updated_at: string | null
+        }
+        Insert: {
+          config?: Json | null
+          created_at?: string | null
+          description?: string | null
+          enabled?: boolean | null
+          feature_key: string
+          id?: string
+          updated_at?: string | null
+        }
+        Update: {
+          config?: Json | null
+          created_at?: string | null
+          description?: string | null
+          enabled?: boolean | null
+          feature_key?: string
+          id?: string
+          updated_at?: string | null
+        }
+        Relationships: []
+      }
+      navigation_config: {
+        Row: {
+          id: string
+          items: Json | null
+          position: string
+          updated_at: string | null
+        }
+        Insert: {
+          id?: string
+          items?: Json | null
+          position?: string
+          updated_at?: string | null
+        }
+        Update: {
+          id?: string
+          items?: Json | null
+          position?: string
+          updated_at?: string | null
+        }
+        Relationships: []
+      }
+      page_sections: {
+        Row: {
+          config: Json | null
+          created_at: string | null
+          enabled: boolean | null
+          id: string
+          page_key: string
+          section_key: string
+          section_type: string
+          sort_order: number | null
+          updated_at: string | null
+        }
+        Insert: {
+          config?: Json | null
+          created_at?: string | null
+          enabled?: boolean | null
+          id?: string
+          page_key: string
+          section_key: string
+          section_type: string
+          sort_order?: number | null
+          updated_at?: string | null
+        }
+        Update: {
+          config?: Json | null
+          created_at?: string | null
+          enabled?: boolean | null
+          id?: string
+          page_key?: string
+          section_key?: string
+          section_type?: string
+          sort_order?: number | null
+          updated_at?: string | null
+        }
+        Relationships: []
+      }
+      theme_config: {
+        Row: {
+          colors: Json | null
+          created_at: string | null
+          fonts: Json | null
+          id: string
+          is_active: boolean | null
+          name: string
+          spacing: Json | null
+          updated_at: string | null
+        }
+        Insert: {
+          colors?: Json | null
+          created_at?: string | null
+          fonts?: Json | null
+          id?: string
+          is_active?: boolean | null
+          name?: string
+          spacing?: Json | null
+          updated_at?: string | null
+        }
+        Update: {
+          colors?: Json | null
+          created_at?: string | null
+          fonts?: Json | null
+          id?: string
+          is_active?: boolean | null
+          name?: string
+          spacing?: Json | null
           updated_at?: string | null
         }
         Relationships: []
