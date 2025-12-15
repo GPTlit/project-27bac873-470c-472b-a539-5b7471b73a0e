@@ -15,6 +15,7 @@ import History from "./pages/History";
 import Downloads from "./pages/Downloads";
 import Upload from "./pages/Upload";
 import AdminUpload from "./pages/AdminUpload";
+import AdminPanel from "./pages/AdminPanel";
 import About from "./pages/About";
 import Search from "./pages/Search";
 import NotFound from "./pages/NotFound";
@@ -39,6 +40,7 @@ const App = () => (
             <Route path="/downloads" element={<ProtectedRoute><Downloads /></ProtectedRoute>} />
             <Route path="/upload" element={<ProtectedRoute><Upload /></ProtectedRoute>} />
             <Route path="/admin-upload-mrt" element={<ProtectedRoute requireAdmin><AdminUpload /></ProtectedRoute>} />
+            <Route path="/admin-panel" element={<ProtectedRoute requireAdmin><AdminPanel /></ProtectedRoute>} />
             <Route path="/about" element={<ProtectedRoute><About /></ProtectedRoute>} />
             <Route path="/search" element={<ProtectedRoute><Search /></ProtectedRoute>} />
             <Route path="*" element={<NotFound />} />
