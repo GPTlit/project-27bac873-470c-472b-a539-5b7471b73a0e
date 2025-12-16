@@ -2,16 +2,21 @@ import { useState, useRef, useEffect } from 'react';
 import { Layout } from '@/components/layout/Layout';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
+import { Textarea } from '@/components/ui/textarea';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Switch } from '@/components/ui/switch';
 import { Badge } from '@/components/ui/badge';
 import { ScrollArea } from '@/components/ui/scroll-area';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { useToast } from '@/hooks/use-toast';
 import { useAuth } from '@/contexts/AuthContext';
 import { supabase } from '@/integrations/supabase/client';
 import { useFeatureToggles, useActiveTheme, useInvalidateConfig } from '@/hooks/useAppConfig';
-import { Bot, Send, Loader2, Settings, Palette, ToggleLeft, MessageSquare, Sparkles } from 'lucide-react';
+import { useBooks } from '@/hooks/useBooks';
+import { categories } from '@/lib/mockData';
+import { Bot, Send, Loader2, Settings, Palette, ToggleLeft, Sparkles, Upload, FileText, Image, Save, Trash2 } from 'lucide-react';
 
 interface ChatMessage {
   role: 'user' | 'assistant';
@@ -26,6 +31,18 @@ const AdminPanel = () => {
   const [isLoading, setIsLoading] = useState(false);
   const scrollRef = useRef<HTMLDivElement>(null);
   const invalidateConfig = useInvalidateConfig();
+
+  // Book upload state
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [formData, setFormData] = useState({
+    title: '',
+    author: '',
+    description: '',
+    category: '',
+  });
+  const [bookFile, setBookFile] = useState<File | null>(null);
+  const [coverFile, setCoverFile] = useState<File | null>(null);
+  const { data: books, refetch: refetchBooks } = useBooks();
 
   const { data: features, refetch: refetchFeatures } = useFeatureToggles();
   const { data: theme, refetch: refetchTheme } = useActiveTheme();
@@ -122,7 +139,6 @@ const AdminPanel = () => {
       const aiMessage: ChatMessage = { role: 'assistant', content: data.message };
       setMessages(prev => [...prev, aiMessage]);
 
-      // Parse and execute any actions in the response
       await parseAndExecuteActions(data.message);
 
     } catch (error: any) {
@@ -162,8 +178,111 @@ const AdminPanel = () => {
   };
 
   const formatMessage = (content: string) => {
-    // Remove action blocks from display
     return content.replace(/```action\n[\s\S]*?\n```/g, '').trim();
+  };
+
+  // Book upload handlers
+  const handleBookSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+
+    if (!formData.title || !formData.author || !formData.category || !bookFile) {
+      toast({
+        title: 'خطأ',
+        description: 'يرجى ملء جميع الحقول المطلوبة',
+        variant: 'destructive',
+      });
+      return;
+    }
+
+    setIsSubmitting(true);
+
+    try {
+      const bookFileName = `${Date.now()}-${bookFile.name}`;
+      const { error: bookUploadError } = await supabase.storage
+        .from('books')
+        .upload(bookFileName, bookFile);
+
+      if (bookUploadError) throw bookUploadError;
+
+      const { data: bookUrlData } = supabase.storage
+        .from('books')
+        .getPublicUrl(bookFileName);
+
+      let coverUrl = null;
+      if (coverFile) {
+        const coverFileName = `${Date.now()}-${coverFile.name}`;
+        const { error: coverUploadError } = await supabase.storage
+          .from('covers')
+          .upload(coverFileName, coverFile);
+
+        if (coverUploadError) throw coverUploadError;
+
+        const { data: coverUrlData } = supabase.storage
+          .from('covers')
+          .getPublicUrl(coverFileName);
+
+        coverUrl = coverUrlData.publicUrl;
+      }
+
+      const fileType = bookFile.name.split('.').pop()?.toLowerCase() || 'pdf';
+
+      const { error: insertError } = await supabase
+        .from('books')
+        .insert({
+          title: formData.title,
+          author: formData.author,
+          description: formData.description || null,
+          category: formData.category,
+          cover_url: coverUrl,
+          file_url: bookUrlData.publicUrl,
+          file_type: fileType,
+        });
+
+      if (insertError) throw insertError;
+
+      toast({
+        title: 'تم الرفع بنجاح',
+        description: 'تم إضافة الكتاب للمكتبة',
+      });
+
+      setFormData({ title: '', author: '', description: '', category: '' });
+      setBookFile(null);
+      setCoverFile(null);
+      refetchBooks();
+    } catch (error) {
+      console.error('Upload error:', error);
+      toast({
+        title: 'خطأ',
+        description: 'حدث خطأ أثناء رفع الكتاب',
+        variant: 'destructive',
+      });
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
+
+  const handleDelete = async (bookId: string) => {
+    try {
+      const { error } = await supabase
+        .from('books')
+        .delete()
+        .eq('id', bookId);
+
+      if (error) throw error;
+
+      toast({
+        title: 'تم الحذف',
+        description: 'تم حذف الكتاب بنجاح',
+      });
+      refetchBooks();
+    } catch (error) {
+      console.error('Delete error:', error);
+      toast({
+        title: 'خطأ',
+        description: 'حدث خطأ أثناء حذف الكتاب',
+        variant: 'destructive',
+      });
+    }
   };
 
   return (
@@ -179,8 +298,12 @@ const AdminPanel = () => {
           </div>
         </div>
 
-        <Tabs defaultValue="ai" className="space-y-6">
-          <TabsList className="grid w-full grid-cols-3 max-w-md">
+        <Tabs defaultValue="upload" className="space-y-6">
+          <TabsList className="grid w-full grid-cols-4 max-w-xl">
+            <TabsTrigger value="upload" className="flex items-center gap-2">
+              <Upload className="h-4 w-4" />
+              رفع الكتب
+            </TabsTrigger>
             <TabsTrigger value="ai" className="flex items-center gap-2">
               <Bot className="h-4 w-4" />
               المساعد الذكي
@@ -194,6 +317,179 @@ const AdminPanel = () => {
               المظهر
             </TabsTrigger>
           </TabsList>
+
+          {/* Book Upload Tab */}
+          <TabsContent value="upload">
+            <div className="grid lg:grid-cols-2 gap-8">
+              <Card>
+                <CardHeader>
+                  <CardTitle>رفع كتاب جديد</CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <form onSubmit={handleBookSubmit} className="space-y-6">
+                    <div className="space-y-2">
+                      <Label htmlFor="title">عنوان الكتاب *</Label>
+                      <Input
+                        id="title"
+                        placeholder="أدخل عنوان الكتاب"
+                        value={formData.title}
+                        onChange={(e) => setFormData({ ...formData, title: e.target.value })}
+                        required
+                      />
+                    </div>
+
+                    <div className="space-y-2">
+                      <Label htmlFor="author">اسم المؤلف *</Label>
+                      <Input
+                        id="author"
+                        placeholder="أدخل اسم المؤلف"
+                        value={formData.author}
+                        onChange={(e) => setFormData({ ...formData, author: e.target.value })}
+                        required
+                      />
+                    </div>
+
+                    <div className="space-y-2">
+                      <Label htmlFor="description">وصف الكتاب</Label>
+                      <Textarea
+                        id="description"
+                        placeholder="أدخل وصفاً للكتاب..."
+                        value={formData.description}
+                        onChange={(e) => setFormData({ ...formData, description: e.target.value })}
+                        rows={4}
+                      />
+                    </div>
+
+                    <div className="space-y-2">
+                      <Label htmlFor="category">التصنيف *</Label>
+                      <Select
+                        value={formData.category}
+                        onValueChange={(value) => setFormData({ ...formData, category: value })}
+                      >
+                        <SelectTrigger>
+                          <SelectValue placeholder="اختر التصنيف" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          {categories.map((cat) => (
+                            <SelectItem key={cat.id} value={cat.name}>
+                              {cat.icon} {cat.nameAr}
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                    </div>
+
+                    <div className="space-y-2">
+                      <Label htmlFor="cover">صورة الغلاف</Label>
+                      <div className="relative">
+                        <input
+                          type="file"
+                          id="cover"
+                          accept="image/*"
+                          className="hidden"
+                          onChange={(e) => setCoverFile(e.target.files?.[0] || null)}
+                        />
+                        <label
+                          htmlFor="cover"
+                          className="flex items-center justify-center gap-3 h-24 border-2 border-dashed border-border rounded-xl cursor-pointer hover:border-primary/50 hover:bg-secondary/50 transition-colors"
+                        >
+                          {coverFile ? (
+                            <div className="flex items-center gap-3">
+                              <Image className="h-6 w-6 text-primary" />
+                              <span className="text-foreground font-medium">{coverFile.name}</span>
+                            </div>
+                          ) : (
+                            <div className="text-center">
+                              <Image className="h-6 w-6 text-muted-foreground mx-auto mb-2" />
+                              <span className="text-sm text-muted-foreground">اضغط لرفع صورة الغلاف</span>
+                            </div>
+                          )}
+                        </label>
+                      </div>
+                    </div>
+
+                    <div className="space-y-2">
+                      <Label htmlFor="bookFile">ملف الكتاب (PDF, TXT, EPUB) *</Label>
+                      <div className="relative">
+                        <input
+                          type="file"
+                          id="bookFile"
+                          accept=".pdf,.txt,.epub,.doc,.docx"
+                          className="hidden"
+                          onChange={(e) => setBookFile(e.target.files?.[0] || null)}
+                        />
+                        <label
+                          htmlFor="bookFile"
+                          className="flex items-center justify-center gap-3 h-24 border-2 border-dashed border-border rounded-xl cursor-pointer hover:border-primary/50 hover:bg-secondary/50 transition-colors"
+                        >
+                          {bookFile ? (
+                            <div className="flex items-center gap-3">
+                              <FileText className="h-6 w-6 text-primary" />
+                              <span className="text-foreground font-medium">{bookFile.name}</span>
+                            </div>
+                          ) : (
+                            <div className="text-center">
+                              <Upload className="h-6 w-6 text-muted-foreground mx-auto mb-2" />
+                              <span className="text-sm text-muted-foreground">اضغط لرفع ملف الكتاب</span>
+                            </div>
+                          )}
+                        </label>
+                      </div>
+                    </div>
+
+                    <Button
+                      type="submit"
+                      className="w-full gap-3"
+                      disabled={isSubmitting}
+                    >
+                      {isSubmitting ? (
+                        <>
+                          <Loader2 className="h-5 w-5 animate-spin" />
+                          جاري الرفع...
+                        </>
+                      ) : (
+                        <>
+                          <Save className="h-5 w-5" />
+                          حفظ الكتاب
+                        </>
+                      )}
+                    </Button>
+                  </form>
+                </CardContent>
+              </Card>
+
+              <Card>
+                <CardHeader>
+                  <CardTitle>الكتب الموجودة ({books?.length || 0})</CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <ScrollArea className="h-[500px]">
+                    <div className="space-y-3">
+                      {books?.map((book) => (
+                        <div key={book.id} className="flex items-center justify-between p-3 bg-secondary/50 rounded-lg">
+                          <div className="flex-1 min-w-0">
+                            <p className="font-medium text-foreground truncate">{book.title}</p>
+                            <p className="text-sm text-muted-foreground">{book.author}</p>
+                          </div>
+                          <Button
+                            variant="ghost"
+                            size="icon"
+                            className="text-destructive hover:text-destructive shrink-0"
+                            onClick={() => handleDelete(book.id)}
+                          >
+                            <Trash2 className="h-4 w-4" />
+                          </Button>
+                        </div>
+                      ))}
+                      {(!books || books.length === 0) && (
+                        <p className="text-center text-muted-foreground py-8">لا توجد كتب بعد</p>
+                      )}
+                    </div>
+                  </ScrollArea>
+                </CardContent>
+              </Card>
+            </div>
+          </TabsContent>
 
           {/* AI Assistant Tab */}
           <TabsContent value="ai">
