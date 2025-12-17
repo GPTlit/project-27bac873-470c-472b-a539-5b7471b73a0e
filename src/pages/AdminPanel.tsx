@@ -299,20 +299,20 @@ const AdminPanel = () => {
         </div>
 
         <Tabs defaultValue="upload" className="space-y-6">
-          <TabsList className="grid w-full grid-cols-4 max-w-xl">
-            <TabsTrigger value="upload" className="flex items-center gap-2">
+          <TabsList className="flex flex-wrap gap-2 h-auto p-2 bg-muted">
+            <TabsTrigger value="upload" className="flex items-center gap-2 px-4 py-2">
               <Upload className="h-4 w-4" />
               رفع الكتب
             </TabsTrigger>
-            <TabsTrigger value="ai" className="flex items-center gap-2">
+            <TabsTrigger value="ai" className="flex items-center gap-2 px-4 py-2">
               <Bot className="h-4 w-4" />
               المساعد الذكي
             </TabsTrigger>
-            <TabsTrigger value="features" className="flex items-center gap-2">
+            <TabsTrigger value="features" className="flex items-center gap-2 px-4 py-2">
               <ToggleLeft className="h-4 w-4" />
               الميزات
             </TabsTrigger>
-            <TabsTrigger value="theme" className="flex items-center gap-2">
+            <TabsTrigger value="theme" className="flex items-center gap-2 px-4 py-2">
               <Palette className="h-4 w-4" />
               المظهر
             </TabsTrigger>
