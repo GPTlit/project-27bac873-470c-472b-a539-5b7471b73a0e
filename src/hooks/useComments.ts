@@ -9,8 +9,10 @@ export interface Comment {
   content: string;
   created_at: string;
   updated_at: string;
+  parent_id: string | null;
   likes_count?: number;
   user_liked?: boolean;
+  replies?: Comment[];
 }
 
 export const useComments = (bookId: string) => {
@@ -54,7 +56,31 @@ export const useComments = (bookId: string) => {
         })
       );
 
-      return commentsWithLikes as Comment[];
+      // Organize into threaded structure
+      const commentMap = new Map<string, Comment>();
+      const rootComments: Comment[] = [];
+
+      commentsWithLikes.forEach((comment) => {
+        commentMap.set(comment.id, { ...comment, replies: [] });
+      });
+
+      commentsWithLikes.forEach((comment) => {
+        const commentWithReplies = commentMap.get(comment.id)!;
+        if (comment.parent_id && commentMap.has(comment.parent_id)) {
+          commentMap.get(comment.parent_id)!.replies!.push(commentWithReplies);
+        } else if (!comment.parent_id) {
+          rootComments.push(commentWithReplies);
+        }
+      });
+
+      // Sort replies by date (oldest first for readability)
+      rootComments.forEach((comment) => {
+        comment.replies?.sort((a, b) => 
+          new Date(a.created_at).getTime() - new Date(b.created_at).getTime()
+        );
+      });
+
+      return rootComments as Comment[];
     },
     enabled: !!bookId,
   });
@@ -65,12 +91,17 @@ export const useAddComment = () => {
   const { user } = useAuth();
 
   return useMutation({
-    mutationFn: async ({ bookId, content }: { bookId: string; content: string }) => {
+    mutationFn: async ({ bookId, content, parentId }: { bookId: string; content: string; parentId?: string }) => {
       if (!user) throw new Error('Must be logged in');
 
       const { data, error } = await supabase
         .from('comments')
-        .insert({ book_id: bookId, user_id: user.id, content })
+        .insert({ 
+          book_id: bookId, 
+          user_id: user.id, 
+          content,
+          parent_id: parentId || null
+        })
         .select()
         .single();
       
