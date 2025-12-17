@@ -210,6 +210,7 @@ export type Database = {
           content: string
           created_at: string | null
           id: string
+          parent_id: string | null
           updated_at: string | null
           user_id: string
         }
@@ -218,6 +219,7 @@ export type Database = {
           content: string
           created_at?: string | null
           id?: string
+          parent_id?: string | null
           updated_at?: string | null
           user_id: string
         }
@@ -226,6 +228,7 @@ export type Database = {
           content?: string
           created_at?: string | null
           id?: string
+          parent_id?: string | null
           updated_at?: string | null
           user_id?: string
         }
@@ -235,6 +238,13 @@ export type Database = {
             columns: ["book_id"]
             isOneToOne: false
             referencedRelation: "books"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "comments_parent_id_fkey"
+            columns: ["parent_id"]
+            isOneToOne: false
+            referencedRelation: "comments"
             referencedColumns: ["id"]
           },
         ]
