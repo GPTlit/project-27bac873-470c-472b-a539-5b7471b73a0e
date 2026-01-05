@@ -1,9 +1,10 @@
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
 import { Link, useLocation } from 'react-router-dom';
-import { Book, Menu, X, Home, Grid3X3, History, Download, Upload, LogOut, Shield, Info } from 'lucide-react';
+import { Menu, X, Home, Grid3X3, History, Download, Upload, LogOut, Shield, Info } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
 import { useAuth } from '@/contexts/AuthContext';
+import { Logo } from './Logo';
 
 const baseNavLinks = [
   { href: '/', label: 'الرئيسية', icon: Home },
@@ -32,14 +33,7 @@ export const Header = () => {
       <div className="container-library">
         <div className="flex h-16 items-center justify-between">
           {/* Logo */}
-          <Link to="/" className="flex items-center gap-3 group">
-            <div className="flex h-10 w-10 items-center justify-center rounded-xl gold-gradient shadow-md group-hover:shadow-lg transition-shadow">
-              <Book className="h-5 w-5 text-primary-foreground" />
-            </div>
-            <span className="text-xl font-bold text-gradient hidden sm:block">
-              مكتبة موريتانيا
-            </span>
-          </Link>
+          <Logo />
 
           {/* Desktop Navigation */}
           <nav className="hidden lg:flex items-center gap-1">

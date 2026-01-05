@@ -57,18 +57,27 @@ export const useCategories = () => {
   return useQuery({
     queryKey: ['categories-with-counts'],
     queryFn: async () => {
-      // Fetch book counts grouped by category
+      // Fetch book counts from both category and categories fields
       const { data, error } = await supabase
         .from('books')
-        .select('category');
+        .select('category, categories');
       
       if (error) throw error;
       
-      // Count books per category
+      // Count books per category (supporting both legacy single category and new array)
       const counts: Record<string, number> = {};
       data?.forEach(book => {
-        const cat = book.category?.toLowerCase() || '';
-        counts[cat] = (counts[cat] || 0) + 1;
+        // Count from categories array if present
+        if (book.categories && Array.isArray(book.categories)) {
+          book.categories.forEach((cat: string) => {
+            const catLower = cat?.toLowerCase() || '';
+            counts[catLower] = (counts[catLower] || 0) + 1;
+          });
+        } else if (book.category) {
+          // Fallback to legacy single category
+          const cat = book.category.toLowerCase();
+          counts[cat] = (counts[cat] || 0) + 1;
+        }
       });
       
       // Merge counts with categories

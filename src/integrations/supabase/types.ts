@@ -133,6 +133,7 @@ export type Database = {
       books: {
         Row: {
           author: string
+          categories: string[] | null
           category: string
           cover_url: string | null
           created_at: string | null
@@ -147,6 +148,7 @@ export type Database = {
         }
         Insert: {
           author: string
+          categories?: string[] | null
           category: string
           cover_url?: string | null
           created_at?: string | null
@@ -161,6 +163,7 @@ export type Database = {
         }
         Update: {
           author?: string
+          categories?: string[] | null
           category?: string
           cover_url?: string | null
           created_at?: string | null
