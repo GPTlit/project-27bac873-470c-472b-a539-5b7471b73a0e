@@ -1,8 +1,11 @@
 import { Layout } from '@/components/layout/Layout';
 import { CategoryCard } from '@/components/home/CategoryCard';
-import { categories } from '@/lib/mockData';
+import { useCategories } from '@/hooks/useCategories';
+import { Skeleton } from '@/components/ui/skeleton';
 
 const Categories = () => {
+  const { data: categories, isLoading } = useCategories();
+
   return (
     <Layout>
       <div className="section-padding">
@@ -13,15 +16,21 @@ const Categories = () => {
               جميع التصنيفات
             </h1>
             <p className="text-muted-foreground max-w-xl mx-auto">
-              تصفح مكتبتنا الغنية بمختلف التصنيفات والمجالات المعرفية
+              تصفح مكتبتنا الغنية بـ {categories?.length || 40} تصنيف ومجال معرفي مختلف
             </p>
           </div>
 
           {/* Categories Grid */}
           <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-6">
-            {categories.map((category, index) => (
-              <CategoryCard key={category.id} category={category} index={index} />
-            ))}
+            {isLoading ? (
+              Array.from({ length: 20 }).map((_, i) => (
+                <Skeleton key={i} className="h-32 rounded-2xl" />
+              ))
+            ) : (
+              categories?.map((category, index) => (
+                <CategoryCard key={category.id} category={category} index={index} />
+              ))
+            )}
           </div>
         </div>
       </div>

@@ -3,12 +3,12 @@ import { ArrowRight, Loader2 } from 'lucide-react';
 import { Layout } from '@/components/layout/Layout';
 import { BookCard } from '@/components/books/BookCard';
 import { Button } from '@/components/ui/button';
-import { categories } from '@/lib/mockData';
+import { allCategories } from '@/hooks/useCategories';
 import { useBooksByCategory } from '@/hooks/useBooks';
 
 const Category = () => {
   const { name } = useParams<{ name: string }>();
-  const category = categories.find((c) => c.name === name);
+  const category = allCategories.find((c) => c.name === name);
   const { data: books, isLoading } = useBooksByCategory(name || '');
 
   if (!category) {

@@ -1,17 +1,7 @@
-import { Book, Category } from './types';
+import { Book } from './types';
 
-export const categories: Category[] = [
-  { id: '1', name: 'novels', nameAr: 'روايات', icon: '📚', bookCount: 45 },
-  { id: '2', name: 'religion', nameAr: 'دين', icon: '🕌', bookCount: 32 },
-  { id: '3', name: 'science', nameAr: 'علوم', icon: '🔬', bookCount: 28 },
-  { id: '4', name: 'history', nameAr: 'تاريخ', icon: '📜', bookCount: 35 },
-  { id: '5', name: 'psychology', nameAr: 'علم النفس', icon: '🧠', bookCount: 22 },
-  { id: '6', name: 'philosophy', nameAr: 'فلسفة', icon: '💭', bookCount: 18 },
-  { id: '7', name: 'kids', nameAr: 'كتب أطفال', icon: '🧒', bookCount: 40 },
-  { id: '8', name: 'school', nameAr: 'كتب مدرسية', icon: '🎓', bookCount: 55 },
-  { id: '9', name: 'poetry', nameAr: 'شعر', icon: '✨', bookCount: 25 },
-  { id: '10', name: 'self-help', nameAr: 'تطوير الذات', icon: '🌱', bookCount: 30 },
-];
+// Categories are now managed in src/hooks/useCategories.ts with real book counts
+export { allCategories as categories } from '@/hooks/useCategories';
 
 export const mockBooks: Book[] = [
   {
