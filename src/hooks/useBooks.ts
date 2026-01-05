@@ -7,6 +7,7 @@ export interface Book {
   author: string;
   description: string | null;
   category: string;
+  categories: string[] | null;
   cover_url: string | null;
   file_url: string;
   file_type: string | null;
@@ -50,10 +51,11 @@ export const useBooksByCategory = (category: string) => {
   return useQuery({
     queryKey: ['books', 'category', category],
     queryFn: async () => {
+      // Query books where the category is in the categories array OR matches the legacy category field
       const { data, error } = await supabase
         .from('books')
         .select('*')
-        .eq('category', category)
+        .or(`categories.cs.{"${category}"},category.eq.${category}`)
         .order('created_at', { ascending: false });
       
       if (error) throw error;

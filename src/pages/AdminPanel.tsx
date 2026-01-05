@@ -9,14 +9,15 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Switch } from '@/components/ui/switch';
 import { Badge } from '@/components/ui/badge';
 import { ScrollArea } from '@/components/ui/scroll-area';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
+import { Checkbox } from '@/components/ui/checkbox';
 import { useToast } from '@/hooks/use-toast';
 import { useAuth } from '@/contexts/AuthContext';
 import { supabase } from '@/integrations/supabase/client';
 import { useFeatureToggles, useActiveTheme, useInvalidateConfig } from '@/hooks/useAppConfig';
-import { useBooks } from '@/hooks/useBooks';
-import { categories } from '@/lib/mockData';
-import { Bot, Send, Loader2, Settings, Palette, ToggleLeft, Sparkles, Upload, FileText, Image, Save, Trash2 } from 'lucide-react';
+import { useBooks, Book } from '@/hooks/useBooks';
+import { allCategories } from '@/hooks/useCategories';
+import { Bot, Send, Loader2, Settings, Palette, ToggleLeft, Sparkles, Upload, FileText, Image, Save, Trash2, Pencil, X } from 'lucide-react';
 
 interface ChatMessage {
   role: 'user' | 'assistant';
@@ -38,11 +39,21 @@ const AdminPanel = () => {
     title: '',
     author: '',
     description: '',
-    category: '',
+    categories: [] as string[],
   });
   const [bookFile, setBookFile] = useState<File | null>(null);
   const [coverFile, setCoverFile] = useState<File | null>(null);
   const { data: books, refetch: refetchBooks } = useBooks();
+
+  // Edit state
+  const [editingBook, setEditingBook] = useState<Book | null>(null);
+  const [editFormData, setEditFormData] = useState({
+    title: '',
+    author: '',
+    description: '',
+    categories: [] as string[],
+  });
+  const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
 
   const { data: features, refetch: refetchFeatures } = useFeatureToggles();
   const { data: theme, refetch: refetchTheme } = useActiveTheme();
@@ -181,14 +192,32 @@ const AdminPanel = () => {
     return content.replace(/```action\n[\s\S]*?\n```/g, '').trim();
   };
 
+  const toggleCategory = (categoryName: string, isEdit = false) => {
+    if (isEdit) {
+      setEditFormData(prev => ({
+        ...prev,
+        categories: prev.categories.includes(categoryName)
+          ? prev.categories.filter(c => c !== categoryName)
+          : [...prev.categories, categoryName]
+      }));
+    } else {
+      setFormData(prev => ({
+        ...prev,
+        categories: prev.categories.includes(categoryName)
+          ? prev.categories.filter(c => c !== categoryName)
+          : [...prev.categories, categoryName]
+      }));
+    }
+  };
+
   // Book upload handlers
   const handleBookSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
 
-    if (!formData.title || !formData.author || !formData.category || !bookFile) {
+    if (!formData.title || !formData.author || formData.categories.length === 0 || !bookFile) {
       toast({
         title: 'خطأ',
-        description: 'يرجى ملء جميع الحقول المطلوبة',
+        description: 'يرجى ملء جميع الحقول المطلوبة واختيار تصنيف واحد على الأقل',
         variant: 'destructive',
       });
       return;
@@ -232,7 +261,8 @@ const AdminPanel = () => {
           title: formData.title,
           author: formData.author,
           description: formData.description || null,
-          category: formData.category,
+          category: formData.categories[0], // Keep first category for backward compatibility
+          categories: formData.categories,
           cover_url: coverUrl,
           file_url: bookUrlData.publicUrl,
           file_type: fileType,
@@ -245,7 +275,7 @@ const AdminPanel = () => {
         description: 'تم إضافة الكتاب للمكتبة',
       });
 
-      setFormData({ title: '', author: '', description: '', category: '' });
+      setFormData({ title: '', author: '', description: '', categories: [] });
       setBookFile(null);
       setCoverFile(null);
       refetchBooks();
@@ -282,6 +312,65 @@ const AdminPanel = () => {
         description: 'حدث خطأ أثناء حذف الكتاب',
         variant: 'destructive',
       });
+    }
+  };
+
+  const openEditDialog = (book: Book) => {
+    setEditingBook(book);
+    setEditFormData({
+      title: book.title,
+      author: book.author,
+      description: book.description || '',
+      categories: book.categories || (book.category ? [book.category] : []),
+    });
+    setIsEditDialogOpen(true);
+  };
+
+  const handleEditSubmit = async () => {
+    if (!editingBook) return;
+
+    if (!editFormData.title || !editFormData.author || editFormData.categories.length === 0) {
+      toast({
+        title: 'خطأ',
+        description: 'يرجى ملء جميع الحقول المطلوبة',
+        variant: 'destructive',
+      });
+      return;
+    }
+
+    setIsSubmitting(true);
+
+    try {
+      const { error } = await supabase
+        .from('books')
+        .update({
+          title: editFormData.title,
+          author: editFormData.author,
+          description: editFormData.description || null,
+          category: editFormData.categories[0],
+          categories: editFormData.categories,
+        })
+        .eq('id', editingBook.id);
+
+      if (error) throw error;
+
+      toast({
+        title: 'تم التحديث',
+        description: 'تم تحديث بيانات الكتاب بنجاح',
+      });
+
+      setIsEditDialogOpen(false);
+      setEditingBook(null);
+      refetchBooks();
+    } catch (error) {
+      console.error('Update error:', error);
+      toast({
+        title: 'خطأ',
+        description: 'حدث خطأ أثناء تحديث الكتاب',
+        variant: 'destructive',
+      });
+    } finally {
+      setIsSubmitting(false);
     }
   };
 
@@ -361,22 +450,46 @@ const AdminPanel = () => {
                     </div>
 
                     <div className="space-y-2">
-                      <Label htmlFor="category">التصنيف *</Label>
-                      <Select
-                        value={formData.category}
-                        onValueChange={(value) => setFormData({ ...formData, category: value })}
-                      >
-                        <SelectTrigger>
-                          <SelectValue placeholder="اختر التصنيف" />
-                        </SelectTrigger>
-                        <SelectContent>
-                          {categories.map((cat) => (
-                            <SelectItem key={cat.id} value={cat.name}>
-                              {cat.icon} {cat.nameAr}
-                            </SelectItem>
+                      <Label>التصنيفات * (اختر واحد أو أكثر)</Label>
+                      <div className="border rounded-lg p-4 max-h-60 overflow-y-auto">
+                        <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
+                          {allCategories.map((cat) => (
+                            <div key={cat.id} className="flex items-center space-x-2 space-x-reverse">
+                              <Checkbox
+                                id={`cat-${cat.id}`}
+                                checked={formData.categories.includes(cat.name)}
+                                onCheckedChange={() => toggleCategory(cat.name)}
+                              />
+                              <label
+                                htmlFor={`cat-${cat.id}`}
+                                className="text-sm cursor-pointer flex items-center gap-1"
+                              >
+                                <span>{cat.icon}</span>
+                                <span>{cat.nameAr}</span>
+                              </label>
+                            </div>
                           ))}
-                        </SelectContent>
-                      </Select>
+                        </div>
+                      </div>
+                      {formData.categories.length > 0 && (
+                        <div className="flex flex-wrap gap-2 mt-2">
+                          {formData.categories.map(catName => {
+                            const cat = allCategories.find(c => c.name === catName);
+                            return cat ? (
+                              <Badge key={catName} variant="secondary" className="gap-1">
+                                {cat.icon} {cat.nameAr}
+                                <button
+                                  type="button"
+                                  onClick={() => toggleCategory(catName)}
+                                  className="ml-1 hover:text-destructive"
+                                >
+                                  <X className="h-3 w-3" />
+                                </button>
+                              </Badge>
+                            ) : null;
+                          })}
+                        </div>
+                      )}
                     </div>
 
                     <div className="space-y-2">
@@ -470,15 +583,40 @@ const AdminPanel = () => {
                           <div className="flex-1 min-w-0">
                             <p className="font-medium text-foreground truncate">{book.title}</p>
                             <p className="text-sm text-muted-foreground">{book.author}</p>
+                            <div className="flex flex-wrap gap-1 mt-1">
+                              {(book.categories || [book.category]).filter(Boolean).slice(0, 3).map(cat => {
+                                const category = allCategories.find(c => c.name === cat);
+                                return (
+                                  <Badge key={cat} variant="outline" className="text-xs">
+                                    {category?.icon} {category?.nameAr || cat}
+                                  </Badge>
+                                );
+                              })}
+                              {(book.categories?.length || 0) > 3 && (
+                                <Badge variant="outline" className="text-xs">
+                                  +{(book.categories?.length || 0) - 3}
+                                </Badge>
+                              )}
+                            </div>
                           </div>
-                          <Button
-                            variant="ghost"
-                            size="icon"
-                            className="text-destructive hover:text-destructive shrink-0"
-                            onClick={() => handleDelete(book.id)}
-                          >
-                            <Trash2 className="h-4 w-4" />
-                          </Button>
+                          <div className="flex gap-1 shrink-0">
+                            <Button
+                              variant="ghost"
+                              size="icon"
+                              className="text-primary hover:text-primary"
+                              onClick={() => openEditDialog(book)}
+                            >
+                              <Pencil className="h-4 w-4" />
+                            </Button>
+                            <Button
+                              variant="ghost"
+                              size="icon"
+                              className="text-destructive hover:text-destructive"
+                              onClick={() => handleDelete(book.id)}
+                            >
+                              <Trash2 className="h-4 w-4" />
+                            </Button>
+                          </div>
                         </div>
                       ))}
                       {(!books || books.length === 0) && (
@@ -647,6 +785,81 @@ const AdminPanel = () => {
             </Card>
           </TabsContent>
         </Tabs>
+
+        {/* Edit Book Dialog */}
+        <Dialog open={isEditDialogOpen} onOpenChange={setIsEditDialogOpen}>
+          <DialogContent className="max-w-lg max-h-[90vh] overflow-y-auto">
+            <DialogHeader>
+              <DialogTitle>تعديل الكتاب</DialogTitle>
+            </DialogHeader>
+            <div className="space-y-4 py-4">
+              <div className="space-y-2">
+                <Label htmlFor="edit-title">عنوان الكتاب *</Label>
+                <Input
+                  id="edit-title"
+                  value={editFormData.title}
+                  onChange={(e) => setEditFormData({ ...editFormData, title: e.target.value })}
+                />
+              </div>
+
+              <div className="space-y-2">
+                <Label htmlFor="edit-author">اسم المؤلف *</Label>
+                <Input
+                  id="edit-author"
+                  value={editFormData.author}
+                  onChange={(e) => setEditFormData({ ...editFormData, author: e.target.value })}
+                />
+              </div>
+
+              <div className="space-y-2">
+                <Label htmlFor="edit-description">وصف الكتاب</Label>
+                <Textarea
+                  id="edit-description"
+                  value={editFormData.description}
+                  onChange={(e) => setEditFormData({ ...editFormData, description: e.target.value })}
+                  rows={3}
+                />
+              </div>
+
+              <div className="space-y-2">
+                <Label>التصنيفات *</Label>
+                <div className="border rounded-lg p-4 max-h-48 overflow-y-auto">
+                  <div className="grid grid-cols-2 gap-3">
+                    {allCategories.map((cat) => (
+                      <div key={cat.id} className="flex items-center space-x-2 space-x-reverse">
+                        <Checkbox
+                          id={`edit-cat-${cat.id}`}
+                          checked={editFormData.categories.includes(cat.name)}
+                          onCheckedChange={() => toggleCategory(cat.name, true)}
+                        />
+                        <label
+                          htmlFor={`edit-cat-${cat.id}`}
+                          className="text-sm cursor-pointer flex items-center gap-1"
+                        >
+                          <span>{cat.icon}</span>
+                          <span>{cat.nameAr}</span>
+                        </label>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              </div>
+
+              <div className="flex gap-2 pt-4">
+                <Button onClick={handleEditSubmit} disabled={isSubmitting} className="flex-1">
+                  {isSubmitting ? (
+                    <Loader2 className="h-4 w-4 animate-spin" />
+                  ) : (
+                    'حفظ التعديلات'
+                  )}
+                </Button>
+                <Button variant="outline" onClick={() => setIsEditDialogOpen(false)}>
+                  إلغاء
+                </Button>
+              </div>
+            </div>
+          </DialogContent>
+        </Dialog>
       </div>
     </Layout>
   );
