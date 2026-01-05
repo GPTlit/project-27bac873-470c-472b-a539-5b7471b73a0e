@@ -2,9 +2,15 @@ import { Link } from 'react-router-dom';
 import { ArrowLeft } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { CategoryCard } from './CategoryCard';
-import { categories } from '@/lib/mockData';
+import { useCategories } from '@/hooks/useCategories';
+import { Skeleton } from '@/components/ui/skeleton';
 
 export const CategoriesSection = () => {
+  const { data: categories, isLoading } = useCategories();
+  
+  // Show first 10 categories on home page
+  const displayCategories = categories?.slice(0, 10) || [];
+
   return (
     <section className="section-padding bg-background">
       <div className="container-library">
@@ -15,7 +21,7 @@ export const CategoriesSection = () => {
               تصفح حسب التصنيف
             </h2>
             <p className="text-muted-foreground">
-              اختر من بين أكثر من 10 تصنيفات مختلفة
+              اختر من بين أكثر من {categories?.length || 40} تصنيف مختلف
             </p>
           </div>
           <Link to="/categories" className="hidden sm:block">
@@ -28,9 +34,15 @@ export const CategoriesSection = () => {
 
         {/* Categories Grid */}
         <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-4">
-          {categories.map((category, index) => (
-            <CategoryCard key={category.id} category={category} index={index} />
-          ))}
+          {isLoading ? (
+            Array.from({ length: 10 }).map((_, i) => (
+              <Skeleton key={i} className="h-32 rounded-2xl" />
+            ))
+          ) : (
+            displayCategories.map((category, index) => (
+              <CategoryCard key={category.id} category={category} index={index} />
+            ))
+          )}
         </div>
 
         {/* Mobile View All Button */}
