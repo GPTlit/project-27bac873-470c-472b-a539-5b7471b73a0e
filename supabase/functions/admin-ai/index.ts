@@ -1,6 +1,7 @@
 import "https://deno.land/x/xhr@0.1.0/mod.ts";
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.49.1';
+import { z } from "https://deno.land/x/zod@v3.22.4/mod.ts";
 
 const LOVABLE_API_KEY = Deno.env.get('LOVABLE_API_KEY');
 
@@ -8,6 +9,54 @@ const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
 };
+
+// Input validation schemas
+const messageSchema = z.object({
+  role: z.enum(['user', 'assistant', 'system']),
+  content: z.string().max(10000, 'Message content too long'),
+});
+
+const actionPayloadSchemas = {
+  toggle_feature: z.object({
+    feature: z.string().max(100),
+    enabled: z.boolean(),
+  }),
+  update_theme: z.object({
+    colors: z.record(z.string().max(50)).optional(),
+    fonts: z.record(z.string().max(100)).optional(),
+  }),
+  update_navigation: z.object({
+    items: z.array(z.object({
+      label: z.string().max(100),
+      href: z.string().max(200),
+    })).max(20),
+  }),
+  add_section: z.object({
+    page: z.string().max(50),
+    section: z.string().max(50),
+    section_type: z.string().max(50).optional(),
+    config: z.record(z.unknown()).optional(),
+  }),
+  remove_section: z.object({
+    page: z.string().max(50),
+    section: z.string().max(50),
+  }),
+  set_premium: z.object({
+    book_id: z.string().uuid(),
+    is_premium: z.boolean(),
+    price: z.number().min(0).max(10000).optional(),
+  }),
+};
+
+const executeActionSchema = z.object({
+  type: z.enum(['toggle_feature', 'update_theme', 'update_navigation', 'add_section', 'remove_section', 'set_premium']),
+  payload: z.record(z.unknown()),
+});
+
+const requestBodySchema = z.object({
+  messages: z.array(messageSchema).max(100, 'Too many messages'),
+  executeAction: executeActionSchema.optional(),
+});
 
 const SYSTEM_PROMPT = `You are an AI Admin Assistant for a digital library application. You can modify the app's configuration, features, and appearance by executing specific actions.
 
@@ -121,7 +170,30 @@ serve(async (req) => {
       });
     }
 
-    const { messages, executeAction } = await req.json();
+    // Parse and validate request body
+    let rawBody;
+    try {
+      rawBody = await req.json();
+    } catch {
+      return new Response(JSON.stringify({ error: 'Invalid JSON body' }), {
+        status: 400,
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+      });
+    }
+
+    const parseResult = requestBodySchema.safeParse(rawBody);
+    if (!parseResult.success) {
+      console.error('Validation error:', parseResult.error.errors);
+      return new Response(JSON.stringify({ 
+        error: 'Invalid request format', 
+        details: parseResult.error.errors.map(e => e.message).join(', ')
+      }), {
+        status: 400,
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+      });
+    }
+
+    const { messages, executeAction } = parseResult.data;
 
     // If executing an action, handle it
     if (executeAction) {
@@ -201,27 +273,44 @@ Current App Configuration:
   }
 });
 
-async function executeAdminAction(supabase: any, action: any) {
-  console.log('Executing action:', action);
+async function executeAdminAction(supabase: any, action: z.infer<typeof executeActionSchema>) {
+  console.log('Executing action:', action.type);
   
   try {
+    // Validate action payload based on type
+    const payloadSchema = actionPayloadSchemas[action.type];
+    if (!payloadSchema) {
+      return { success: false, message: 'Unknown action type' };
+    }
+
+    const payloadResult = payloadSchema.safeParse(action.payload);
+    if (!payloadResult.success) {
+      console.error('Payload validation error:', payloadResult.error.errors);
+      return { 
+        success: false, 
+        message: `Invalid payload: ${payloadResult.error.errors.map(e => e.message).join(', ')}` 
+      };
+    }
+
+    const validatedPayload = payloadResult.data;
+
     switch (action.type) {
       case 'toggle_feature': {
-        const { feature, enabled } = action.payload;
+        const payload = validatedPayload as z.infer<typeof actionPayloadSchemas.toggle_feature>;
         const { error } = await supabase
           .from('feature_toggles')
-          .update({ enabled })
-          .eq('feature_key', feature);
+          .update({ enabled: payload.enabled })
+          .eq('feature_key', payload.feature);
         
         if (error) throw error;
-        return { success: true, message: `Feature "${feature}" ${enabled ? 'enabled' : 'disabled'}` };
+        return { success: true, message: `Feature "${payload.feature}" ${payload.enabled ? 'enabled' : 'disabled'}` };
       }
 
       case 'update_theme': {
-        const { colors, fonts } = action.payload;
+        const payload = validatedPayload as z.infer<typeof actionPayloadSchemas.update_theme>;
         const updateData: any = {};
-        if (colors) updateData.colors = colors;
-        if (fonts) updateData.fonts = fonts;
+        if (payload.colors) updateData.colors = payload.colors;
+        if (payload.fonts) updateData.fonts = payload.fonts;
 
         // Get current theme and merge
         const { data: currentTheme } = await supabase
@@ -231,11 +320,11 @@ async function executeAdminAction(supabase: any, action: any) {
           .maybeSingle();
 
         if (currentTheme) {
-          if (colors) {
-            updateData.colors = { ...currentTheme.colors, ...colors };
+          if (payload.colors) {
+            updateData.colors = { ...currentTheme.colors, ...payload.colors };
           }
-          if (fonts) {
-            updateData.fonts = { ...currentTheme.fonts, ...fonts };
+          if (payload.fonts) {
+            updateData.fonts = { ...currentTheme.fonts, ...payload.fonts };
           }
 
           const { error } = await supabase
@@ -250,10 +339,10 @@ async function executeAdminAction(supabase: any, action: any) {
       }
 
       case 'update_navigation': {
-        const { items } = action.payload;
+        const payload = validatedPayload as z.infer<typeof actionPayloadSchemas.update_navigation>;
         const { error } = await supabase
           .from('navigation_config')
-          .update({ items })
+          .update({ items: payload.items })
           .eq('position', 'header');
 
         if (error) throw error;
@@ -261,45 +350,45 @@ async function executeAdminAction(supabase: any, action: any) {
       }
 
       case 'add_section': {
-        const { page, section, section_type, config = {} } = action.payload;
+        const payload = validatedPayload as z.infer<typeof actionPayloadSchemas.add_section>;
         
         // First enable the related feature if exists
         await supabase
           .from('feature_toggles')
           .update({ enabled: true })
-          .eq('feature_key', section);
+          .eq('feature_key', payload.section);
 
         const { error } = await supabase
           .from('page_sections')
           .upsert({
-            page_key: page,
-            section_key: section,
-            section_type: section_type || section,
-            config,
+            page_key: payload.page,
+            section_key: payload.section,
+            section_type: payload.section_type || payload.section,
+            config: payload.config || {},
             enabled: true,
           }, { onConflict: 'page_key,section_key' });
 
         if (error) throw error;
-        return { success: true, message: `Section "${section}" added to ${page}` };
+        return { success: true, message: `Section "${payload.section}" added to ${payload.page}` };
       }
 
       case 'remove_section': {
-        const { page, section } = action.payload;
+        const payload = validatedPayload as z.infer<typeof actionPayloadSchemas.remove_section>;
         const { error } = await supabase
           .from('page_sections')
           .update({ enabled: false })
-          .eq('page_key', page)
-          .eq('section_key', section);
+          .eq('page_key', payload.page)
+          .eq('section_key', payload.section);
 
         if (error) throw error;
-        return { success: true, message: `Section "${section}" removed from ${page}` };
+        return { success: true, message: `Section "${payload.section}" removed from ${payload.page}` };
       }
 
       case 'set_premium': {
-        const { book_id, is_premium, price = 0 } = action.payload;
+        const payload = validatedPayload as z.infer<typeof actionPayloadSchemas.set_premium>;
         
         // Enable premium feature if setting a book as premium
-        if (is_premium) {
+        if (payload.is_premium) {
           await supabase
             .from('feature_toggles')
             .update({ enabled: true })
@@ -308,11 +397,11 @@ async function executeAdminAction(supabase: any, action: any) {
 
         const { error } = await supabase
           .from('books')
-          .update({ is_premium, premium_price: price })
-          .eq('id', book_id);
+          .update({ is_premium: payload.is_premium, premium_price: payload.price || 0 })
+          .eq('id', payload.book_id);
 
         if (error) throw error;
-        return { success: true, message: `Book marked as ${is_premium ? 'premium' : 'free'}` };
+        return { success: true, message: `Book marked as ${payload.is_premium ? 'premium' : 'free'}` };
       }
 
       default:
