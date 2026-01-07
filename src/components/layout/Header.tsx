@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { Link, useLocation } from 'react-router-dom';
-import { Menu, X, Home, Grid3X3, History, Download, Upload, LogOut, Shield, Info } from 'lucide-react';
+import { Menu, X, Home, Grid3X3, History, Download, Upload, LogOut, Shield, Info, Sparkles, Users } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
 import { useAuth } from '@/contexts/AuthContext';
@@ -9,6 +9,8 @@ import { Logo } from './Logo';
 const baseNavLinks = [
   { href: '/', label: 'الرئيسية', icon: Home },
   { href: '/categories', label: 'التصنيفات', icon: Grid3X3 },
+  { href: '/author-chat', label: 'المؤلف أحمد سالم', icon: Sparkles },
+  { href: '/eterke', label: 'ETERKE', icon: Users },
   { href: '/history', label: 'تاريخ القراءة', icon: History },
   { href: '/downloads', label: 'التحميلات', icon: Download },
   { href: '/upload', label: 'أرسل كتاباً', icon: Upload },
