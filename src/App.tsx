@@ -19,6 +19,8 @@ import AdminPanel from "./pages/AdminPanel";
 import About from "./pages/About";
 import Search from "./pages/Search";
 import NotFound from "./pages/NotFound";
+import AuthorChat from "./pages/AuthorChat";
+import Eterke from "./pages/Eterke";
 
 const queryClient = new QueryClient();
 
@@ -44,6 +46,8 @@ const App = () => (
               <Route path="/admin-panel" element={<ProtectedRoute requireAdmin><AdminPanel /></ProtectedRoute>} />
               <Route path="/about" element={<ProtectedRoute><About /></ProtectedRoute>} />
               <Route path="/search" element={<ProtectedRoute><Search /></ProtectedRoute>} />
+              <Route path="/author-chat" element={<ProtectedRoute><AuthorChat /></ProtectedRoute>} />
+              <Route path="/eterke" element={<ProtectedRoute><Eterke /></ProtectedRoute>} />
               <Route path="*" element={<NotFound />} />
             </Routes>
           </BrowserRouter>

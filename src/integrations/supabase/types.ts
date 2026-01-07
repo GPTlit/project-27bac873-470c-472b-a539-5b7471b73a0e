@@ -282,6 +282,122 @@ export type Database = {
         }
         Relationships: []
       }
+      group_members: {
+        Row: {
+          group_id: string
+          id: string
+          joined_at: string
+          role: string
+          user_id: string
+        }
+        Insert: {
+          group_id: string
+          id?: string
+          joined_at?: string
+          role?: string
+          user_id: string
+        }
+        Update: {
+          group_id?: string
+          id?: string
+          joined_at?: string
+          role?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "group_members_group_id_fkey"
+            columns: ["group_id"]
+            isOneToOne: false
+            referencedRelation: "groups"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      group_messages: {
+        Row: {
+          ai_response: string | null
+          book_id: string | null
+          content: string | null
+          created_at: string
+          group_id: string
+          id: string
+          is_ai_mention: boolean | null
+          media_url: string | null
+          message_type: string
+          user_id: string
+        }
+        Insert: {
+          ai_response?: string | null
+          book_id?: string | null
+          content?: string | null
+          created_at?: string
+          group_id: string
+          id?: string
+          is_ai_mention?: boolean | null
+          media_url?: string | null
+          message_type?: string
+          user_id: string
+        }
+        Update: {
+          ai_response?: string | null
+          book_id?: string | null
+          content?: string | null
+          created_at?: string
+          group_id?: string
+          id?: string
+          is_ai_mention?: boolean | null
+          media_url?: string | null
+          message_type?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "group_messages_book_id_fkey"
+            columns: ["book_id"]
+            isOneToOne: false
+            referencedRelation: "books"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "group_messages_group_id_fkey"
+            columns: ["group_id"]
+            isOneToOne: false
+            referencedRelation: "groups"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      groups: {
+        Row: {
+          avatar_url: string | null
+          created_at: string
+          created_by: string
+          description: string | null
+          id: string
+          name: string
+          updated_at: string
+        }
+        Insert: {
+          avatar_url?: string | null
+          created_at?: string
+          created_by: string
+          description?: string | null
+          id?: string
+          name: string
+          updated_at?: string
+        }
+        Update: {
+          avatar_url?: string | null
+          created_at?: string
+          created_by?: string
+          description?: string | null
+          id?: string
+          name?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
       navigation_config: {
         Row: {
           id: string
@@ -369,6 +485,36 @@ export type Database = {
           name?: string
           spacing?: Json | null
           updated_at?: string | null
+        }
+        Relationships: []
+      }
+      user_profiles: {
+        Row: {
+          avatar_url: string | null
+          created_at: string
+          display_name: string | null
+          id: string
+          updated_at: string
+          user_id: string
+          username: string
+        }
+        Insert: {
+          avatar_url?: string | null
+          created_at?: string
+          display_name?: string | null
+          id?: string
+          updated_at?: string
+          user_id: string
+          username: string
+        }
+        Update: {
+          avatar_url?: string | null
+          created_at?: string
+          display_name?: string | null
+          id?: string
+          updated_at?: string
+          user_id?: string
+          username?: string
         }
         Relationships: []
       }
