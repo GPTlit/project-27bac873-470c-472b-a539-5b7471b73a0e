@@ -1,11 +1,12 @@
 import { useState, useRef, useEffect } from 'react';
-import { Send, Loader2, User, Sparkles, Mic, MicOff, Volume2 } from 'lucide-react';
+import { Send, Loader2, User, Sparkles, Mic, Volume2, Trash2, Square } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Layout } from '@/components/layout/Layout';
 import { cn } from '@/lib/utils';
 import { useToast } from '@/hooks/use-toast';
+import { supabase } from '@/integrations/supabase/client';
 
 interface Message {
   role: 'user' | 'assistant';
@@ -20,8 +21,18 @@ const AuthorChat = () => {
   const [isLoading, setIsLoading] = useState(false);
   const [isRecording, setIsRecording] = useState(false);
   const [isSpeaking, setIsSpeaking] = useState(false);
+  const [recordingDuration, setRecordingDuration] = useState(0);
+  const [audioBlob, setAudioBlob] = useState<Blob | null>(null);
+  const [audioLevel, setAudioLevel] = useState(0);
+  const [isTranscribing, setIsTranscribing] = useState(false);
+  
   const scrollRef = useRef<HTMLDivElement>(null);
   const mediaRecorderRef = useRef<MediaRecorder | null>(null);
+  const audioChunksRef = useRef<Blob[]>([]);
+  const recordingTimerRef = useRef<NodeJS.Timeout | null>(null);
+  const audioContextRef = useRef<AudioContext | null>(null);
+  const analyserRef = useRef<AnalyserNode | null>(null);
+  const animationFrameRef = useRef<number | null>(null);
   const { toast } = useToast();
 
   useEffect(() => {
@@ -97,10 +108,11 @@ const AuthorChat = () => {
     return assistantSoFar;
   };
 
-  const sendMessage = async () => {
-    if (!input.trim() || isLoading) return;
+  const sendMessage = async (messageText?: string) => {
+    const text = messageText || input.trim();
+    if (!text || isLoading) return;
 
-    const userMessage: Message = { role: 'user', content: input };
+    const userMessage: Message = { role: 'user', content: text };
     setMessages(prev => [...prev, userMessage]);
     setInput('');
     setIsLoading(true);
@@ -123,26 +135,46 @@ const AuthorChat = () => {
       const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
       const mediaRecorder = new MediaRecorder(stream);
       mediaRecorderRef.current = mediaRecorder;
-      
-      const audioChunks: Blob[] = [];
-      
-      mediaRecorder.ondataavailable = (event) => {
-        audioChunks.push(event.data);
+      audioChunksRef.current = [];
+
+      // Setup audio analyzer for visualization
+      audioContextRef.current = new AudioContext();
+      const source = audioContextRef.current.createMediaStreamSource(stream);
+      analyserRef.current = audioContextRef.current.createAnalyser();
+      analyserRef.current.fftSize = 256;
+      source.connect(analyserRef.current);
+
+      // Animate audio level
+      const updateLevel = () => {
+        if (analyserRef.current) {
+          const dataArray = new Uint8Array(analyserRef.current.frequencyBinCount);
+          analyserRef.current.getByteFrequencyData(dataArray);
+          const average = dataArray.reduce((a, b) => a + b, 0) / dataArray.length;
+          setAudioLevel(average / 255);
+        }
+        animationFrameRef.current = requestAnimationFrame(updateLevel);
       };
-      
+      updateLevel();
+
+      mediaRecorder.ondataavailable = (e) => audioChunksRef.current.push(e.data);
       mediaRecorder.onstop = async () => {
-        const audioBlob = new Blob(audioChunks, { type: 'audio/webm' });
-        stream.getTracks().forEach(track => track.stop());
+        stream.getTracks().forEach(t => t.stop());
+        if (animationFrameRef.current) cancelAnimationFrame(animationFrameRef.current);
+        if (audioContextRef.current) audioContextRef.current.close();
         
-        // For now, show a message that voice is recorded
-        toast({
-          title: "تم التسجيل",
-          description: "تم تسجيل صوتك بنجاح (التحويل النصي قيد التطوير)",
-        });
+        const blob = new Blob(audioChunksRef.current, { type: 'audio/webm' });
+        setAudioBlob(blob);
+        setAudioLevel(0);
       };
-      
+
       mediaRecorder.start();
       setIsRecording(true);
+      setRecordingDuration(0);
+      
+      // Start timer
+      recordingTimerRef.current = setInterval(() => {
+        setRecordingDuration(prev => prev + 1);
+      }, 1000);
     } catch (error) {
       console.error('Error accessing microphone:', error);
       toast({
@@ -154,10 +186,70 @@ const AuthorChat = () => {
   };
 
   const stopRecording = () => {
-    if (mediaRecorderRef.current && isRecording) {
-      mediaRecorderRef.current.stop();
-      setIsRecording(false);
+    if (recordingTimerRef.current) clearInterval(recordingTimerRef.current);
+    mediaRecorderRef.current?.stop();
+    setIsRecording(false);
+  };
+
+  const cancelRecording = () => {
+    if (recordingTimerRef.current) clearInterval(recordingTimerRef.current);
+    if (animationFrameRef.current) cancelAnimationFrame(animationFrameRef.current);
+    if (audioContextRef.current) audioContextRef.current.close();
+    
+    const stream = mediaRecorderRef.current?.stream;
+    stream?.getTracks().forEach(t => t.stop());
+    
+    mediaRecorderRef.current = null;
+    setIsRecording(false);
+    setAudioBlob(null);
+    setRecordingDuration(0);
+    setAudioLevel(0);
+  };
+
+  const sendVoiceMessage = async () => {
+    if (!audioBlob) return;
+    
+    setIsTranscribing(true);
+    
+    try {
+      // Transcribe audio using OpenAI
+      const arrayBuffer = await audioBlob.arrayBuffer();
+      const base64Audio = btoa(
+        new Uint8Array(arrayBuffer).reduce((data, byte) => data + String.fromCharCode(byte), '')
+      );
+
+      const transcribeResp = await supabase.functions.invoke('transcribe-audio', {
+        body: { audio: base64Audio }
+      });
+
+      if (transcribeResp.error) {
+        throw new Error(transcribeResp.error.message);
+      }
+
+      if (transcribeResp.data?.text) {
+        // Send the transcribed text as a message
+        setAudioBlob(null);
+        setRecordingDuration(0);
+        setIsTranscribing(false);
+        await sendMessage(transcribeResp.data.text);
+      } else {
+        throw new Error('لم يتم التعرف على الكلام');
+      }
+    } catch (error) {
+      console.error('Transcription error:', error);
+      toast({
+        title: "خطأ في التحويل",
+        description: error instanceof Error ? error.message : "فشل تحويل الصوت إلى نص",
+        variant: "destructive"
+      });
+      setIsTranscribing(false);
     }
+  };
+
+  const formatDuration = (seconds: number) => {
+    const mins = Math.floor(seconds / 60);
+    const secs = seconds % 60;
+    return `${mins}:${secs.toString().padStart(2, '0')}`;
   };
 
   const speakText = (text: string) => {
@@ -275,26 +367,88 @@ const AuthorChat = () => {
 
           {/* Input */}
           <div className="border-t p-6 bg-background/50">
+            {/* Recording UI */}
+            {(isRecording || audioBlob) && (
+              <div className="mb-4 flex items-center gap-3 p-3 bg-destructive/10 rounded-xl border border-destructive/20">
+                {isRecording ? (
+                  <>
+                    {/* Recording animation */}
+                    <div className="flex items-center gap-2">
+                      <div className="relative">
+                        <div className="w-3 h-3 bg-destructive rounded-full animate-pulse" />
+                        <div 
+                          className="absolute inset-0 bg-destructive rounded-full animate-ping opacity-75"
+                          style={{ transform: `scale(${1 + audioLevel * 2})` }}
+                        />
+                      </div>
+                      {/* Audio wave animation */}
+                      <div className="flex items-center gap-0.5 h-8">
+                        {[...Array(12)].map((_, i) => (
+                          <div
+                            key={i}
+                            className="w-1 bg-destructive rounded-full transition-all duration-100"
+                            style={{ 
+                              height: `${Math.max(4, (Math.sin(Date.now() / 100 + i) * 0.5 + 0.5) * audioLevel * 32)}px`,
+                              opacity: 0.5 + audioLevel * 0.5
+                            }}
+                          />
+                        ))}
+                      </div>
+                    </div>
+                    <span className="text-destructive font-mono text-sm min-w-[50px]">
+                      {formatDuration(recordingDuration)}
+                    </span>
+                    <span className="text-destructive/70 text-sm flex-1">جاري التسجيل...</span>
+                    <Button variant="ghost" size="icon" onClick={cancelRecording} className="text-destructive hover:bg-destructive/10">
+                      <Trash2 className="h-5 w-5" />
+                    </Button>
+                    <Button size="icon" onClick={stopRecording} className="bg-destructive hover:bg-destructive/90 text-destructive-foreground">
+                      <Square className="h-4 w-4" />
+                    </Button>
+                  </>
+                ) : audioBlob && (
+                  <>
+                    <Mic className="h-5 w-5 text-primary" />
+                    <span className="font-mono text-sm">{formatDuration(recordingDuration)}</span>
+                    <audio src={URL.createObjectURL(audioBlob)} controls className="flex-1 h-8" />
+                    <Button variant="ghost" size="icon" onClick={cancelRecording} className="text-destructive hover:bg-destructive/10">
+                      <Trash2 className="h-5 w-5" />
+                    </Button>
+                    <Button 
+                      size="icon" 
+                      onClick={sendVoiceMessage} 
+                      disabled={isTranscribing}
+                      className="gold-gradient"
+                    >
+                      {isTranscribing ? <Loader2 className="h-5 w-5 animate-spin" /> : <Send className="h-5 w-5" />}
+                    </Button>
+                  </>
+                )}
+              </div>
+            )}
+
             <div className="flex gap-3">
-              <Button
-                variant={isRecording ? "destructive" : "outline"}
-                size="icon"
-                onClick={isRecording ? stopRecording : startRecording}
-                className="shrink-0"
-              >
-                {isRecording ? <MicOff className="h-5 w-5" /> : <Mic className="h-5 w-5" />}
-              </Button>
+              {!audioBlob && (
+                <Button
+                  variant={isRecording ? "destructive" : "outline"}
+                  size="icon"
+                  onClick={isRecording ? stopRecording : startRecording}
+                  className="shrink-0"
+                >
+                  {isRecording ? <Square className="h-4 w-4" /> : <Mic className="h-5 w-5" />}
+                </Button>
+              )}
               <Input
                 value={input}
                 onChange={(e) => setInput(e.target.value)}
                 onKeyDown={(e) => e.key === 'Enter' && sendMessage()}
                 placeholder="اكتب رسالتك هنا..."
-                disabled={isLoading}
+                disabled={isLoading || isRecording || !!audioBlob}
                 className="flex-1 text-base"
               />
               <Button
-                onClick={sendMessage}
-                disabled={isLoading || !input.trim()}
+                onClick={() => sendMessage()}
+                disabled={isLoading || !input.trim() || isRecording || !!audioBlob}
                 size="icon"
                 className="gold-gradient hover:opacity-90 shrink-0"
               >
