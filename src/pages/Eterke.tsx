@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect, useRef, useCallback } from 'react';
 import { Layout } from '@/components/layout/Layout';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -8,7 +8,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { 
   Plus, Send, Mic, MicOff, Image, FileUp, Book, Users, 
-  Settings, Search, Check, X, Loader2, Sparkles
+  Settings, Search, Check, X, Loader2, Sparkles, Trash2, Square
 } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
@@ -78,9 +78,21 @@ const Eterke = () => {
   const [showProfileSetup, setShowProfileSetup] = useState(false);
   const [profileUsername, setProfileUsername] = useState('');
   const [profileDisplayName, setProfileDisplayName] = useState('');
+  
+  // Voice recording states
+  const [recordingDuration, setRecordingDuration] = useState(0);
+  const [audioBlob, setAudioBlob] = useState<Blob | null>(null);
+  const [audioLevel, setAudioLevel] = useState(0);
+  const [isTranscribing, setIsTranscribing] = useState(false);
+  
   const scrollRef = useRef<HTMLDivElement>(null);
   const mediaRecorderRef = useRef<MediaRecorder | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const audioChunksRef = useRef<Blob[]>([]);
+  const recordingTimerRef = useRef<NodeJS.Timeout | null>(null);
+  const audioContextRef = useRef<AudioContext | null>(null);
+  const analyserRef = useRef<AnalyserNode | null>(null);
+  const animationFrameRef = useRef<number | null>(null);
 
   // Scroll to bottom on new messages
   useEffect(() => {
@@ -397,32 +409,136 @@ const Eterke = () => {
       const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
       const mediaRecorder = new MediaRecorder(stream);
       mediaRecorderRef.current = mediaRecorder;
-      const chunks: Blob[] = [];
+      audioChunksRef.current = [];
 
-      mediaRecorder.ondataavailable = (e) => chunks.push(e.data);
+      // Setup audio analyzer for visualization
+      audioContextRef.current = new AudioContext();
+      const source = audioContextRef.current.createMediaStreamSource(stream);
+      analyserRef.current = audioContextRef.current.createAnalyser();
+      analyserRef.current.fftSize = 256;
+      source.connect(analyserRef.current);
+
+      // Animate audio level
+      const updateLevel = () => {
+        if (analyserRef.current) {
+          const dataArray = new Uint8Array(analyserRef.current.frequencyBinCount);
+          analyserRef.current.getByteFrequencyData(dataArray);
+          const average = dataArray.reduce((a, b) => a + b, 0) / dataArray.length;
+          setAudioLevel(average / 255);
+        }
+        animationFrameRef.current = requestAnimationFrame(updateLevel);
+      };
+      updateLevel();
+
+      mediaRecorder.ondataavailable = (e) => audioChunksRef.current.push(e.data);
       mediaRecorder.onstop = async () => {
         stream.getTracks().forEach(t => t.stop());
-        const blob = new Blob(chunks, { type: 'audio/webm' });
+        if (animationFrameRef.current) cancelAnimationFrame(animationFrameRef.current);
+        if (audioContextRef.current) audioContextRef.current.close();
         
-        if (!user || !selectedGroup) return;
-        const path = `${selectedGroup.id}/${user.id}/${Date.now()}.webm`;
-        const { error } = await supabase.storage.from('chat-media').upload(path, blob);
-        if (!error) {
-          const { data: { publicUrl } } = supabase.storage.from('chat-media').getPublicUrl(path);
-          sendMessage('voice', publicUrl);
-        }
+        const blob = new Blob(audioChunksRef.current, { type: 'audio/webm' });
+        setAudioBlob(blob);
+        setAudioLevel(0);
       };
 
       mediaRecorder.start();
       setIsRecording(true);
+      setRecordingDuration(0);
+      
+      // Start timer
+      recordingTimerRef.current = setInterval(() => {
+        setRecordingDuration(prev => prev + 1);
+      }, 1000);
     } catch (e) {
       toast({ title: "خطأ", description: "لا يمكن الوصول للميكروفون", variant: "destructive" });
     }
   };
 
   const stopRecording = () => {
+    if (recordingTimerRef.current) clearInterval(recordingTimerRef.current);
     mediaRecorderRef.current?.stop();
     setIsRecording(false);
+  };
+
+  const cancelRecording = () => {
+    if (recordingTimerRef.current) clearInterval(recordingTimerRef.current);
+    if (animationFrameRef.current) cancelAnimationFrame(animationFrameRef.current);
+    if (audioContextRef.current) audioContextRef.current.close();
+    
+    const stream = mediaRecorderRef.current?.stream;
+    stream?.getTracks().forEach(t => t.stop());
+    
+    mediaRecorderRef.current = null;
+    setIsRecording(false);
+    setAudioBlob(null);
+    setRecordingDuration(0);
+    setAudioLevel(0);
+  };
+
+  const sendVoiceMessage = async () => {
+    if (!audioBlob || !user || !selectedGroup) return;
+    
+    setIsTranscribing(true);
+    
+    try {
+      // Upload audio
+      const path = `${selectedGroup.id}/${user.id}/${Date.now()}.webm`;
+      const { error: uploadError } = await supabase.storage.from('chat-media').upload(path, audioBlob);
+      
+      if (uploadError) {
+        toast({ title: "خطأ", description: "فشل رفع الملف الصوتي", variant: "destructive" });
+        setIsTranscribing(false);
+        return;
+      }
+
+      const { data: { publicUrl } } = supabase.storage.from('chat-media').getPublicUrl(path);
+
+      // Transcribe audio using OpenAI
+      let transcribedText = '';
+      try {
+        const arrayBuffer = await audioBlob.arrayBuffer();
+        const base64Audio = btoa(
+          new Uint8Array(arrayBuffer).reduce((data, byte) => data + String.fromCharCode(byte), '')
+        );
+
+        const transcribeResp = await supabase.functions.invoke('transcribe-audio', {
+          body: { audio: base64Audio }
+        });
+
+        if (transcribeResp.data?.text) {
+          transcribedText = transcribeResp.data.text;
+        }
+      } catch (transcribeError) {
+        console.error('Transcription error:', transcribeError);
+      }
+
+      // Send as voice message with transcription
+      const { error } = await supabase.from('group_messages').insert({
+        group_id: selectedGroup.id,
+        user_id: user.id,
+        content: transcribedText || null,
+        message_type: 'voice',
+        media_url: publicUrl,
+        is_ai_mention: false
+      });
+
+      if (error) {
+        toast({ title: "خطأ", description: error.message, variant: "destructive" });
+      }
+    } catch (e) {
+      console.error('Send voice error:', e);
+      toast({ title: "خطأ", description: "فشل إرسال الرسالة الصوتية", variant: "destructive" });
+    }
+
+    setAudioBlob(null);
+    setRecordingDuration(0);
+    setIsTranscribing(false);
+  };
+
+  const formatDuration = (seconds: number) => {
+    const mins = Math.floor(seconds / 60);
+    const secs = seconds % 60;
+    return `${mins}:${secs.toString().padStart(2, '0')}`;
   };
 
   // Profile setup dialog
@@ -622,7 +738,12 @@ const Eterke = () => {
                             {msg.message_type === 'text' || msg.message_type === 'ai_response' ? (
                               <p className="text-sm whitespace-pre-wrap">{msg.content}</p>
                             ) : msg.message_type === 'voice' ? (
-                              <audio src={msg.media_url || ''} controls className="max-w-[200px]" />
+                              <div className="space-y-2">
+                                <audio src={msg.media_url || ''} controls className="max-w-[200px]" />
+                                {msg.content && (
+                                  <p className="text-xs opacity-80 italic">"{msg.content}"</p>
+                                )}
+                              </div>
                             ) : msg.message_type === 'image' ? (
                               <img src={msg.media_url || ''} alt="" className="max-w-[200px] rounded-lg" />
                             ) : msg.message_type === 'video' ? (
@@ -653,6 +774,66 @@ const Eterke = () => {
 
               {/* Input Area */}
               <div className="p-4 border-t bg-background/50">
+                {/* Recording UI */}
+                {(isRecording || audioBlob) && (
+                  <div className="mb-3 flex items-center gap-3 p-3 bg-destructive/10 rounded-xl border border-destructive/20">
+                    {isRecording ? (
+                      <>
+                        {/* Recording animation */}
+                        <div className="flex items-center gap-2">
+                          <div className="relative">
+                            <div className="w-3 h-3 bg-destructive rounded-full animate-pulse" />
+                            <div 
+                              className="absolute inset-0 bg-destructive rounded-full animate-ping opacity-75"
+                              style={{ transform: `scale(${1 + audioLevel * 2})` }}
+                            />
+                          </div>
+                          {/* Audio wave animation */}
+                          <div className="flex items-center gap-0.5 h-8">
+                            {[...Array(12)].map((_, i) => (
+                              <div
+                                key={i}
+                                className="w-1 bg-destructive rounded-full transition-all duration-100"
+                                style={{ 
+                                  height: `${Math.max(4, (Math.sin(Date.now() / 100 + i) * 0.5 + 0.5) * audioLevel * 32)}px`,
+                                  opacity: 0.5 + audioLevel * 0.5
+                                }}
+                              />
+                            ))}
+                          </div>
+                        </div>
+                        <span className="text-destructive font-mono text-sm min-w-[50px]">
+                          {formatDuration(recordingDuration)}
+                        </span>
+                        <span className="text-destructive/70 text-sm flex-1">جاري التسجيل...</span>
+                        <Button variant="ghost" size="icon" onClick={cancelRecording} className="text-destructive hover:bg-destructive/10">
+                          <Trash2 className="h-5 w-5" />
+                        </Button>
+                        <Button size="icon" onClick={stopRecording} className="bg-destructive hover:bg-destructive/90 text-destructive-foreground">
+                          <Square className="h-4 w-4" />
+                        </Button>
+                      </>
+                    ) : audioBlob && (
+                      <>
+                        <Mic className="h-5 w-5 text-primary" />
+                        <span className="font-mono text-sm">{formatDuration(recordingDuration)}</span>
+                        <audio src={URL.createObjectURL(audioBlob)} controls className="flex-1 h-8" />
+                        <Button variant="ghost" size="icon" onClick={cancelRecording} className="text-destructive hover:bg-destructive/10">
+                          <Trash2 className="h-5 w-5" />
+                        </Button>
+                        <Button 
+                          size="icon" 
+                          onClick={sendVoiceMessage} 
+                          disabled={isTranscribing}
+                          className="gold-gradient"
+                        >
+                          {isTranscribing ? <Loader2 className="h-5 w-5 animate-spin" /> : <Send className="h-5 w-5" />}
+                        </Button>
+                      </>
+                    )}
+                  </div>
+                )}
+
                 <div className="flex gap-2 items-center">
                   <input 
                     type="file" 
@@ -661,12 +842,12 @@ const Eterke = () => {
                     onChange={(e) => handleFileUpload(e, 'image')}
                     accept="image/*,video/*"
                   />
-                  <Button variant="ghost" size="icon" onClick={() => fileInputRef.current?.click()}>
+                  <Button variant="ghost" size="icon" onClick={() => fileInputRef.current?.click()} disabled={isRecording || !!audioBlob}>
                     <Image className="h-5 w-5" />
                   </Button>
                   <Dialog open={showBookShare} onOpenChange={setShowBookShare}>
                     <DialogTrigger asChild>
-                      <Button variant="ghost" size="icon">
+                      <Button variant="ghost" size="icon" disabled={isRecording || !!audioBlob}>
                         <Book className="h-5 w-5" />
                       </Button>
                     </DialogTrigger>
@@ -693,23 +874,28 @@ const Eterke = () => {
                       </ScrollArea>
                     </DialogContent>
                   </Dialog>
-                  <Button 
-                    variant={isRecording ? "destructive" : "ghost"} 
-                    size="icon"
-                    onClick={isRecording ? stopRecording : startRecording}
-                  >
-                    {isRecording ? <MicOff className="h-5 w-5" /> : <Mic className="h-5 w-5" />}
-                  </Button>
+                  
+                  {!audioBlob && (
+                    <Button 
+                      variant={isRecording ? "destructive" : "ghost"} 
+                      size="icon"
+                      onClick={isRecording ? stopRecording : startRecording}
+                    >
+                      {isRecording ? <Square className="h-4 w-4" /> : <Mic className="h-5 w-5" />}
+                    </Button>
+                  )}
+                  
                   <Input
                     value={newMessage}
                     onChange={(e) => setNewMessage(e.target.value)}
                     onKeyDown={(e) => e.key === 'Enter' && !e.shiftKey && sendMessage()}
                     placeholder="اكتب رسالة... (@المؤلف للتحدث مع الذكاء الاصطناعي)"
                     className="flex-1"
+                    disabled={isRecording || !!audioBlob}
                   />
                   <Button 
                     onClick={() => sendMessage()}
-                    disabled={isLoading || !newMessage.trim()}
+                    disabled={isLoading || !newMessage.trim() || isRecording || !!audioBlob}
                     size="icon"
                     className="gold-gradient"
                   >
