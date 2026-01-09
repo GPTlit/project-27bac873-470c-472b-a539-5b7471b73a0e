@@ -170,24 +170,29 @@ const Eterke = () => {
   };
 
   // Helper to get signed URL for private chat media
-  const getSignedMediaUrl = async (mediaUrl: string): Promise<string | null> => {
-    if (!mediaUrl) return null;
-    
-    // Extract the path from the full URL
-    const urlParts = mediaUrl.split('/storage/v1/object/public/chat-media/');
-    if (urlParts.length < 2) return mediaUrl; // Not a chat-media URL, return as-is
-    
-    const filePath = urlParts[1];
-    
+  // Accepts either:
+  // - a storage path: "{group_id}/{user_id}/{filename}" (preferred)
+  // - an old public URL (legacy data)
+  const getSignedMediaUrl = async (mediaRef: string): Promise<string | null> => {
+    if (!mediaRef) return null;
+
+    // Legacy: extract path from a previously-stored public URL
+    let filePath = mediaRef;
+    const legacyMarker = '/storage/v1/object/public/chat-media/';
+    if (mediaRef.includes(legacyMarker)) {
+      const parts = mediaRef.split(legacyMarker);
+      if (parts.length >= 2) filePath = parts[1];
+    }
+
     const { data, error } = await supabase.storage
       .from('chat-media')
-      .createSignedUrl(filePath, 3600); // 1 hour expiry
-    
+      .createSignedUrl(filePath, 60 * 60); // 1 hour
+
     if (error || !data?.signedUrl) {
       console.error('Failed to get signed URL:', error);
-      return mediaUrl; // Fall back to original URL
+      return null;
     }
-    
+
     return data.signedUrl;
   };
 
@@ -283,30 +288,41 @@ const Eterke = () => {
 
   const createGroup = async () => {
     if (!user || !newGroupName.trim()) return;
-    
+
     const { data: group, error } = await supabase
       .from('groups')
       .insert({
         name: newGroupName.trim(),
         description: newGroupDesc.trim() || null,
-        created_by: user.id
+        created_by: user.id,
       })
       .select()
       .single();
 
-    if (error) {
-      toast({ title: "خطأ", description: error.message, variant: "destructive" });
+    if (error || !group) {
+      toast({ title: "خطأ", description: error?.message || "فشل إنشاء المجموعة", variant: "destructive" });
       return;
     }
 
-    // Add creator as member
-    await supabase.from('group_members').insert({
+    // Add creator as member (critical: without this, the creator may not be able to see/use the group)
+    const { error: memberError } = await supabase.from('group_members').insert({
       group_id: group.id,
       user_id: user.id,
-      role: 'admin'
+      role: 'admin',
     });
 
-    setGroups(prev => [group, ...prev]);
+    if (memberError) {
+      // Try to rollback group creation so the user doesn't end up with a "ghost" group
+      await supabase.from('groups').delete().eq('id', group.id);
+      toast({
+        title: "خطأ",
+        description: "تم إنشاء المجموعة لكن فشل إضافتك كعضو. حاول مرة أخرى.",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    setGroups((prev) => [group, ...prev]);
     setSelectedGroup(group);
     setShowCreateGroup(false);
     setNewGroupName('');
@@ -435,8 +451,8 @@ const Eterke = () => {
       return;
     }
 
-    const { data: { publicUrl } } = supabase.storage.from('chat-media').getPublicUrl(path);
-    sendMessage(type, publicUrl);
+    // Bucket is private: store the storage path, and we will sign it when displaying.
+    sendMessage(type, path);
   };
 
   const shareBook = async (bookId: string) => {
@@ -515,34 +531,42 @@ const Eterke = () => {
     setAudioLevel(0);
   };
 
+  const arrayBufferToBase64 = (buffer: ArrayBuffer) => {
+    // Chunked encoding to avoid "Maximum call stack size" / memory issues
+    const bytes = new Uint8Array(buffer);
+    const chunkSize = 0x8000;
+    let binary = '';
+    for (let i = 0; i < bytes.length; i += chunkSize) {
+      const chunk = bytes.subarray(i, i + chunkSize);
+      binary += String.fromCharCode(...chunk);
+    }
+    return btoa(binary);
+  };
+
   const sendVoiceMessage = async () => {
     if (!audioBlob || !user || !selectedGroup) return;
-    
+
     setIsTranscribing(true);
-    
+
     try {
       // Upload audio
       const path = `${selectedGroup.id}/${user.id}/${Date.now()}.webm`;
       const { error: uploadError } = await supabase.storage.from('chat-media').upload(path, audioBlob);
-      
+
       if (uploadError) {
         toast({ title: "خطأ", description: "فشل رفع الملف الصوتي", variant: "destructive" });
         setIsTranscribing(false);
         return;
       }
 
-      const { data: { publicUrl } } = supabase.storage.from('chat-media').getPublicUrl(path);
-
-      // Transcribe audio using OpenAI
+      // Transcribe audio
       let transcribedText = '';
       try {
         const arrayBuffer = await audioBlob.arrayBuffer();
-        const base64Audio = btoa(
-          new Uint8Array(arrayBuffer).reduce((data, byte) => data + String.fromCharCode(byte), '')
-        );
+        const base64Audio = arrayBufferToBase64(arrayBuffer);
 
         const transcribeResp = await supabase.functions.invoke('transcribe-audio', {
-          body: { audio: base64Audio }
+          body: { audio: base64Audio },
         });
 
         if (transcribeResp.data?.text) {
@@ -552,14 +576,14 @@ const Eterke = () => {
         console.error('Transcription error:', transcribeError);
       }
 
-      // Send as voice message with transcription
+      // Store storage path (private bucket); UI will turn it into a signed URL when displaying.
       const { error } = await supabase.from('group_messages').insert({
         group_id: selectedGroup.id,
         user_id: user.id,
         content: transcribedText || null,
         message_type: 'voice',
-        media_url: publicUrl,
-        is_ai_mention: false
+        media_url: path,
+        is_ai_mention: false,
       });
 
       if (error) {
