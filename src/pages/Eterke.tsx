@@ -169,6 +169,28 @@ const Eterke = () => {
     if (data) setGroups(data);
   };
 
+  // Helper to get signed URL for private chat media
+  const getSignedMediaUrl = async (mediaUrl: string): Promise<string | null> => {
+    if (!mediaUrl) return null;
+    
+    // Extract the path from the full URL
+    const urlParts = mediaUrl.split('/storage/v1/object/public/chat-media/');
+    if (urlParts.length < 2) return mediaUrl; // Not a chat-media URL, return as-is
+    
+    const filePath = urlParts[1];
+    
+    const { data, error } = await supabase.storage
+      .from('chat-media')
+      .createSignedUrl(filePath, 3600); // 1 hour expiry
+    
+    if (error || !data?.signedUrl) {
+      console.error('Failed to get signed URL:', error);
+      return mediaUrl; // Fall back to original URL
+    }
+    
+    return data.signedUrl;
+  };
+
   const loadMessages = async (groupId: string) => {
     const { data } = await supabase
       .from('group_messages')
@@ -190,8 +212,19 @@ const Eterke = () => {
         setUserProfiles(profileMap);
       }
 
+      // Get signed URLs for media messages
+      const messagesWithSignedUrls = await Promise.all(
+        data.map(async (m) => {
+          if (m.media_url && ['voice', 'image', 'video', 'file'].includes(m.message_type)) {
+            const signedUrl = await getSignedMediaUrl(m.media_url);
+            return { ...m, media_url: signedUrl };
+          }
+          return m;
+        })
+      );
+
       // Load book info for book shares
-      const bookIds = data.filter(m => m.book_id).map(m => m.book_id);
+      const bookIds = messagesWithSignedUrls.filter(m => m.book_id).map(m => m.book_id);
       if (bookIds.length > 0) {
         const { data: booksData } = await supabase
           .from('books')
@@ -199,12 +232,12 @@ const Eterke = () => {
           .in('id', bookIds);
         
         const bookMap = new Map(booksData?.map(b => [b.id, b]) || []);
-        setMessages(data.map(m => ({
+        setMessages(messagesWithSignedUrls.map(m => ({
           ...m,
           book: m.book_id ? bookMap.get(m.book_id) : undefined
         })));
       } else {
-        setMessages(data);
+        setMessages(messagesWithSignedUrls);
       }
     }
   };
@@ -232,7 +265,14 @@ const Eterke = () => {
           }
         }
 
-        setMessages(prev => [...prev, newMsg]);
+        // Get signed URL for media messages
+        let processedMsg = newMsg;
+        if (newMsg.media_url && ['voice', 'image', 'video', 'file'].includes(newMsg.message_type)) {
+          const signedUrl = await getSignedMediaUrl(newMsg.media_url);
+          processedMsg = { ...newMsg, media_url: signedUrl };
+        }
+
+        setMessages(prev => [...prev, processedMsg]);
       })
       .subscribe();
 
