@@ -58,11 +58,11 @@ serve(async (req) => {
     formData.append('model', 'whisper-1')
     formData.append('language', 'ar') // Arabic language
 
-    // Send to OpenAI
-    const response = await fetch('https://api.openai.com/v1/audio/transcriptions', {
+    // Send to Lovable AI gateway (supports Whisper)
+    const response = await fetch('https://ai.gateway.lovable.dev/v1/audio/transcriptions', {
       method: 'POST',
       headers: {
-        'Authorization': `Bearer ${Deno.env.get('OPENAI_API_KEY')}`,
+        'Authorization': `Bearer ${Deno.env.get('LOVABLE_API_KEY')}`,
       },
       body: formData,
     })
