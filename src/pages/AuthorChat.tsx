@@ -206,20 +206,29 @@ const AuthorChat = () => {
     setAudioLevel(0);
   };
 
+  const arrayBufferToBase64 = (buffer: ArrayBuffer) => {
+    // Chunked encoding to avoid "Maximum call stack size" / memory issues
+    const bytes = new Uint8Array(buffer);
+    const chunkSize = 0x8000;
+    let binary = '';
+    for (let i = 0; i < bytes.length; i += chunkSize) {
+      const chunk = bytes.subarray(i, i + chunkSize);
+      binary += String.fromCharCode(...chunk);
+    }
+    return btoa(binary);
+  };
+
   const sendVoiceMessage = async () => {
     if (!audioBlob) return;
-    
+
     setIsTranscribing(true);
-    
+
     try {
-      // Transcribe audio using OpenAI
       const arrayBuffer = await audioBlob.arrayBuffer();
-      const base64Audio = btoa(
-        new Uint8Array(arrayBuffer).reduce((data, byte) => data + String.fromCharCode(byte), '')
-      );
+      const base64Audio = arrayBufferToBase64(arrayBuffer);
 
       const transcribeResp = await supabase.functions.invoke('transcribe-audio', {
-        body: { audio: base64Audio }
+        body: { audio: base64Audio },
       });
 
       if (transcribeResp.error) {
@@ -227,7 +236,6 @@ const AuthorChat = () => {
       }
 
       if (transcribeResp.data?.text) {
-        // Send the transcribed text as a message
         setAudioBlob(null);
         setRecordingDuration(0);
         setIsTranscribing(false);
@@ -240,7 +248,7 @@ const AuthorChat = () => {
       toast({
         title: "خطأ في التحويل",
         description: error instanceof Error ? error.message : "فشل تحويل الصوت إلى نص",
-        variant: "destructive"
+        variant: "destructive",
       });
       setIsTranscribing(false);
     }
