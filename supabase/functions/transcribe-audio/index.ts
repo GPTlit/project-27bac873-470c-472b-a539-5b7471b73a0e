@@ -21,6 +21,7 @@ serve(async (req) => {
     console.log('Received audio data, length:', audio.length)
 
     // Use Lovable AI Gateway with Gemini for audio transcription
+    // Gemini supports audio as inline_data with proper MIME type
     const response = await fetch('https://ai.gateway.lovable.dev/v1/chat/completions', {
       method: 'POST',
       headers: {
@@ -35,13 +36,12 @@ serve(async (req) => {
             content: [
               {
                 type: 'text',
-                text: 'Transcribe this audio to text. Return ONLY the transcribed text, nothing else. If the audio is in Arabic, transcribe it in Arabic. If no speech is detected, return an empty string.'
+                text: 'Listen to this audio and transcribe exactly what is being said. Output ONLY the transcribed speech text - no explanations, no descriptions, no formatting. If the speech is in Arabic, transcribe it in Arabic script. If the speech is in English, transcribe it in English. If mixed, transcribe each part in its original language. If you cannot hear any clear speech, respond with exactly: [no speech detected]'
               },
               {
-                type: 'input_audio',
-                input_audio: {
-                  data: audio,
-                  format: 'webm'
+                type: 'image_url',
+                image_url: {
+                  url: `data:audio/webm;base64,${audio}`
                 }
               }
             ]
@@ -57,12 +57,18 @@ serve(async (req) => {
     }
 
     const result = await response.json()
-    console.log('Transcription result:', result)
+    console.log('Transcription result:', JSON.stringify(result))
     
-    const transcribedText = result.choices?.[0]?.message?.content || ''
+    let transcribedText = result.choices?.[0]?.message?.content || ''
+    
+    // Clean up the response
+    transcribedText = transcribedText.trim()
+    if (transcribedText === '[no speech detected]' || transcribedText.toLowerCase().includes('no speech') || transcribedText.toLowerCase().includes('cannot hear')) {
+      transcribedText = ''
+    }
 
     return new Response(
-      JSON.stringify({ text: transcribedText.trim() }),
+      JSON.stringify({ text: transcribedText }),
       { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
     )
 

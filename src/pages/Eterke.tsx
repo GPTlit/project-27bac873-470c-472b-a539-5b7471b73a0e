@@ -4,11 +4,10 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { 
-  Plus, Send, Mic, MicOff, Image, FileUp, Book, Users, 
-  Settings, Search, Check, X, Loader2, Sparkles, Trash2, Square
+  Plus, Send, Mic, Image, FileUp, Book, Users, 
+  Loader2, Sparkles, Trash2, Square, Camera, UserPlus, X
 } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
@@ -23,6 +22,14 @@ interface Group {
   avatar_url: string | null;
   created_by: string;
   created_at: string;
+}
+
+interface GroupMember {
+  id: string;
+  user_id: string;
+  role: string;
+  username?: string;
+  display_name?: string;
 }
 
 interface GroupMessage {
@@ -69,15 +76,17 @@ const Eterke = () => {
   const [isRecording, setIsRecording] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [showCreateGroup, setShowCreateGroup] = useState(false);
-  const [showAddMember, setShowAddMember] = useState(false);
+  const [showGroupSettings, setShowGroupSettings] = useState(false);
   const [showBookShare, setShowBookShare] = useState(false);
   const [newGroupName, setNewGroupName] = useState('');
-  const [newGroupDesc, setNewGroupDesc] = useState('');
   const [memberUsername, setMemberUsername] = useState('');
+  const [groupMembers, setGroupMembers] = useState<GroupMember[]>([]);
   const [myProfile, setMyProfile] = useState<UserProfile | null>(null);
   const [showProfileSetup, setShowProfileSetup] = useState(false);
   const [profileUsername, setProfileUsername] = useState('');
   const [profileDisplayName, setProfileDisplayName] = useState('');
+  const [isCreatingGroup, setIsCreatingGroup] = useState(false);
+  const [isAddingMember, setIsAddingMember] = useState(false);
   
   // Voice recording states
   const [recordingDuration, setRecordingDuration] = useState(0);
@@ -88,6 +97,7 @@ const Eterke = () => {
   const scrollRef = useRef<HTMLDivElement>(null);
   const mediaRecorderRef = useRef<MediaRecorder | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const groupAvatarInputRef = useRef<HTMLInputElement>(null);
   const audioChunksRef = useRef<Blob[]>([]);
   const recordingTimerRef = useRef<NodeJS.Timeout | null>(null);
   const audioContextRef = useRef<AudioContext | null>(null);
@@ -114,6 +124,7 @@ const Eterke = () => {
     if (selectedGroup) {
       loadMessages(selectedGroup.id);
       subscribeToMessages(selectedGroup.id);
+      loadGroupMembers(selectedGroup.id);
     }
   }, [selectedGroup]);
 
@@ -161,22 +172,55 @@ const Eterke = () => {
 
   const loadGroups = async () => {
     if (!user) return;
-    const { data } = await supabase
-      .from('groups')
-      .select('*')
-      .order('updated_at', { ascending: false });
     
-    if (data) setGroups(data);
+    // Get groups where user is a member
+    const { data: memberGroups } = await supabase
+      .from('group_members')
+      .select('group_id')
+      .eq('user_id', user.id);
+    
+    if (memberGroups && memberGroups.length > 0) {
+      const groupIds = memberGroups.map(m => m.group_id);
+      const { data } = await supabase
+        .from('groups')
+        .select('*')
+        .in('id', groupIds)
+        .order('updated_at', { ascending: false });
+      
+      if (data) setGroups(data);
+    } else {
+      setGroups([]);
+    }
+  };
+
+  const loadGroupMembers = async (groupId: string) => {
+    const { data } = await supabase
+      .from('group_members')
+      .select('*')
+      .eq('group_id', groupId);
+    
+    if (data) {
+      // Get usernames for members
+      const userIds = data.map(m => m.user_id);
+      const { data: profiles } = await supabase
+        .from('user_profiles')
+        .select('user_id, username, display_name')
+        .in('user_id', userIds);
+      
+      const profileMap = new Map(profiles?.map(p => [p.user_id, p]) || []);
+      const membersWithNames = data.map(m => ({
+        ...m,
+        username: profileMap.get(m.user_id)?.username,
+        display_name: profileMap.get(m.user_id)?.display_name
+      }));
+      setGroupMembers(membersWithNames);
+    }
   };
 
   // Helper to get signed URL for private chat media
-  // Accepts either:
-  // - a storage path: "{group_id}/{user_id}/{filename}" (preferred)
-  // - an old public URL (legacy data)
   const getSignedMediaUrl = async (mediaRef: string): Promise<string | null> => {
     if (!mediaRef) return null;
 
-    // Legacy: extract path from a previously-stored public URL
     let filePath = mediaRef;
     const legacyMarker = '/storage/v1/object/public/chat-media/';
     if (mediaRef.includes(legacyMarker)) {
@@ -186,7 +230,7 @@ const Eterke = () => {
 
     const { data, error } = await supabase.storage
       .from('chat-media')
-      .createSignedUrl(filePath, 60 * 60); // 1 hour
+      .createSignedUrl(filePath, 60 * 60);
 
     if (error || !data?.signedUrl) {
       console.error('Failed to get signed URL:', error);
@@ -205,7 +249,6 @@ const Eterke = () => {
       .limit(100);
 
     if (data) {
-      // Load user profiles for messages
       const userIds = [...new Set(data.map(m => m.user_id))];
       const { data: profiles } = await supabase
         .from('user_profiles')
@@ -217,7 +260,6 @@ const Eterke = () => {
         setUserProfiles(profileMap);
       }
 
-      // Get signed URLs for media messages
       const messagesWithSignedUrls = await Promise.all(
         data.map(async (m) => {
           if (m.media_url && ['voice', 'image', 'video', 'file'].includes(m.message_type)) {
@@ -228,7 +270,6 @@ const Eterke = () => {
         })
       );
 
-      // Load book info for book shares
       const bookIds = messagesWithSignedUrls.filter(m => m.book_id).map(m => m.book_id);
       if (bookIds.length > 0) {
         const { data: booksData } = await supabase
@@ -258,7 +299,6 @@ const Eterke = () => {
       }, async (payload) => {
         const newMsg = payload.new as GroupMessage;
         
-        // Get user profile
         if (!userProfiles.has(newMsg.user_id)) {
           const { data } = await supabase
             .from('user_profiles')
@@ -270,7 +310,6 @@ const Eterke = () => {
           }
         }
 
-        // Get signed URL for media messages
         let processedMsg = newMsg;
         if (newMsg.media_url && ['voice', 'image', 'video', 'file'].includes(newMsg.message_type)) {
           const signedUrl = await getSignedMediaUrl(newMsg.media_url);
@@ -286,78 +325,148 @@ const Eterke = () => {
     };
   };
 
+  // Simple group creation - just name it and go!
   const createGroup = async () => {
-    if (!user || !newGroupName.trim()) return;
-
-    const { data: group, error } = await supabase
-      .from('groups')
-      .insert({
-        name: newGroupName.trim(),
-        description: newGroupDesc.trim() || null,
-        created_by: user.id,
-      })
-      .select()
-      .single();
-
-    if (error || !group) {
-      toast({ title: "خطأ", description: error?.message || "فشل إنشاء المجموعة", variant: "destructive" });
+    if (!user || !newGroupName.trim()) {
+      toast({ title: "أدخل اسم المجموعة", variant: "destructive" });
       return;
     }
 
-    // Add creator as member (critical: without this, the creator may not be able to see/use the group)
-    const { error: memberError } = await supabase.from('group_members').insert({
-      group_id: group.id,
-      user_id: user.id,
-      role: 'admin',
-    });
+    setIsCreatingGroup(true);
 
-    if (memberError) {
-      // Try to rollback group creation so the user doesn't end up with a "ghost" group
-      await supabase.from('groups').delete().eq('id', group.id);
-      toast({
-        title: "خطأ",
-        description: "تم إنشاء المجموعة لكن فشل إضافتك كعضو. حاول مرة أخرى.",
-        variant: "destructive",
+    try {
+      const { data: group, error } = await supabase
+        .from('groups')
+        .insert({
+          name: newGroupName.trim(),
+          created_by: user.id,
+        })
+        .select()
+        .single();
+
+      if (error || !group) {
+        throw new Error(error?.message || "فشل إنشاء المجموعة");
+      }
+
+      // Add creator as admin member
+      const { error: memberError } = await supabase.from('group_members').insert({
+        group_id: group.id,
+        user_id: user.id,
+        role: 'admin',
       });
-      return;
-    }
 
-    setGroups((prev) => [group, ...prev]);
-    setSelectedGroup(group);
-    setShowCreateGroup(false);
-    setNewGroupName('');
-    setNewGroupDesc('');
-    toast({ title: "تم إنشاء المجموعة بنجاح!" });
+      if (memberError) {
+        await supabase.from('groups').delete().eq('id', group.id);
+        throw new Error("فشل إضافتك كعضو");
+      }
+
+      setGroups(prev => [group, ...prev]);
+      setSelectedGroup(group);
+      setShowCreateGroup(false);
+      setNewGroupName('');
+      toast({ title: "تم إنشاء المجموعة! 🎉" });
+    } catch (e: any) {
+      toast({ title: "خطأ", description: e.message, variant: "destructive" });
+    } finally {
+      setIsCreatingGroup(false);
+    }
   };
 
+  // Add member by username
   const addMember = async () => {
     if (!selectedGroup || !memberUsername.trim()) return;
     
-    // Find user by username
-    const { data: profile } = await supabase
-      .from('user_profiles')
-      .select('user_id')
-      .eq('username', memberUsername.toLowerCase().trim())
-      .single();
+    setIsAddingMember(true);
+    
+    try {
+      const { data: profile } = await supabase
+        .from('user_profiles')
+        .select('user_id, username, display_name')
+        .eq('username', memberUsername.toLowerCase().trim())
+        .single();
 
-    if (!profile) {
-      toast({ title: "خطأ", description: "لم يتم العثور على المستخدم", variant: "destructive" });
+      if (!profile) {
+        toast({ title: "لم يتم العثور على المستخدم", description: `@${memberUsername} غير موجود`, variant: "destructive" });
+        return;
+      }
+
+      // Check if already a member
+      const existing = groupMembers.find(m => m.user_id === profile.user_id);
+      if (existing) {
+        toast({ title: "العضو موجود بالفعل", variant: "destructive" });
+        return;
+      }
+
+      const { error } = await supabase.from('group_members').insert({
+        group_id: selectedGroup.id,
+        user_id: profile.user_id,
+        role: 'member'
+      });
+
+      if (error) {
+        throw new Error(error.message);
+      }
+
+      setGroupMembers(prev => [...prev, { 
+        id: Date.now().toString(), 
+        user_id: profile.user_id, 
+        role: 'member',
+        username: profile.username,
+        display_name: profile.display_name
+      }]);
+      setMemberUsername('');
+      toast({ title: `تمت إضافة @${profile.username}! ✓` });
+    } catch (e: any) {
+      toast({ title: "خطأ", description: e.message, variant: "destructive" });
+    } finally {
+      setIsAddingMember(false);
+    }
+  };
+
+  // Upload group avatar
+  const uploadGroupAvatar = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file || !selectedGroup || !user) return;
+
+    const ext = file.name.split('.').pop();
+    const path = `group-avatars/${selectedGroup.id}.${ext}`;
+
+    const { error: uploadError } = await supabase.storage
+      .from('covers')
+      .upload(path, file, { upsert: true });
+
+    if (uploadError) {
+      toast({ title: "خطأ", description: "فشل رفع الصورة", variant: "destructive" });
       return;
     }
 
-    const { error } = await supabase.from('group_members').insert({
-      group_id: selectedGroup.id,
-      user_id: profile.user_id
-    });
+    const { data: urlData } = supabase.storage.from('covers').getPublicUrl(path);
 
-    if (error) {
-      toast({ title: "خطأ", description: "المستخدم عضو بالفعل أو حدث خطأ", variant: "destructive" });
-      return;
+    const { error: updateError } = await supabase
+      .from('groups')
+      .update({ avatar_url: urlData.publicUrl })
+      .eq('id', selectedGroup.id);
+
+    if (!updateError) {
+      setSelectedGroup(prev => prev ? { ...prev, avatar_url: urlData.publicUrl } : prev);
+      setGroups(prev => prev.map(g => g.id === selectedGroup.id ? { ...g, avatar_url: urlData.publicUrl } : g));
+      toast({ title: "تم تحديث صورة المجموعة!" });
     }
+  };
 
-    setShowAddMember(false);
-    setMemberUsername('');
-    toast({ title: "تمت إضافة العضو بنجاح!" });
+  // Remove member
+  const removeMember = async (memberId: string, userId: string) => {
+    if (!selectedGroup || userId === user?.id) return;
+
+    const { error } = await supabase
+      .from('group_members')
+      .delete()
+      .eq('id', memberId);
+
+    if (!error) {
+      setGroupMembers(prev => prev.filter(m => m.id !== memberId));
+      toast({ title: "تم إزالة العضو" });
+    }
   };
 
   const sendMessage = async (type: string = 'text', mediaUrl?: string, bookId?: string) => {
@@ -384,7 +493,6 @@ const Eterke = () => {
       setNewMessage(content);
     }
 
-    // If AI is mentioned, get response
     if (isAiMention) {
       try {
         const resp = await fetch(`${import.meta.env.VITE_SUPABASE_URL}/functions/v1/author-chat`, {
@@ -422,7 +530,7 @@ const Eterke = () => {
           if (aiResponse) {
             await supabase.from('group_messages').insert({
               group_id: selectedGroup.id,
-              user_id: user.id, // AI uses system but we track who triggered it
+              user_id: user.id,
               content: aiResponse,
               message_type: 'ai_response',
               is_ai_mention: false,
@@ -451,7 +559,6 @@ const Eterke = () => {
       return;
     }
 
-    // Bucket is private: store the storage path, and we will sign it when displaying.
     sendMessage(type, path);
   };
 
@@ -467,14 +574,12 @@ const Eterke = () => {
       mediaRecorderRef.current = mediaRecorder;
       audioChunksRef.current = [];
 
-      // Setup audio analyzer for visualization
       audioContextRef.current = new AudioContext();
       const source = audioContextRef.current.createMediaStreamSource(stream);
       analyserRef.current = audioContextRef.current.createAnalyser();
       analyserRef.current.fftSize = 256;
       source.connect(analyserRef.current);
 
-      // Animate audio level
       const updateLevel = () => {
         if (analyserRef.current) {
           const dataArray = new Uint8Array(analyserRef.current.frequencyBinCount);
@@ -501,7 +606,6 @@ const Eterke = () => {
       setIsRecording(true);
       setRecordingDuration(0);
       
-      // Start timer
       recordingTimerRef.current = setInterval(() => {
         setRecordingDuration(prev => prev + 1);
       }, 1000);
@@ -532,7 +636,6 @@ const Eterke = () => {
   };
 
   const arrayBufferToBase64 = (buffer: ArrayBuffer) => {
-    // Chunked encoding to avoid "Maximum call stack size" / memory issues
     const bytes = new Uint8Array(buffer);
     const chunkSize = 0x8000;
     let binary = '';
@@ -549,7 +652,6 @@ const Eterke = () => {
     setIsTranscribing(true);
 
     try {
-      // Upload audio
       const path = `${selectedGroup.id}/${user.id}/${Date.now()}.webm`;
       const { error: uploadError } = await supabase.storage.from('chat-media').upload(path, audioBlob);
 
@@ -559,7 +661,6 @@ const Eterke = () => {
         return;
       }
 
-      // Transcribe audio
       let transcribedText = '';
       try {
         const arrayBuffer = await audioBlob.arrayBuffer();
@@ -576,7 +677,6 @@ const Eterke = () => {
         console.error('Transcription error:', transcribeError);
       }
 
-      // Store storage path (private bucket); UI will turn it into a signed URL when displaying.
       const { error } = await supabase.from('group_messages').insert({
         group_id: selectedGroup.id,
         user_id: user.id,
@@ -657,23 +757,28 @@ const Eterke = () => {
                       <Plus className="h-5 w-5" />
                     </Button>
                   </DialogTrigger>
-                  <DialogContent dir="rtl">
+                  <DialogContent dir="rtl" className="max-w-sm">
                     <DialogHeader>
-                      <DialogTitle>إنشاء مجموعة جديدة</DialogTitle>
+                      <DialogTitle>مجموعة جديدة</DialogTitle>
                     </DialogHeader>
                     <div className="space-y-4 mt-4">
                       <Input 
                         placeholder="اسم المجموعة"
                         value={newGroupName}
                         onChange={(e) => setNewGroupName(e.target.value)}
+                        onKeyDown={(e) => e.key === 'Enter' && createGroup()}
+                        autoFocus
                       />
-                      <Input 
-                        placeholder="وصف المجموعة (اختياري)"
-                        value={newGroupDesc}
-                        onChange={(e) => setNewGroupDesc(e.target.value)}
-                      />
-                      <Button onClick={createGroup} className="w-full gold-gradient">
-                        إنشاء المجموعة
+                      <p className="text-xs text-muted-foreground">
+                        يمكنك إضافة الأعضاء والصورة بعد الإنشاء
+                      </p>
+                      <Button 
+                        onClick={createGroup} 
+                        className="w-full gold-gradient"
+                        disabled={isCreatingGroup || !newGroupName.trim()}
+                      >
+                        {isCreatingGroup ? <Loader2 className="h-4 w-4 animate-spin ml-2" /> : null}
+                        إنشاء
                       </Button>
                     </div>
                   </DialogContent>
@@ -731,33 +836,110 @@ const Eterke = () => {
                   </Avatar>
                   <div>
                     <h3 className="font-semibold">{selectedGroup.name}</h3>
-                    <p className="text-xs text-muted-foreground">{selectedGroup.description}</p>
+                    <p className="text-xs text-muted-foreground">{groupMembers.length} أعضاء</p>
                   </div>
                 </div>
-                <div className="flex gap-2">
-                  <Dialog open={showAddMember} onOpenChange={setShowAddMember}>
-                    <DialogTrigger asChild>
-                      <Button variant="ghost" size="icon">
-                        <Users className="h-5 w-5" />
-                      </Button>
-                    </DialogTrigger>
-                    <DialogContent dir="rtl">
-                      <DialogHeader>
-                        <DialogTitle>إضافة عضو</DialogTitle>
-                      </DialogHeader>
-                      <div className="space-y-4 mt-4">
-                        <Input 
-                          placeholder="اسم المستخدم"
-                          value={memberUsername}
-                          onChange={(e) => setMemberUsername(e.target.value)}
-                        />
-                        <Button onClick={addMember} className="w-full gold-gradient">
-                          إضافة
-                        </Button>
+                <Dialog open={showGroupSettings} onOpenChange={setShowGroupSettings}>
+                  <DialogTrigger asChild>
+                    <Button variant="ghost" size="icon">
+                      <Users className="h-5 w-5" />
+                    </Button>
+                  </DialogTrigger>
+                  <DialogContent dir="rtl" className="max-w-md">
+                    <DialogHeader>
+                      <DialogTitle>إعدادات المجموعة</DialogTitle>
+                    </DialogHeader>
+                    <div className="space-y-6 mt-4">
+                      {/* Group Avatar */}
+                      <div className="flex flex-col items-center gap-3">
+                        <div className="relative">
+                          <Avatar className="h-20 w-20">
+                            <AvatarImage src={selectedGroup.avatar_url || undefined} />
+                            <AvatarFallback className="gold-gradient text-primary-foreground text-2xl">
+                              {selectedGroup.name.slice(0, 2)}
+                            </AvatarFallback>
+                          </Avatar>
+                          <input 
+                            type="file" 
+                            ref={groupAvatarInputRef}
+                            className="hidden"
+                            accept="image/*"
+                            onChange={uploadGroupAvatar}
+                          />
+                          <Button 
+                            size="icon" 
+                            variant="secondary"
+                            className="absolute -bottom-1 -right-1 h-8 w-8 rounded-full"
+                            onClick={() => groupAvatarInputRef.current?.click()}
+                          >
+                            <Camera className="h-4 w-4" />
+                          </Button>
+                        </div>
+                        <p className="text-sm text-muted-foreground">انقر لتغيير الصورة</p>
                       </div>
-                    </DialogContent>
-                  </Dialog>
-                </div>
+
+                      {/* Add Member */}
+                      <div className="space-y-2">
+                        <label className="text-sm font-medium flex items-center gap-2">
+                          <UserPlus className="h-4 w-4" />
+                          إضافة عضو
+                        </label>
+                        <div className="flex gap-2">
+                          <Input 
+                            placeholder="اسم المستخدم"
+                            value={memberUsername}
+                            onChange={(e) => setMemberUsername(e.target.value)}
+                            onKeyDown={(e) => e.key === 'Enter' && addMember()}
+                          />
+                          <Button 
+                            onClick={addMember} 
+                            disabled={isAddingMember || !memberUsername.trim()}
+                            className="gold-gradient"
+                          >
+                            {isAddingMember ? <Loader2 className="h-4 w-4 animate-spin" /> : 'إضافة'}
+                          </Button>
+                        </div>
+                      </div>
+
+                      {/* Members List */}
+                      <div className="space-y-2">
+                        <label className="text-sm font-medium">الأعضاء ({groupMembers.length})</label>
+                        <ScrollArea className="h-48 border rounded-lg">
+                          {groupMembers.map((member) => (
+                            <div key={member.id} className="flex items-center justify-between p-3 hover:bg-muted">
+                              <div className="flex items-center gap-2">
+                                <Avatar className="h-8 w-8">
+                                  <AvatarFallback className="text-xs">
+                                    {member.display_name?.slice(0, 2) || member.username?.slice(0, 2) || '??'}
+                                  </AvatarFallback>
+                                </Avatar>
+                                <div>
+                                  <p className="text-sm font-medium">{member.display_name || member.username}</p>
+                                  <p className="text-xs text-muted-foreground">@{member.username}</p>
+                                </div>
+                                {member.role === 'admin' && (
+                                  <span className="text-xs bg-amber-100 dark:bg-amber-900/30 text-amber-600 dark:text-amber-400 px-2 py-0.5 rounded">
+                                    مشرف
+                                  </span>
+                                )}
+                              </div>
+                              {member.user_id !== user?.id && selectedGroup.created_by === user?.id && (
+                                <Button 
+                                  variant="ghost" 
+                                  size="icon" 
+                                  className="h-8 w-8 text-destructive hover:text-destructive"
+                                  onClick={() => removeMember(member.id, member.user_id)}
+                                >
+                                  <X className="h-4 w-4" />
+                                </Button>
+                              )}
+                            </div>
+                          ))}
+                        </ScrollArea>
+                      </div>
+                    </div>
+                  </DialogContent>
+                </Dialog>
               </div>
 
               {/* Messages */}
@@ -843,7 +1025,6 @@ const Eterke = () => {
                   <div className="mb-3 flex items-center gap-3 p-3 bg-destructive/10 rounded-xl border border-destructive/20">
                     {isRecording ? (
                       <>
-                        {/* Recording animation */}
                         <div className="flex items-center gap-2">
                           <div className="relative">
                             <div className="w-3 h-3 bg-destructive rounded-full animate-pulse" />
@@ -852,7 +1033,6 @@ const Eterke = () => {
                               style={{ transform: `scale(${1 + audioLevel * 2})` }}
                             />
                           </div>
-                          {/* Audio wave animation */}
                           <div className="flex items-center gap-0.5 h-8">
                             {[...Array(12)].map((_, i) => (
                               <div
@@ -973,7 +1153,7 @@ const Eterke = () => {
               <div>
                 <Users className="h-16 w-16 mx-auto mb-4 text-muted-foreground/50" />
                 <h3 className="text-xl font-semibold mb-2">مرحباً بك في ETERKE</h3>
-                <p className="text-muted-foreground mb-4">اختر مجموعة للبدء أو أنشئ مجموعة جديدة</p>
+                <p className="text-muted-foreground mb-4">أنشئ مجموعة وأضف أصدقاءك</p>
                 <Button onClick={() => setShowCreateGroup(true)} className="gold-gradient">
                   <Plus className="h-4 w-4 ml-2" />
                   إنشاء مجموعة
