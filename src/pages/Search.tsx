@@ -1,29 +1,28 @@
-import { useSearchParams, Link } from 'react-router-dom';
-import { Search as SearchIcon, ArrowRight } from 'lucide-react';
+import { useSearchParams, Link, useNavigate } from 'react-router-dom';
+import { Search as SearchIcon, ArrowRight, Loader2 } from 'lucide-react';
 import { Layout } from '@/components/layout/Layout';
 import { BookCard } from '@/components/books/BookCard';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { mockBooks } from '@/lib/mockData';
-import { useState } from 'react';
+import { useSearchBooks } from '@/hooks/useBooks';
+import { useState, useEffect } from 'react';
 
 const Search = () => {
   const [searchParams] = useSearchParams();
   const query = searchParams.get('q') || '';
   const [searchQuery, setSearchQuery] = useState(query);
+  const navigate = useNavigate();
 
-  const results = mockBooks.filter(
-    (book) =>
-      book.title.includes(query) ||
-      book.author.includes(query) ||
-      book.category.includes(query) ||
-      book.description.includes(query)
-  );
+  const { data: results, isLoading } = useSearchBooks(query);
+
+  useEffect(() => {
+    setSearchQuery(query);
+  }, [query]);
 
   const handleSearch = (e: React.FormEvent) => {
     e.preventDefault();
     if (searchQuery.trim()) {
-      window.location.href = `/search?q=${encodeURIComponent(searchQuery.trim())}`;
+      navigate(`/search?q=${encodeURIComponent(searchQuery.trim())}`);
     }
   };
 
@@ -54,23 +53,35 @@ const Search = () => {
           </form>
 
           {/* Results Header */}
-          <div className="mb-8">
-            <h1 className="text-2xl font-bold text-foreground mb-2">
-              نتائج البحث عن "{query}"
-            </h1>
-            <p className="text-muted-foreground">
-              تم العثور على {results.length} نتيجة
-            </p>
-          </div>
+          {query && (
+            <div className="mb-8">
+              <h1 className="text-2xl font-bold text-foreground mb-2">
+                نتائج البحث عن "{query}"
+              </h1>
+              <p className="text-muted-foreground">
+                {isLoading ? 'جاري البحث...' : `تم العثور على ${results?.length || 0} نتيجة`}
+              </p>
+            </div>
+          )}
+
+          {/* Loading State */}
+          {isLoading && (
+            <div className="flex justify-center py-16">
+              <Loader2 className="h-8 w-8 animate-spin text-primary" />
+            </div>
+          )}
 
           {/* Results Grid */}
-          {results.length > 0 ? (
+          {!isLoading && results && results.length > 0 && (
             <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-6">
               {results.map((book, index) => (
                 <BookCard key={book.id} book={book} index={index} />
               ))}
             </div>
-          ) : (
+          )}
+
+          {/* No Results */}
+          {!isLoading && query && (!results || results.length === 0) && (
             <div className="text-center py-16">
               <div className="text-6xl mb-6">🔍</div>
               <h2 className="text-xl font-bold text-foreground mb-2">
@@ -85,6 +96,19 @@ const Search = () => {
                   العودة للرئيسية
                 </Button>
               </Link>
+            </div>
+          )}
+
+          {/* Initial State - No Query */}
+          {!query && (
+            <div className="text-center py-16">
+              <div className="text-6xl mb-6">📚</div>
+              <h2 className="text-xl font-bold text-foreground mb-2">
+                ابحث في مكتبتنا
+              </h2>
+              <p className="text-muted-foreground">
+                اكتب اسم الكتاب أو المؤلف أو التصنيف للبحث
+              </p>
             </div>
           )}
         </div>
