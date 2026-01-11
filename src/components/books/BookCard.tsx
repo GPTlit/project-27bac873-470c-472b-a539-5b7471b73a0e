@@ -1,13 +1,30 @@
 import { Link } from 'react-router-dom';
-import { Book } from '@/lib/types';
 import { cn } from '@/lib/utils';
+import { Book as MockBook } from '@/lib/types';
+import { Book as DbBook } from '@/hooks/useBooks';
+
+// Accept both the mock Book type and database Book type
+type AnyBook = MockBook | DbBook | {
+  id: string;
+  title: string;
+  author: string;
+  coverUrl?: string;
+  cover_url?: string | null;
+  featured?: boolean;
+  category?: string;
+};
 
 interface BookCardProps {
-  book: Book;
+  book: AnyBook;
   index?: number;
 }
 
 export const BookCard = ({ book, index = 0 }: BookCardProps) => {
+  // Handle both coverUrl (mock) and cover_url (database)
+  const coverImage = ('coverUrl' in book && book.coverUrl) || 
+                     ('cover_url' in book && book.cover_url) || 
+                     '/placeholder.svg';
+  
   return (
     <Link
       to={`/book/${book.id}`}
@@ -21,7 +38,7 @@ export const BookCard = ({ book, index = 0 }: BookCardProps) => {
           "book-shadow book-hover"
         )}>
           <img
-            src={book.coverUrl}
+            src={coverImage}
             alt={book.title}
             className="w-full h-full object-cover"
           />
@@ -34,7 +51,7 @@ export const BookCard = ({ book, index = 0 }: BookCardProps) => {
           </div>
 
           {/* Featured Badge */}
-          {book.featured && (
+          {'featured' in book && book.featured && (
             <div className="absolute top-3 right-3 px-2 py-1 rounded-md gold-gradient text-xs font-medium text-primary-foreground">
               مميز
             </div>
