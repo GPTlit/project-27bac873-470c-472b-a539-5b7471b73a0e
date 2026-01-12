@@ -455,6 +455,80 @@ export type Database = {
         }
         Relationships: []
       }
+      private_conversations: {
+        Row: {
+          created_at: string
+          id: string
+          updated_at: string
+          user1_id: string
+          user2_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          updated_at?: string
+          user1_id: string
+          user2_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          updated_at?: string
+          user1_id?: string
+          user2_id?: string
+        }
+        Relationships: []
+      }
+      private_messages: {
+        Row: {
+          ai_response: string | null
+          book_id: string | null
+          content: string | null
+          conversation_id: string
+          created_at: string
+          id: string
+          is_ai_mention: boolean | null
+          is_read: boolean | null
+          media_url: string | null
+          message_type: string
+          sender_id: string
+        }
+        Insert: {
+          ai_response?: string | null
+          book_id?: string | null
+          content?: string | null
+          conversation_id: string
+          created_at?: string
+          id?: string
+          is_ai_mention?: boolean | null
+          is_read?: boolean | null
+          media_url?: string | null
+          message_type?: string
+          sender_id: string
+        }
+        Update: {
+          ai_response?: string | null
+          book_id?: string | null
+          content?: string | null
+          conversation_id?: string
+          created_at?: string
+          id?: string
+          is_ai_mention?: boolean | null
+          is_read?: boolean | null
+          media_url?: string | null
+          message_type?: string
+          sender_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "private_messages_conversation_id_fkey"
+            columns: ["conversation_id"]
+            isOneToOne: false
+            referencedRelation: "private_conversations"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       theme_config: {
         Row: {
           colors: Json | null
