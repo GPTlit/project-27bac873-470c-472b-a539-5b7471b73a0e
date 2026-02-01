@@ -17,7 +17,8 @@ import { supabase } from '@/integrations/supabase/client';
 import { useFeatureToggles, useActiveTheme, useInvalidateConfig } from '@/hooks/useAppConfig';
 import { useBooks, Book } from '@/hooks/useBooks';
 import { allCategories } from '@/hooks/useCategories';
-import { Bot, Send, Loader2, Settings, Palette, ToggleLeft, Sparkles, Upload, FileText, Image, Save, Trash2, Pencil, X } from 'lucide-react';
+import { StoreManagement } from '@/components/admin/StoreManagement';
+import { Bot, Send, Loader2, Settings, Palette, ToggleLeft, Sparkles, Upload, FileText, Image, Save, Trash2, Pencil, X, ShoppingBag } from 'lucide-react';
 
 interface ChatMessage {
   role: 'user' | 'assistant';
@@ -393,6 +394,10 @@ const AdminPanel = () => {
               <Upload className="h-4 w-4" />
               رفع الكتب
             </TabsTrigger>
+            <TabsTrigger value="store" className="flex items-center gap-2 px-4 py-2">
+              <ShoppingBag className="h-4 w-4" />
+              المتجر
+            </TabsTrigger>
             <TabsTrigger value="ai" className="flex items-center gap-2 px-4 py-2">
               <Bot className="h-4 w-4" />
               المساعد الذكي
@@ -406,6 +411,15 @@ const AdminPanel = () => {
               المظهر
             </TabsTrigger>
           </TabsList>
+
+          {/* Store Management Tab */}
+          <TabsContent value="store">
+            <Card>
+              <CardContent className="p-6">
+                <StoreManagement />
+              </CardContent>
+            </Card>
+          </TabsContent>
 
           {/* Book Upload Tab */}
           <TabsContent value="upload">

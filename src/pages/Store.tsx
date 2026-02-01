@@ -1,0 +1,321 @@
+import { useState } from 'react';
+import { Layout } from '@/components/layout/Layout';
+import { Card, CardContent } from '@/components/ui/card';
+import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+import { Badge } from '@/components/ui/badge';
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
+import { Label } from '@/components/ui/label';
+import { Textarea } from '@/components/ui/textarea';
+import { useStoreProducts, StoreProduct, useCreateOrder } from '@/hooks/useStoreProducts';
+import { useToast } from '@/hooks/use-toast';
+import { ShoppingBag, Search, ShoppingCart, BookOpen, Loader2 } from 'lucide-react';
+import { allCategories } from '@/hooks/useCategories';
+
+const Store = () => {
+  const { data: products, isLoading } = useStoreProducts();
+  const { toast } = useToast();
+  const createOrder = useCreateOrder();
+  const [searchQuery, setSearchQuery] = useState('');
+  const [selectedCategory, setSelectedCategory] = useState<string | null>(null);
+  const [selectedProduct, setSelectedProduct] = useState<StoreProduct | null>(null);
+  const [isOrderDialogOpen, setIsOrderDialogOpen] = useState(false);
+  const [orderForm, setOrderForm] = useState({
+    customerName: '',
+    customerPhone: '',
+    customerAddress: '',
+    notes: '',
+    quantity: 1,
+  });
+
+  const filteredProducts = products?.filter(product => {
+    const matchesSearch = product.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      product.author?.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      product.description?.toLowerCase().includes(searchQuery.toLowerCase());
+    const matchesCategory = !selectedCategory || product.category === selectedCategory;
+    return matchesSearch && matchesCategory;
+  });
+
+  const handleOrder = async () => {
+    if (!selectedProduct) return;
+    
+    if (!orderForm.customerName || !orderForm.customerPhone) {
+      toast({
+        title: 'خطأ',
+        description: 'يرجى إدخال الاسم ورقم الهاتف',
+        variant: 'destructive',
+      });
+      return;
+    }
+
+    try {
+      await createOrder.mutateAsync({
+        product_id: selectedProduct.id,
+        quantity: orderForm.quantity,
+        total_price: selectedProduct.price * orderForm.quantity,
+        customer_name: orderForm.customerName,
+        customer_phone: orderForm.customerPhone,
+        customer_address: orderForm.customerAddress,
+        notes: orderForm.notes,
+      });
+
+      toast({
+        title: 'تم الطلب بنجاح',
+        description: 'سيتم التواصل معك قريباً لتأكيد الطلب',
+      });
+
+      setIsOrderDialogOpen(false);
+      setSelectedProduct(null);
+      setOrderForm({
+        customerName: '',
+        customerPhone: '',
+        customerAddress: '',
+        notes: '',
+        quantity: 1,
+      });
+    } catch (error) {
+      toast({
+        title: 'خطأ',
+        description: 'حدث خطأ أثناء إرسال الطلب',
+        variant: 'destructive',
+      });
+    }
+  };
+
+  const openOrderDialog = (product: StoreProduct) => {
+    setSelectedProduct(product);
+    setIsOrderDialogOpen(true);
+  };
+
+  const getCategoryName = (categoryKey: string) => {
+    const cat = allCategories.find(c => c.name === categoryKey);
+    return cat ? `${cat.icon} ${cat.nameAr}` : categoryKey;
+  };
+
+  return (
+    <Layout>
+      <div className="section-padding">
+        <div className="container-library">
+          {/* Header */}
+          <div className="text-center mb-12">
+            <div className="inline-flex h-16 w-16 items-center justify-center rounded-2xl gold-gradient mb-6">
+              <ShoppingBag className="h-8 w-8 text-primary-foreground" />
+            </div>
+            <h1 className="text-3xl md:text-4xl font-bold text-foreground mb-4">
+              متجر الكتب
+            </h1>
+            <p className="text-muted-foreground max-w-md mx-auto">
+              اشترِ الكتب الورقية واستلمها في منزلك
+            </p>
+          </div>
+
+          {/* Search and Filter */}
+          <div className="flex flex-col md:flex-row gap-4 mb-8">
+            <div className="relative flex-1">
+              <Search className="absolute right-3 top-1/2 -translate-y-1/2 h-5 w-5 text-muted-foreground" />
+              <Input
+                placeholder="ابحث عن كتاب..."
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                className="pr-10"
+              />
+            </div>
+            <div className="flex flex-wrap gap-2">
+              <Button
+                variant={selectedCategory === null ? 'default' : 'outline'}
+                size="sm"
+                onClick={() => setSelectedCategory(null)}
+              >
+                الكل
+              </Button>
+              {allCategories.slice(0, 5).map(cat => (
+                <Button
+                  key={cat.id}
+                  variant={selectedCategory === cat.name ? 'default' : 'outline'}
+                  size="sm"
+                  onClick={() => setSelectedCategory(cat.name)}
+                >
+                  {cat.icon} {cat.nameAr}
+                </Button>
+              ))}
+            </div>
+          </div>
+
+          {/* Products Grid */}
+          {isLoading ? (
+            <div className="flex items-center justify-center py-20">
+              <Loader2 className="h-8 w-8 animate-spin text-primary" />
+            </div>
+          ) : filteredProducts && filteredProducts.length > 0 ? (
+            <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-4 md:gap-6">
+              {filteredProducts.map((product) => (
+                <Card key={product.id} className="group hover:shadow-lg transition-all duration-300 overflow-hidden">
+                  <div className="relative aspect-[3/4] bg-muted">
+                    {product.cover_url ? (
+                      <img
+                        src={product.cover_url}
+                        alt={product.title}
+                        className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
+                      />
+                    ) : (
+                      <div className="flex items-center justify-center h-full">
+                        <BookOpen className="h-12 w-12 text-muted-foreground" />
+                      </div>
+                    )}
+                    <Badge className="absolute top-2 left-2 bg-primary text-primary-foreground">
+                      {product.price} MRU
+                    </Badge>
+                  </div>
+                  <CardContent className="p-4">
+                    <h3 className="font-semibold text-sm line-clamp-2 mb-1">
+                      {product.title}
+                    </h3>
+                    {product.author && (
+                      <p className="text-xs text-muted-foreground mb-2">
+                        {product.author}
+                      </p>
+                    )}
+                    <Badge variant="secondary" className="text-xs mb-3">
+                      {getCategoryName(product.category)}
+                    </Badge>
+                    <Button
+                      variant="gold"
+                      size="sm"
+                      className="w-full gap-2"
+                      onClick={() => openOrderDialog(product)}
+                    >
+                      <ShoppingCart className="h-4 w-4" />
+                      اطلب الآن
+                    </Button>
+                  </CardContent>
+                </Card>
+              ))}
+            </div>
+          ) : (
+            <div className="text-center py-20">
+              <ShoppingBag className="h-16 w-16 text-muted-foreground mx-auto mb-4" />
+              <h2 className="text-xl font-semibold mb-2">لا توجد منتجات</h2>
+              <p className="text-muted-foreground">
+                {searchQuery ? 'لم يتم العثور على نتائج للبحث' : 'لم تتم إضافة منتجات بعد'}
+              </p>
+            </div>
+          )}
+        </div>
+      </div>
+
+      {/* Order Dialog */}
+      <Dialog open={isOrderDialogOpen} onOpenChange={setIsOrderDialogOpen}>
+        <DialogContent className="max-w-md">
+          <DialogHeader>
+            <DialogTitle>طلب كتاب</DialogTitle>
+          </DialogHeader>
+          {selectedProduct && (
+            <div className="space-y-4">
+              <div className="flex gap-4 p-4 bg-muted rounded-lg">
+                {selectedProduct.cover_url ? (
+                  <img
+                    src={selectedProduct.cover_url}
+                    alt={selectedProduct.title}
+                    className="w-16 h-20 object-cover rounded"
+                  />
+                ) : (
+                  <div className="w-16 h-20 bg-background rounded flex items-center justify-center">
+                    <BookOpen className="h-6 w-6 text-muted-foreground" />
+                  </div>
+                )}
+                <div>
+                  <h3 className="font-semibold">{selectedProduct.title}</h3>
+                  {selectedProduct.author && (
+                    <p className="text-sm text-muted-foreground">{selectedProduct.author}</p>
+                  )}
+                  <p className="text-primary font-bold mt-1">
+                    {selectedProduct.price} MRU
+                  </p>
+                </div>
+              </div>
+
+              <div className="space-y-4">
+                <div className="space-y-2">
+                  <Label htmlFor="customerName">الاسم الكامل *</Label>
+                  <Input
+                    id="customerName"
+                    placeholder="أدخل اسمك الكامل"
+                    value={orderForm.customerName}
+                    onChange={(e) => setOrderForm({ ...orderForm, customerName: e.target.value })}
+                  />
+                </div>
+
+                <div className="space-y-2">
+                  <Label htmlFor="customerPhone">رقم الهاتف *</Label>
+                  <Input
+                    id="customerPhone"
+                    placeholder="أدخل رقم هاتفك"
+                    value={orderForm.customerPhone}
+                    onChange={(e) => setOrderForm({ ...orderForm, customerPhone: e.target.value })}
+                  />
+                </div>
+
+                <div className="space-y-2">
+                  <Label htmlFor="customerAddress">العنوان</Label>
+                  <Input
+                    id="customerAddress"
+                    placeholder="أدخل عنوانك للتوصيل"
+                    value={orderForm.customerAddress}
+                    onChange={(e) => setOrderForm({ ...orderForm, customerAddress: e.target.value })}
+                  />
+                </div>
+
+                <div className="space-y-2">
+                  <Label htmlFor="quantity">الكمية</Label>
+                  <Input
+                    id="quantity"
+                    type="number"
+                    min={1}
+                    value={orderForm.quantity}
+                    onChange={(e) => setOrderForm({ ...orderForm, quantity: parseInt(e.target.value) || 1 })}
+                  />
+                </div>
+
+                <div className="space-y-2">
+                  <Label htmlFor="notes">ملاحظات</Label>
+                  <Textarea
+                    id="notes"
+                    placeholder="أي ملاحظات إضافية..."
+                    value={orderForm.notes}
+                    onChange={(e) => setOrderForm({ ...orderForm, notes: e.target.value })}
+                    rows={2}
+                  />
+                </div>
+
+                <div className="p-4 bg-muted rounded-lg">
+                  <div className="flex justify-between items-center">
+                    <span className="font-medium">الإجمالي:</span>
+                    <span className="text-xl font-bold text-primary">
+                      {selectedProduct.price * orderForm.quantity} MRU
+                    </span>
+                  </div>
+                </div>
+
+                <Button
+                  variant="gold"
+                  className="w-full gap-2"
+                  onClick={handleOrder}
+                  disabled={createOrder.isPending}
+                >
+                  {createOrder.isPending ? (
+                    <Loader2 className="h-4 w-4 animate-spin" />
+                  ) : (
+                    <ShoppingCart className="h-4 w-4" />
+                  )}
+                  تأكيد الطلب
+                </Button>
+              </div>
+            </div>
+          )}
+        </DialogContent>
+      </Dialog>
+    </Layout>
+  );
+};
+
+export default Store;

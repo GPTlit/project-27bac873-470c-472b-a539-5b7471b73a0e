@@ -529,6 +529,107 @@ export type Database = {
           },
         ]
       }
+      store_orders: {
+        Row: {
+          created_at: string
+          customer_address: string | null
+          customer_name: string | null
+          customer_phone: string | null
+          id: string
+          notes: string | null
+          product_id: string
+          quantity: number
+          status: string
+          total_price: number
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          customer_address?: string | null
+          customer_name?: string | null
+          customer_phone?: string | null
+          id?: string
+          notes?: string | null
+          product_id: string
+          quantity?: number
+          status?: string
+          total_price: number
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          customer_address?: string | null
+          customer_name?: string | null
+          customer_phone?: string | null
+          id?: string
+          notes?: string | null
+          product_id?: string
+          quantity?: number
+          status?: string
+          total_price?: number
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "store_orders_product_id_fkey"
+            columns: ["product_id"]
+            isOneToOne: false
+            referencedRelation: "store_products"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      store_products: {
+        Row: {
+          author: string | null
+          category: string
+          cover_url: string | null
+          created_at: string
+          created_by: string | null
+          currency: string
+          description: string | null
+          id: string
+          is_available: boolean | null
+          price: number
+          stock_quantity: number | null
+          title: string
+          updated_at: string
+        }
+        Insert: {
+          author?: string | null
+          category: string
+          cover_url?: string | null
+          created_at?: string
+          created_by?: string | null
+          currency?: string
+          description?: string | null
+          id?: string
+          is_available?: boolean | null
+          price: number
+          stock_quantity?: number | null
+          title: string
+          updated_at?: string
+        }
+        Update: {
+          author?: string | null
+          category?: string
+          cover_url?: string | null
+          created_at?: string
+          created_by?: string | null
+          currency?: string
+          description?: string | null
+          id?: string
+          is_available?: boolean | null
+          price?: number
+          stock_quantity?: number | null
+          title?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
       theme_config: {
         Row: {
           colors: Json | null
