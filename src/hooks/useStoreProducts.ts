@@ -108,6 +108,9 @@ export const useCreateOrder = () => {
       customer_phone?: string;
       customer_address?: string;
       notes?: string;
+      payment_method?: string;
+      receipt_url?: string;
+      whatsapp_number?: string;
     }) => {
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) throw new Error('Not authenticated');

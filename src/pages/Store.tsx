@@ -1,86 +1,31 @@
-import { useState } from 'react';
+import { useState, useMemo } from 'react';
 import { Layout } from '@/components/layout/Layout';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
-import { Label } from '@/components/ui/label';
-import { Textarea } from '@/components/ui/textarea';
-import { useStoreProducts, StoreProduct, useCreateOrder } from '@/hooks/useStoreProducts';
-import { useToast } from '@/hooks/use-toast';
+import { useStoreProducts, StoreProduct } from '@/hooks/useStoreProducts';
+import { OrderDialog } from '@/components/store/OrderDialog';
 import { ShoppingBag, Search, ShoppingCart, BookOpen, Loader2 } from 'lucide-react';
 import { allCategories } from '@/hooks/useCategories';
 
 const Store = () => {
   const { data: products, isLoading } = useStoreProducts();
-  const { toast } = useToast();
-  const createOrder = useCreateOrder();
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedCategory, setSelectedCategory] = useState<string | null>(null);
   const [selectedProduct, setSelectedProduct] = useState<StoreProduct | null>(null);
   const [isOrderDialogOpen, setIsOrderDialogOpen] = useState(false);
-  const [orderForm, setOrderForm] = useState({
-    customerName: '',
-    customerPhone: '',
-    customerAddress: '',
-    notes: '',
-    quantity: 1,
-  });
 
-  const filteredProducts = products?.filter(product => {
-    const matchesSearch = product.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      product.author?.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      product.description?.toLowerCase().includes(searchQuery.toLowerCase());
-    const matchesCategory = !selectedCategory || product.category === selectedCategory;
-    return matchesSearch && matchesCategory;
-  });
-
-  const handleOrder = async () => {
-    if (!selectedProduct) return;
-    
-    if (!orderForm.customerName || !orderForm.customerPhone) {
-      toast({
-        title: 'خطأ',
-        description: 'يرجى إدخال الاسم ورقم الهاتف',
-        variant: 'destructive',
-      });
-      return;
-    }
-
-    try {
-      await createOrder.mutateAsync({
-        product_id: selectedProduct.id,
-        quantity: orderForm.quantity,
-        total_price: selectedProduct.price * orderForm.quantity,
-        customer_name: orderForm.customerName,
-        customer_phone: orderForm.customerPhone,
-        customer_address: orderForm.customerAddress,
-        notes: orderForm.notes,
-      });
-
-      toast({
-        title: 'تم الطلب بنجاح',
-        description: 'سيتم التواصل معك قريباً لتأكيد الطلب',
-      });
-
-      setIsOrderDialogOpen(false);
-      setSelectedProduct(null);
-      setOrderForm({
-        customerName: '',
-        customerPhone: '',
-        customerAddress: '',
-        notes: '',
-        quantity: 1,
-      });
-    } catch (error) {
-      toast({
-        title: 'خطأ',
-        description: 'حدث خطأ أثناء إرسال الطلب',
-        variant: 'destructive',
-      });
-    }
-  };
+  const filteredProducts = useMemo(() => {
+    if (!products) return [];
+    return products.filter(product => {
+      const matchesSearch = product.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
+        product.author?.toLowerCase().includes(searchQuery.toLowerCase()) ||
+        product.description?.toLowerCase().includes(searchQuery.toLowerCase());
+      const matchesCategory = !selectedCategory || product.category === selectedCategory;
+      return matchesSearch && matchesCategory;
+    });
+  }, [products, searchQuery, selectedCategory]);
 
   const openOrderDialog = (product: StoreProduct) => {
     setSelectedProduct(product);
@@ -146,7 +91,7 @@ const Store = () => {
             <div className="flex items-center justify-center py-20">
               <Loader2 className="h-8 w-8 animate-spin text-primary" />
             </div>
-          ) : filteredProducts && filteredProducts.length > 0 ? (
+          ) : filteredProducts.length > 0 ? (
             <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-4 md:gap-6">
               {filteredProducts.map((product) => (
                 <Card key={product.id} className="group hover:shadow-lg transition-all duration-300 overflow-hidden">
@@ -204,116 +149,11 @@ const Store = () => {
       </div>
 
       {/* Order Dialog */}
-      <Dialog open={isOrderDialogOpen} onOpenChange={setIsOrderDialogOpen}>
-        <DialogContent className="max-w-md">
-          <DialogHeader>
-            <DialogTitle>طلب كتاب</DialogTitle>
-          </DialogHeader>
-          {selectedProduct && (
-            <div className="space-y-4">
-              <div className="flex gap-4 p-4 bg-muted rounded-lg">
-                {selectedProduct.cover_url ? (
-                  <img
-                    src={selectedProduct.cover_url}
-                    alt={selectedProduct.title}
-                    className="w-16 h-20 object-cover rounded"
-                  />
-                ) : (
-                  <div className="w-16 h-20 bg-background rounded flex items-center justify-center">
-                    <BookOpen className="h-6 w-6 text-muted-foreground" />
-                  </div>
-                )}
-                <div>
-                  <h3 className="font-semibold">{selectedProduct.title}</h3>
-                  {selectedProduct.author && (
-                    <p className="text-sm text-muted-foreground">{selectedProduct.author}</p>
-                  )}
-                  <p className="text-primary font-bold mt-1">
-                    {selectedProduct.price} MRU
-                  </p>
-                </div>
-              </div>
-
-              <div className="space-y-4">
-                <div className="space-y-2">
-                  <Label htmlFor="customerName">الاسم الكامل *</Label>
-                  <Input
-                    id="customerName"
-                    placeholder="أدخل اسمك الكامل"
-                    value={orderForm.customerName}
-                    onChange={(e) => setOrderForm({ ...orderForm, customerName: e.target.value })}
-                  />
-                </div>
-
-                <div className="space-y-2">
-                  <Label htmlFor="customerPhone">رقم الهاتف *</Label>
-                  <Input
-                    id="customerPhone"
-                    placeholder="أدخل رقم هاتفك"
-                    value={orderForm.customerPhone}
-                    onChange={(e) => setOrderForm({ ...orderForm, customerPhone: e.target.value })}
-                  />
-                </div>
-
-                <div className="space-y-2">
-                  <Label htmlFor="customerAddress">العنوان</Label>
-                  <Input
-                    id="customerAddress"
-                    placeholder="أدخل عنوانك للتوصيل"
-                    value={orderForm.customerAddress}
-                    onChange={(e) => setOrderForm({ ...orderForm, customerAddress: e.target.value })}
-                  />
-                </div>
-
-                <div className="space-y-2">
-                  <Label htmlFor="quantity">الكمية</Label>
-                  <Input
-                    id="quantity"
-                    type="number"
-                    min={1}
-                    value={orderForm.quantity}
-                    onChange={(e) => setOrderForm({ ...orderForm, quantity: parseInt(e.target.value) || 1 })}
-                  />
-                </div>
-
-                <div className="space-y-2">
-                  <Label htmlFor="notes">ملاحظات</Label>
-                  <Textarea
-                    id="notes"
-                    placeholder="أي ملاحظات إضافية..."
-                    value={orderForm.notes}
-                    onChange={(e) => setOrderForm({ ...orderForm, notes: e.target.value })}
-                    rows={2}
-                  />
-                </div>
-
-                <div className="p-4 bg-muted rounded-lg">
-                  <div className="flex justify-between items-center">
-                    <span className="font-medium">الإجمالي:</span>
-                    <span className="text-xl font-bold text-primary">
-                      {selectedProduct.price * orderForm.quantity} MRU
-                    </span>
-                  </div>
-                </div>
-
-                <Button
-                  variant="gold"
-                  className="w-full gap-2"
-                  onClick={handleOrder}
-                  disabled={createOrder.isPending}
-                >
-                  {createOrder.isPending ? (
-                    <Loader2 className="h-4 w-4 animate-spin" />
-                  ) : (
-                    <ShoppingCart className="h-4 w-4" />
-                  )}
-                  تأكيد الطلب
-                </Button>
-              </div>
-            </div>
-          )}
-        </DialogContent>
-      </Dialog>
+      <OrderDialog
+        open={isOrderDialogOpen}
+        onOpenChange={setIsOrderDialogOpen}
+        product={selectedProduct}
+      />
     </Layout>
   );
 };
