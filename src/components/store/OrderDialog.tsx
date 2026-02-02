@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -9,7 +9,7 @@ import { PaymentMethodSelector, PaymentMethod } from './PaymentMethodSelector';
 import { ReceiptUploader } from './ReceiptUploader';
 import { useToast } from '@/hooks/use-toast';
 import { supabase } from '@/integrations/supabase/client';
-import { BookOpen, Loader2, ShoppingCart, CheckCircle } from 'lucide-react';
+import { BookOpen, Loader2, ShoppingCart, CheckCircle, ArrowLeft } from 'lucide-react';
 
 interface OrderFormData {
   customerName: string;
@@ -196,6 +196,11 @@ ${formData.notes ? `📝 ملاحظات: ${formData.notes}` : ''}`;
             {step === 'info' && 'طلب كتاب - المعلومات'}
             {step === 'success' && 'تم الطلب بنجاح'}
           </DialogTitle>
+          <DialogDescription>
+            {step === 'payment' && 'اختر طريقة الدفع وارفع صورة الإيصال للمتابعة'}
+            {step === 'info' && 'أدخل معلومات التواصل لإتمام الطلب'}
+            {step === 'success' && 'شكراً لك على طلبك'}
+          </DialogDescription>
         </DialogHeader>
 
         {/* Product Info */}
@@ -249,13 +254,28 @@ ${formData.notes ? `📝 ملاحظات: ${formData.notes}` : ''}`;
               />
             </div>
 
+            {/* Status indicators */}
+            <div className="flex items-center gap-2 p-3 bg-muted/50 rounded-lg text-sm">
+              <div className={`h-3 w-3 rounded-full ${formData.paymentMethod ? 'bg-green-500' : 'bg-muted-foreground/30'}`} />
+              <span className={formData.paymentMethod ? 'text-foreground' : 'text-muted-foreground'}>
+                {formData.paymentMethod ? '✓ تم اختيار طريقة الدفع' : 'اختر طريقة الدفع'}
+              </span>
+            </div>
+            <div className="flex items-center gap-2 p-3 bg-muted/50 rounded-lg text-sm">
+              <div className={`h-3 w-3 rounded-full ${formData.receiptUrl ? 'bg-green-500' : 'bg-muted-foreground/30'}`} />
+              <span className={formData.receiptUrl ? 'text-foreground' : 'text-muted-foreground'}>
+                {formData.receiptUrl ? '✓ تم رفع صورة الإيصال' : 'ارفع صورة إيصال الدفع'}
+              </span>
+            </div>
+
             <Button
               variant="gold"
-              className="w-full"
+              className="w-full gap-2"
               onClick={handleNextStep}
               disabled={!formData.paymentMethod || !formData.receiptUrl}
             >
-              التالي
+              <ArrowLeft className="h-4 w-4" />
+              التالي - إدخال المعلومات
             </Button>
           </div>
         )}
