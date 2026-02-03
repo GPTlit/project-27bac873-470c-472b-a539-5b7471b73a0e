@@ -1,5 +1,5 @@
 import { useParams, Link } from 'react-router-dom';
-import { ArrowRight, Download, ZoomIn, ZoomOut, Loader2 } from 'lucide-react';
+import { ArrowRight, Download, ZoomIn, ZoomOut, Loader2, WifiOff } from 'lucide-react';
 import { useState, useEffect } from 'react';
 import { Document, Page, pdfjs } from 'react-pdf';
 import 'react-pdf/dist/Page/AnnotationLayer.css';
@@ -7,6 +7,7 @@ import 'react-pdf/dist/Page/TextLayer.css';
 import { Button } from '@/components/ui/button';
 import { useBook } from '@/hooks/useBooks';
 import { addToReadingHistory } from '@/lib/storage';
+import { useOfflineBooks } from '@/hooks/useOfflineBooks';
 
 // Set up PDF.js worker
 pdfjs.GlobalWorkerOptions.workerSrc = `//unpkg.com/pdfjs-dist@${pdfjs.version}/build/pdf.worker.min.mjs`;
@@ -14,11 +15,24 @@ pdfjs.GlobalWorkerOptions.workerSrc = `//unpkg.com/pdfjs-dist@${pdfjs.version}/b
 const BookReader = () => {
   const { id } = useParams<{ id: string }>();
   const { data: book, isLoading } = useBook(id || '');
+  const { isBookOffline, getOfflineBookUrl } = useOfflineBooks();
   const [numPages, setNumPages] = useState<number>(0);
   const [scale, setScale] = useState(1.0);
+  const [isOfflineMode, setIsOfflineMode] = useState(false);
+  const [fileUrl, setFileUrl] = useState<string | null>(null);
 
   useEffect(() => {
-    if (book) {
+    if (id && book) {
+      // Check if book is available offline
+      const offlineUrl = getOfflineBookUrl(id);
+      if (offlineUrl) {
+        setFileUrl(offlineUrl);
+        setIsOfflineMode(true);
+      } else {
+        setFileUrl(book.file_url);
+        setIsOfflineMode(false);
+      }
+
       addToReadingHistory({
         bookId: book.id,
         title: book.title,
@@ -27,7 +41,7 @@ const BookReader = () => {
         lastRead: new Date().toISOString(),
       });
     }
-  }, [book]);
+  }, [book, id, getOfflineBookUrl]);
 
   const onDocumentLoadSuccess = ({ numPages }: { numPages: number }) => {
     setNumPages(numPages);
@@ -81,6 +95,13 @@ const BookReader = () => {
                 </h1>
                 <p className="text-xs text-muted-foreground">{book.author}</p>
               </div>
+              {/* Offline indicator */}
+              {isOfflineMode && (
+                <div className="flex items-center gap-1 px-2 py-1 rounded-full bg-green-500/10 text-green-600 text-xs">
+                  <WifiOff className="h-3 w-3" />
+                  <span className="hidden sm:inline">بدون إنترنت</span>
+                </div>
+              )}
             </div>
 
             {/* Controls */}
@@ -119,38 +140,40 @@ const BookReader = () => {
       {/* PDF Viewer - Scrollable */}
       <div className="flex-1 overflow-auto p-4">
         <div className="flex justify-center">
-          <Document
-            file={book.file_url}
-            onLoadSuccess={onDocumentLoadSuccess}
-            loading={
-              <div className="flex items-center justify-center py-20">
-                <Loader2 className="h-8 w-8 animate-spin text-primary" />
-              </div>
-            }
-            error={
-              <div className="flex flex-col items-center justify-center py-20 text-center">
-                <p className="text-destructive mb-4">فشل في تحميل الملف</p>
-                <a href={book.file_url} download target="_blank" rel="noopener noreferrer">
-                  <Button variant="outline" className="gap-2">
-                    <Download className="h-4 w-4" />
-                    تحميل الملف مباشرة
-                  </Button>
-                </a>
-              </div>
-            }
-            className="flex flex-col items-center gap-4"
-          >
-            {Array.from(new Array(numPages), (_, index) => (
-              <Page
-                key={`page_${index + 1}`}
-                pageNumber={index + 1}
-                scale={scale}
-                className="shadow-xl rounded-lg overflow-hidden"
-                renderTextLayer={true}
-                renderAnnotationLayer={true}
-              />
-            ))}
-          </Document>
+          {fileUrl && (
+            <Document
+              file={fileUrl}
+              onLoadSuccess={onDocumentLoadSuccess}
+              loading={
+                <div className="flex items-center justify-center py-20">
+                  <Loader2 className="h-8 w-8 animate-spin text-primary" />
+                </div>
+              }
+              error={
+                <div className="flex flex-col items-center justify-center py-20 text-center">
+                  <p className="text-destructive mb-4">فشل في تحميل الملف</p>
+                  <a href={book.file_url} download target="_blank" rel="noopener noreferrer">
+                    <Button variant="outline" className="gap-2">
+                      <Download className="h-4 w-4" />
+                      تحميل الملف مباشرة
+                    </Button>
+                  </a>
+                </div>
+              }
+              className="flex flex-col items-center gap-4"
+            >
+              {Array.from(new Array(numPages), (_, index) => (
+                <Page
+                  key={`page_${index + 1}`}
+                  pageNumber={index + 1}
+                  scale={scale}
+                  className="shadow-xl rounded-lg overflow-hidden"
+                  renderTextLayer={true}
+                  renderAnnotationLayer={true}
+                />
+              ))}
+            </Document>
+          )}
         </div>
       </div>
     </div>

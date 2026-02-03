@@ -1,29 +1,33 @@
 import { useParams, Link } from 'react-router-dom';
-import { ArrowRight, BookOpen, Download, Share2, WifiOff, Check } from 'lucide-react';
+import { ArrowRight, BookOpen, Download, Share2, WifiOff, Check, Loader2 } from 'lucide-react';
 import { Layout } from '@/components/layout/Layout';
 import { Button } from '@/components/ui/button';
+import { Progress } from '@/components/ui/progress';
 import { categories } from '@/lib/mockData';
-import { addToReadingHistory, saveBookOffline, isBookAvailableOffline } from '@/lib/storage';
+import { addToReadingHistory } from '@/lib/storage';
 import { useToast } from '@/hooks/use-toast';
 import { useBook } from '@/hooks/useBooks';
 import { useState, useEffect } from 'react';
 import { CommentsSection } from '@/components/books/CommentsSection';
 import { LikeButton } from '@/components/books/LikeButton';
+import { useOfflineBooks } from '@/hooks/useOfflineBooks';
 
 const BookDetail = () => {
   const { id } = useParams<{ id: string }>();
   const { toast } = useToast();
   const { data: book, isLoading } = useBook(id || '');
+  const { isBookOffline, saveBookOffline, formatFileSize } = useOfflineBooks();
   const [isDownloading, setIsDownloading] = useState(false);
+  const [downloadProgress, setDownloadProgress] = useState(0);
   const [isOffline, setIsOffline] = useState(false);
   
   const category = book ? categories.find((c) => c.name === book.category) : null;
 
   useEffect(() => {
     if (id) {
-      setIsOffline(isBookAvailableOffline(id));
+      setIsOffline(isBookOffline(id));
     }
-  }, [id]);
+  }, [id, isBookOffline]);
 
   if (isLoading) {
     return (
@@ -73,40 +77,43 @@ const BookDetail = () => {
 
   const handleDownload = async () => {
     setIsDownloading(true);
+    setDownloadProgress(0);
     
     try {
       const success = await saveBookOffline(
-        book.id,
-        book.title,
-        book.author,
-        book.cover_url || '/placeholder.svg',
-        book.file_url,
-        book.file_type || 'pdf'
+        {
+          id: book.id,
+          title: book.title,
+          author: book.author,
+          coverUrl: book.cover_url || '/placeholder.svg',
+          fileUrl: book.file_url,
+          fileType: book.file_type || 'pdf',
+        },
+        (progress) => setDownloadProgress(progress)
       );
 
       if (success) {
         setIsOffline(true);
         toast({
-          title: 'تم التحميل',
-          description: 'تم حفظ الكتاب للقراءة بدون إنترنت',
+          title: 'تم التحميل بنجاح ✓',
+          description: 'تم حفظ الكتاب على جهازك للقراءة بدون إنترنت',
         });
       } else {
-        // Fallback to direct download
-        window.open(book.file_url, '_blank');
         toast({
-          title: 'جاري التحميل',
-          description: 'سيتم تحميل الملف مباشرة',
+          title: 'تعذر الحفظ',
+          description: 'مساحة التخزين غير كافية أو حدث خطأ',
+          variant: 'destructive',
         });
       }
     } catch {
-      // Fallback to direct download
-      window.open(book.file_url, '_blank');
       toast({
-        title: 'جاري التحميل',
-        description: 'سيتم تحميل الملف مباشرة',
+        title: 'حدث خطأ',
+        description: 'تعذر تحميل الكتاب',
+        variant: 'destructive',
       });
     } finally {
       setIsDownloading(false);
+      setDownloadProgress(0);
     }
   };
 
@@ -209,7 +216,19 @@ const BookDetail = () => {
               {isOffline && (
                 <div className="inline-flex items-center gap-2 px-3 py-2 rounded-lg bg-green-500/10 text-green-600 mb-6">
                   <WifiOff className="h-4 w-4" />
-                  <span className="text-sm font-medium">متاح للقراءة بدون إنترنت</span>
+                  <span className="text-sm font-medium">محفوظ على جهازك - متاح بدون إنترنت</span>
+                </div>
+              )}
+
+              {/* Download Progress */}
+              {isDownloading && (
+                <div className="mb-6 p-4 rounded-lg bg-secondary/50">
+                  <div className="flex items-center gap-2 mb-2">
+                    <Loader2 className="h-4 w-4 animate-spin text-primary" />
+                    <span className="text-sm text-foreground">جاري التحميل...</span>
+                    <span className="text-sm text-muted-foreground mr-auto">{Math.round(downloadProgress)}%</span>
+                  </div>
+                  <Progress value={downloadProgress} className="h-2" />
                 </div>
               )}
 
@@ -226,16 +245,16 @@ const BookDetail = () => {
                   size="xl"
                   className="gap-3"
                   onClick={handleDownload}
-                  disabled={isDownloading}
+                  disabled={isDownloading || isOffline}
                 >
                   {isDownloading ? (
-                    <div className="h-5 w-5 border-2 border-foreground/30 border-t-foreground rounded-full animate-spin" />
+                    <Loader2 className="h-5 w-5 animate-spin" />
                   ) : isOffline ? (
                     <Check className="h-5 w-5 text-green-600" />
                   ) : (
                     <Download className="h-5 w-5" />
                   )}
-                  {isOffline ? 'تم الحفظ' : 'تحميل للقراءة لاحقاً'}
+                  {isOffline ? 'محفوظ على الجهاز' : 'حفظ للقراءة بدون إنترنت'}
                 </Button>
                 <LikeButton bookId={book.id} size="lg" />
                 <Button

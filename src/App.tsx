@@ -22,6 +22,7 @@ import NotFound from "./pages/NotFound";
 import AuthorChat from "./pages/AuthorChat";
 import Eterke from "./pages/Eterke";
 import Store from "./pages/Store";
+import Profile from "./pages/Profile";
 
 const queryClient = new QueryClient();
 
@@ -50,6 +51,7 @@ const App = () => (
               <Route path="/author-chat" element={<ProtectedRoute><AuthorChat /></ProtectedRoute>} />
               <Route path="/eterke" element={<ProtectedRoute><Eterke /></ProtectedRoute>} />
               <Route path="/store" element={<ProtectedRoute><Store /></ProtectedRoute>} />
+              <Route path="/profile" element={<ProtectedRoute><Profile /></ProtectedRoute>} />
               <Route path="*" element={<NotFound />} />
             </Routes>
           </BrowserRouter>
