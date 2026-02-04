@@ -65,6 +65,33 @@ export type Database = {
         }
         Relationships: []
       }
+      author_ratings: {
+        Row: {
+          author_name: string
+          created_at: string | null
+          id: string
+          rating: number
+          updated_at: string | null
+          user_id: string
+        }
+        Insert: {
+          author_name: string
+          created_at?: string | null
+          id?: string
+          rating: number
+          updated_at?: string | null
+          user_id: string
+        }
+        Update: {
+          author_name?: string
+          created_at?: string | null
+          id?: string
+          rating?: number
+          updated_at?: string | null
+          user_id?: string
+        }
+        Relationships: []
+      }
       book_likes: {
         Row: {
           book_id: string
@@ -87,6 +114,41 @@ export type Database = {
         Relationships: [
           {
             foreignKeyName: "book_likes_book_id_fkey"
+            columns: ["book_id"]
+            isOneToOne: false
+            referencedRelation: "books"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      book_ratings: {
+        Row: {
+          book_id: string
+          created_at: string | null
+          id: string
+          rating: number
+          updated_at: string | null
+          user_id: string
+        }
+        Insert: {
+          book_id: string
+          created_at?: string | null
+          id?: string
+          rating: number
+          updated_at?: string | null
+          user_id: string
+        }
+        Update: {
+          book_id?: string
+          created_at?: string | null
+          id?: string
+          rating?: number
+          updated_at?: string | null
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "book_ratings_book_id_fkey"
             columns: ["book_id"]
             isOneToOne: false
             referencedRelation: "books"
@@ -142,6 +204,7 @@ export type Database = {
           file_url: string
           id: string
           is_premium: boolean | null
+          page_count: number | null
           premium_price: number | null
           title: string
           updated_at: string | null
@@ -157,6 +220,7 @@ export type Database = {
           file_url: string
           id?: string
           is_premium?: boolean | null
+          page_count?: number | null
           premium_price?: number | null
           title: string
           updated_at?: string | null
@@ -172,6 +236,7 @@ export type Database = {
           file_url?: string
           id?: string
           is_premium?: boolean | null
+          page_count?: number | null
           premium_price?: number | null
           title?: string
           updated_at?: string | null
@@ -672,30 +737,63 @@ export type Database = {
         }
         Relationships: []
       }
+      user_notes: {
+        Row: {
+          content: string
+          created_at: string | null
+          id: string
+          title: string | null
+          updated_at: string | null
+          user_id: string
+        }
+        Insert: {
+          content: string
+          created_at?: string | null
+          id?: string
+          title?: string | null
+          updated_at?: string | null
+          user_id: string
+        }
+        Update: {
+          content?: string
+          created_at?: string | null
+          id?: string
+          title?: string | null
+          updated_at?: string | null
+          user_id?: string
+        }
+        Relationships: []
+      }
       user_profiles: {
         Row: {
           avatar_url: string | null
+          bio: string | null
           created_at: string
           display_name: string | null
           id: string
+          phone: string | null
           updated_at: string
           user_id: string
           username: string
         }
         Insert: {
           avatar_url?: string | null
+          bio?: string | null
           created_at?: string
           display_name?: string | null
           id?: string
+          phone?: string | null
           updated_at?: string
           user_id: string
           username: string
         }
         Update: {
           avatar_url?: string | null
+          bio?: string | null
           created_at?: string
           display_name?: string | null
           id?: string
+          phone?: string | null
           updated_at?: string
           user_id?: string
           username?: string

@@ -4,9 +4,19 @@ import { Textarea } from '@/components/ui/textarea';
 import { useAuth } from '@/contexts/AuthContext';
 import { useComments, useAddComment, useDeleteComment, useToggleCommentLike, Comment } from '@/hooks/useComments';
 import { useFeature } from '@/hooks/useAppConfig';
-import { MessageSquare, Heart, Trash2, Loader2, Send, Reply, X } from 'lucide-react';
+import { useLanguage } from '@/contexts/LanguageContext';
+import { MessageSquare, Heart, Loader2, Send, Reply, X, MoreVertical, Pencil, Trash2 } from 'lucide-react';
 import { formatDistanceToNow } from 'date-fns';
-import { ar } from 'date-fns/locale';
+import { ar, enUS, fr } from 'date-fns/locale';
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from '@/components/ui/dropdown-menu';
+import { supabase } from '@/integrations/supabase/client';
+import { useToast } from '@/hooks/use-toast';
+import { useQueryClient } from '@tanstack/react-query';
 
 interface CommentsSectionProps {
   bookId: string;
@@ -47,8 +57,52 @@ const CommentItem = ({
   isDeleting,
   depth = 0,
 }: CommentItemProps) => {
+  const { t, language } = useLanguage();
+  const { toast } = useToast();
+  const queryClient = useQueryClient();
+  const [isEditing, setIsEditing] = useState(false);
+  const [editContent, setEditContent] = useState(comment.content);
+  const [isSavingEdit, setIsSavingEdit] = useState(false);
+  
   const isReplyingToThis = replyingTo === comment.id;
   const maxDepth = 2;
+  const isOwner = user && user.id === comment.user_id;
+
+  const getLocale = () => {
+    switch (language) {
+      case 'ar': return ar;
+      case 'fr': return fr;
+      default: return enUS;
+    }
+  };
+
+  const handleSaveEdit = async () => {
+    if (!editContent.trim()) return;
+    
+    setIsSavingEdit(true);
+    try {
+      const { error } = await supabase
+        .from('comments')
+        .update({ content: editContent })
+        .eq('id', comment.id);
+      
+      if (error) throw error;
+      
+      queryClient.invalidateQueries({ queryKey: ['comments', bookId] });
+      setIsEditing(false);
+      toast({
+        title: t('success'),
+        description: 'تم تحديث التعليق',
+      });
+    } catch {
+      toast({
+        title: t('error'),
+        variant: 'destructive',
+      });
+    } finally {
+      setIsSavingEdit(false);
+    }
+  };
 
   return (
     <div className={`space-y-3 ${depth > 0 ? 'mr-6 pr-4 border-r-2 border-primary/20' : ''}`}>
@@ -63,13 +117,13 @@ const CommentItem = ({
             <span className="text-sm text-muted-foreground">
               {formatDistanceToNow(new Date(comment.created_at), { 
                 addSuffix: true, 
-                locale: ar 
+                locale: getLocale()
               })}
             </span>
           </div>
 
           <div className="flex items-center gap-1">
-            {user && depth < maxDepth && (
+            {user && depth < maxDepth && !isEditing && (
               <Button
                 variant="ghost"
                 size="sm"
@@ -77,11 +131,11 @@ const CommentItem = ({
                 className="gap-1 text-xs"
               >
                 <Reply className="h-3 w-3" />
-                رد
+                {t('reply')}
               </Button>
             )}
 
-            {commentLikesEnabled && (
+            {commentLikesEnabled && !isEditing && (
               <Button
                 variant="ghost"
                 size="sm"
@@ -96,26 +150,68 @@ const CommentItem = ({
               </Button>
             )}
 
-            {user && user.id === comment.user_id && (
-              <Button
-                variant="ghost"
-                size="sm"
-                onClick={() => onDelete(comment.id)}
-                disabled={isDeleting}
-              >
-                <Trash2 className="h-4 w-4 text-destructive" />
-              </Button>
+            {isOwner && !isEditing && (
+              <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                  <Button variant="ghost" size="icon" className="h-8 w-8">
+                    <MoreVertical className="h-4 w-4" />
+                  </Button>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent align="end">
+                  <DropdownMenuItem onClick={() => {
+                    setEditContent(comment.content);
+                    setIsEditing(true);
+                  }}>
+                    <Pencil className="h-4 w-4 ml-2" />
+                    {t('edit')}
+                  </DropdownMenuItem>
+                  <DropdownMenuItem 
+                    onClick={() => onDelete(comment.id)}
+                    className="text-destructive"
+                    disabled={isDeleting}
+                  >
+                    <Trash2 className="h-4 w-4 ml-2" />
+                    {t('delete')}
+                  </DropdownMenuItem>
+                </DropdownMenuContent>
+              </DropdownMenu>
             )}
           </div>
         </div>
 
-        <p className="text-foreground">{comment.content}</p>
+        {isEditing ? (
+          <div className="space-y-2">
+            <Textarea
+              value={editContent}
+              onChange={(e) => setEditContent(e.target.value)}
+              className="min-h-[80px]"
+            />
+            <div className="flex gap-2">
+              <Button
+                size="sm"
+                onClick={handleSaveEdit}
+                disabled={!editContent.trim() || isSavingEdit}
+              >
+                {isSavingEdit ? <Loader2 className="h-4 w-4 animate-spin" /> : t('save')}
+              </Button>
+              <Button
+                size="sm"
+                variant="ghost"
+                onClick={() => setIsEditing(false)}
+              >
+                {t('cancel')}
+              </Button>
+            </div>
+          </div>
+        ) : (
+          <p className="text-foreground">{comment.content}</p>
+        )}
 
         {/* Reply form */}
         {isReplyingToThis && (
           <div className="mt-3 pt-3 border-t space-y-2">
             <div className="flex items-center justify-between">
-              <span className="text-sm text-muted-foreground">الرد على التعليق</span>
+              <span className="text-sm text-muted-foreground">{t('reply')}</span>
               <Button variant="ghost" size="sm" onClick={onCancelReply}>
                 <X className="h-4 w-4" />
               </Button>
@@ -123,7 +219,7 @@ const CommentItem = ({
             <Textarea
               value={replyContent}
               onChange={(e) => onReplyContentChange(e.target.value)}
-              placeholder="اكتب ردك هنا..."
+              placeholder={t('writeComment')}
               className="min-h-[80px]"
             />
             <Button
@@ -137,7 +233,7 @@ const CommentItem = ({
               ) : (
                 <Send className="h-4 w-4" />
               )}
-              إرسال الرد
+              {t('sendComment')}
             </Button>
           </div>
         )}
@@ -174,6 +270,7 @@ const CommentItem = ({
 
 export const CommentsSection = ({ bookId }: CommentsSectionProps) => {
   const { user } = useAuth();
+  const { t } = useLanguage();
   const [newComment, setNewComment] = useState('');
   const [replyingTo, setReplyingTo] = useState<string | null>(null);
   const [replyContent, setReplyContent] = useState('');
@@ -242,7 +339,7 @@ export const CommentsSection = ({ bookId }: CommentsSectionProps) => {
     <div className="space-y-6">
       <div className="flex items-center gap-2">
         <MessageSquare className="h-5 w-5 text-primary" />
-        <h3 className="text-xl font-bold">التعليقات</h3>
+        <h3 className="text-xl font-bold">{t('comments')}</h3>
         {comments && comments.length > 0 && (
           <span className="text-sm text-muted-foreground">({comments.length})</span>
         )}
@@ -254,7 +351,7 @@ export const CommentsSection = ({ bookId }: CommentsSectionProps) => {
           <Textarea
             value={newComment}
             onChange={(e) => setNewComment(e.target.value)}
-            placeholder="اكتب تعليقك هنا..."
+            placeholder={t('writeComment')}
             className="min-h-[100px]"
           />
           <Button
@@ -267,12 +364,12 @@ export const CommentsSection = ({ bookId }: CommentsSectionProps) => {
             ) : (
               <Send className="h-4 w-4" />
             )}
-            إرسال التعليق
+            {t('sendComment')}
           </Button>
         </div>
       ) : (
         <p className="text-muted-foreground text-center py-4 bg-muted/50 rounded-lg">
-          سجل دخولك لإضافة تعليق
+          {t('loginToComment')}
         </p>
       )}
 
@@ -305,7 +402,7 @@ export const CommentsSection = ({ bookId }: CommentsSectionProps) => {
         </div>
       ) : (
         <p className="text-center text-muted-foreground py-8">
-          لا توجد تعليقات بعد. كن أول من يعلق!
+          {t('noComments')}
         </p>
       )}
     </div>

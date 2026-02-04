@@ -4,6 +4,7 @@ import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
 import { AuthProvider } from "@/contexts/AuthContext";
+import { LanguageProvider } from "@/contexts/LanguageContext";
 import { ThemeProvider } from "@/components/ThemeProvider";
 import { ProtectedRoute } from "@/components/ProtectedRoute";
 import Index from "./pages/Index";
@@ -29,34 +30,36 @@ const queryClient = new QueryClient();
 const App = () => (
   <QueryClientProvider client={queryClient}>
     <AuthProvider>
-      <ThemeProvider>
-        <TooltipProvider>
-          <Toaster />
-          <Sonner />
-          <BrowserRouter>
-            <Routes>
-              <Route path="/auth" element={<Auth />} />
-              <Route path="/" element={<ProtectedRoute><Index /></ProtectedRoute>} />
-              <Route path="/categories" element={<ProtectedRoute><Categories /></ProtectedRoute>} />
-              <Route path="/category/:name" element={<ProtectedRoute><Category /></ProtectedRoute>} />
-              <Route path="/book/:id" element={<ProtectedRoute><BookDetail /></ProtectedRoute>} />
-              <Route path="/book/:id/read" element={<ProtectedRoute><BookReader /></ProtectedRoute>} />
-              <Route path="/history" element={<ProtectedRoute><History /></ProtectedRoute>} />
-              <Route path="/downloads" element={<ProtectedRoute><Downloads /></ProtectedRoute>} />
-              <Route path="/upload" element={<ProtectedRoute><Upload /></ProtectedRoute>} />
-              <Route path="/admin-upload-mrt" element={<Navigate to="/admin-panel" replace />} />
-              <Route path="/admin-panel" element={<ProtectedRoute requireAdmin><AdminPanel /></ProtectedRoute>} />
-              <Route path="/about" element={<ProtectedRoute><About /></ProtectedRoute>} />
-              <Route path="/search" element={<ProtectedRoute><Search /></ProtectedRoute>} />
-              <Route path="/author-chat" element={<ProtectedRoute><AuthorChat /></ProtectedRoute>} />
-              <Route path="/eterke" element={<ProtectedRoute><Eterke /></ProtectedRoute>} />
-              <Route path="/store" element={<ProtectedRoute><Store /></ProtectedRoute>} />
-              <Route path="/profile" element={<ProtectedRoute><Profile /></ProtectedRoute>} />
-              <Route path="*" element={<NotFound />} />
-            </Routes>
-          </BrowserRouter>
-        </TooltipProvider>
-      </ThemeProvider>
+      <LanguageProvider>
+        <ThemeProvider>
+          <TooltipProvider>
+            <Toaster />
+            <Sonner />
+            <BrowserRouter>
+              <Routes>
+                <Route path="/auth" element={<Auth />} />
+                <Route path="/" element={<ProtectedRoute><Index /></ProtectedRoute>} />
+                <Route path="/categories" element={<ProtectedRoute><Categories /></ProtectedRoute>} />
+                <Route path="/category/:name" element={<ProtectedRoute><Category /></ProtectedRoute>} />
+                <Route path="/book/:id" element={<ProtectedRoute><BookDetail /></ProtectedRoute>} />
+                <Route path="/book/:id/read" element={<ProtectedRoute><BookReader /></ProtectedRoute>} />
+                <Route path="/history" element={<ProtectedRoute><History /></ProtectedRoute>} />
+                <Route path="/downloads" element={<ProtectedRoute><Downloads /></ProtectedRoute>} />
+                <Route path="/upload" element={<ProtectedRoute><Upload /></ProtectedRoute>} />
+                <Route path="/admin-upload-mrt" element={<Navigate to="/admin-panel" replace />} />
+                <Route path="/admin-panel" element={<ProtectedRoute requireAdmin><AdminPanel /></ProtectedRoute>} />
+                <Route path="/about" element={<ProtectedRoute><About /></ProtectedRoute>} />
+                <Route path="/search" element={<ProtectedRoute><Search /></ProtectedRoute>} />
+                <Route path="/author-chat" element={<ProtectedRoute><AuthorChat /></ProtectedRoute>} />
+                <Route path="/eterke" element={<ProtectedRoute><Eterke /></ProtectedRoute>} />
+                <Route path="/store" element={<ProtectedRoute><Store /></ProtectedRoute>} />
+                <Route path="/profile" element={<ProtectedRoute><Profile /></ProtectedRoute>} />
+                <Route path="*" element={<NotFound />} />
+              </Routes>
+            </BrowserRouter>
+          </TooltipProvider>
+        </ThemeProvider>
+      </LanguageProvider>
     </AuthProvider>
   </QueryClientProvider>
 );
