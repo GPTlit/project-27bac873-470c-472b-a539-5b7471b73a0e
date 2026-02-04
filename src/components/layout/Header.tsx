@@ -4,7 +4,9 @@ import { Menu, X, Home, Grid3X3, History, Download, Upload, LogOut, Shield, Info
 import { Button } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
 import { useAuth } from '@/contexts/AuthContext';
+import { useLanguage } from '@/contexts/LanguageContext';
 import { Logo } from './Logo';
+import { LanguageSelector } from '@/components/LanguageSelector';
 
 const baseNavLinks = [
   { href: '/', label: 'الرئيسية', icon: Home },
@@ -23,6 +25,7 @@ export const Header = () => {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const location = useLocation();
   const { user, isAdmin, signOut } = useAuth();
+  const { t } = useLanguage();
 
   const navLinks = isAdmin 
     ? [...baseNavLinks, { href: '/admin-upload-mrt', label: 'لوحة التحكم', icon: Shield }]
@@ -38,6 +41,11 @@ export const Header = () => {
         <div className="flex h-16 items-center justify-between">
           {/* Logo */}
           <Logo />
+          
+          {/* Language Selector - Mobile */}
+          <div className="lg:hidden">
+            <LanguageSelector />
+          </div>
 
           {/* Desktop Navigation */}
           <nav className="hidden lg:flex items-center gap-1">
@@ -59,6 +67,7 @@ export const Header = () => {
                 </Link>
               );
             })}
+            <LanguageSelector />
             {user && (
               <Button
                 variant="ghost"
@@ -66,7 +75,7 @@ export const Header = () => {
                 onClick={handleSignOut}
               >
                 <LogOut className="h-4 w-4" />
-                خروج
+                {t('logout')}
               </Button>
             )}
           </nav>
@@ -118,7 +127,7 @@ export const Header = () => {
                   }}
                 >
                   <LogOut className="h-4 w-4" />
-                  خروج
+                  {t('logout')}
                 </Button>
               )}
             </div>

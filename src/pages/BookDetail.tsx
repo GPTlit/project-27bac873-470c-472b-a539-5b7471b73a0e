@@ -1,5 +1,5 @@
 import { useParams, Link } from 'react-router-dom';
-import { ArrowRight, BookOpen, Download, Share2, WifiOff, Check, Loader2 } from 'lucide-react';
+import { ArrowRight, BookOpen, Download, Share2, WifiOff, Check, Loader2, FileText } from 'lucide-react';
 import { Layout } from '@/components/layout/Layout';
 import { Button } from '@/components/ui/button';
 import { Progress } from '@/components/ui/progress';
@@ -10,13 +10,17 @@ import { useBook } from '@/hooks/useBooks';
 import { useState, useEffect } from 'react';
 import { CommentsSection } from '@/components/books/CommentsSection';
 import { LikeButton } from '@/components/books/LikeButton';
+import { BookRatingSection } from '@/components/books/BookRatingSection';
+import { BookRecommendations } from '@/components/books/BookRecommendations';
 import { useOfflineBooks } from '@/hooks/useOfflineBooks';
+import { useLanguage } from '@/contexts/LanguageContext';
 
 const BookDetail = () => {
   const { id } = useParams<{ id: string }>();
   const { toast } = useToast();
+  const { t } = useLanguage();
   const { data: book, isLoading } = useBook(id || '');
-  const { isBookOffline, saveBookOffline, formatFileSize } = useOfflineBooks();
+  const { isBookOffline, saveBookOffline } = useOfflineBooks();
   const [isDownloading, setIsDownloading] = useState(false);
   const [downloadProgress, setDownloadProgress] = useState(0);
   const [isOffline, setIsOffline] = useState(false);
@@ -47,12 +51,12 @@ const BookDetail = () => {
         <div className="section-padding">
           <div className="container-library text-center">
             <h1 className="text-2xl font-bold text-foreground mb-4">
-              الكتاب غير موجود
+              {t('bookNotFound')}
             </h1>
             <Link to="/">
               <Button variant="outline" className="gap-2">
                 <ArrowRight className="h-4 w-4" />
-                العودة للرئيسية
+                {t('backToHome')}
               </Button>
             </Link>
           </div>
@@ -70,7 +74,7 @@ const BookDetail = () => {
       lastRead: new Date().toISOString(),
     });
     toast({
-      title: 'تم الإضافة',
+      title: t('success'),
       description: 'تمت إضافة الكتاب لتاريخ القراءة',
     });
   };
@@ -95,19 +99,19 @@ const BookDetail = () => {
       if (success) {
         setIsOffline(true);
         toast({
-          title: 'تم التحميل بنجاح ✓',
+          title: t('success') + ' ✓',
           description: 'تم حفظ الكتاب على جهازك للقراءة بدون إنترنت',
         });
       } else {
         toast({
-          title: 'تعذر الحفظ',
+          title: t('error'),
           description: 'مساحة التخزين غير كافية أو حدث خطأ',
           variant: 'destructive',
         });
       }
     } catch {
       toast({
-        title: 'حدث خطأ',
+        title: t('error'),
         description: 'تعذر تحميل الكتاب',
         variant: 'destructive',
       });
@@ -131,7 +135,7 @@ const BookDetail = () => {
     } else {
       navigator.clipboard.writeText(window.location.href);
       toast({
-        title: 'تم النسخ',
+        title: t('success'),
         description: 'تم نسخ رابط الكتاب',
       });
     }
@@ -144,7 +148,7 @@ const BookDetail = () => {
           {/* Breadcrumb */}
           <div className="flex items-center gap-2 text-sm text-muted-foreground mb-8">
             <Link to="/" className="hover:text-primary transition-colors">
-              الرئيسية
+              {t('home')}
             </Link>
             <span>/</span>
             {category && (
@@ -200,7 +204,7 @@ const BookDetail = () => {
 
               {/* Author */}
               <p className="text-xl text-muted-foreground mb-6">
-                المؤلف: {book.author}
+                {t('author')}: {book.author}
               </p>
 
               {/* Description */}
@@ -212,11 +216,16 @@ const BookDetail = () => {
                 </div>
               )}
 
+              {/* Rating Section */}
+              <div className="mb-6">
+                <BookRatingSection bookId={book.id} authorName={book.author} />
+              </div>
+
               {/* Offline Badge */}
               {isOffline && (
                 <div className="inline-flex items-center gap-2 px-3 py-2 rounded-lg bg-green-500/10 text-green-600 mb-6">
                   <WifiOff className="h-4 w-4" />
-                  <span className="text-sm font-medium">محفوظ على جهازك - متاح بدون إنترنت</span>
+                  <span className="text-sm font-medium">{t('savedOnDevice')}</span>
                 </div>
               )}
 
@@ -225,7 +234,7 @@ const BookDetail = () => {
                 <div className="mb-6 p-4 rounded-lg bg-secondary/50">
                   <div className="flex items-center gap-2 mb-2">
                     <Loader2 className="h-4 w-4 animate-spin text-primary" />
-                    <span className="text-sm text-foreground">جاري التحميل...</span>
+                    <span className="text-sm text-foreground">{t('loading')}</span>
                     <span className="text-sm text-muted-foreground mr-auto">{Math.round(downloadProgress)}%</span>
                   </div>
                   <Progress value={downloadProgress} className="h-2" />
@@ -237,7 +246,7 @@ const BookDetail = () => {
                 <Link to={`/book/${book.id}/read`} onClick={handleRead}>
                   <Button variant="gold" size="xl" className="gap-3">
                     <BookOpen className="h-5 w-5" />
-                    اقرأ الآن
+                    {t('readNow')}
                   </Button>
                 </Link>
                 <Button
@@ -254,7 +263,7 @@ const BookDetail = () => {
                   ) : (
                     <Download className="h-5 w-5" />
                   )}
-                  {isOffline ? 'محفوظ على الجهاز' : 'حفظ للقراءة بدون إنترنت'}
+                  {isOffline ? t('savedOnDevice') : t('saveOffline')}
                 </Button>
                 <LikeButton bookId={book.id} size="lg" />
                 <Button
@@ -264,7 +273,7 @@ const BookDetail = () => {
                   onClick={handleShare}
                 >
                   <Share2 className="h-5 w-5" />
-                  مشاركة
+                  {t('share')}
                 </Button>
               </div>
 
@@ -272,33 +281,41 @@ const BookDetail = () => {
               <div className="mt-8 pt-8 border-t border-border">
                 <div className="grid grid-cols-2 sm:grid-cols-3 gap-4">
                   <div>
-                    <p className="text-sm text-muted-foreground">تاريخ الإضافة</p>
+                    <p className="text-sm text-muted-foreground">{t('dateAdded')}</p>
                     <p className="font-medium text-foreground">
                       {new Date(book.created_at).toLocaleDateString('ar-MR')}
                     </p>
                   </div>
                   <div>
-                    <p className="text-sm text-muted-foreground">التصنيف</p>
+                    <p className="text-sm text-muted-foreground">{t('category')}</p>
                     <p className="font-medium text-foreground">
                       {category?.nameAr}
                     </p>
                   </div>
                   <div>
-                    <p className="text-sm text-muted-foreground">نوع الملف</p>
-                    <p className="font-medium text-foreground uppercase">
-                      {book.file_type || 'PDF'}
+                    <p className="text-sm text-muted-foreground flex items-center gap-1">
+                      <FileText className="h-4 w-4" />
+                      {t('pages')}
                     </p>
+                    <p className="font-medium text-foreground">
+                      {(book as any).page_count || '—'} {t('pages')}
+                    </p>
+                  </div>
                 </div>
-              </div>
 
-              {/* Comments Section */}
-              <div className="mt-12 pt-8 border-t border-border">
-                <CommentsSection bookId={book.id} />
+                {/* Comments Section */}
+                <div className="mt-12 pt-8 border-t border-border">
+                  <CommentsSection bookId={book.id} />
+                </div>
+
+                {/* Recommendations */}
+                <div className="mt-12 pt-8 border-t border-border">
+                  <BookRecommendations currentBook={book} />
+                </div>
               </div>
             </div>
           </div>
         </div>
-      </div>
       </div>
     </Layout>
   );
