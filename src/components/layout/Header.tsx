@@ -1,39 +1,52 @@
 import { useState } from 'react';
 import { Link, useLocation } from 'react-router-dom';
-import { Menu, X, Home, Grid3X3, History, Download, Upload, LogOut, Shield, Info, Sparkles, Users, ShoppingBag, User } from 'lucide-react';
+import { Menu, X, Home, Grid3X3, History, Download, Upload, LogOut, Shield, Info, Sparkles, Users, ShoppingBag, User, Moon, Sun, Globe } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
 import { useAuth } from '@/contexts/AuthContext';
 import { useLanguage } from '@/contexts/LanguageContext';
+import { useTheme } from '@/components/ThemeProvider';
 import { Logo } from './Logo';
-import { LanguageSelector } from '@/components/LanguageSelector';
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+  DropdownMenuSeparator,
+} from '@/components/ui/dropdown-menu';
 
-const baseNavLinks = [
-  { href: '/', label: 'الرئيسية', icon: Home },
-  { href: '/categories', label: 'التصنيفات', icon: Grid3X3 },
-  { href: '/store', label: 'المتجر', icon: ShoppingBag },
-  { href: '/author-chat', label: 'المؤلف أحمد سالم', icon: Sparkles },
-  { href: '/eterke', label: 'ETERKE', icon: Users },
-  { href: '/history', label: 'تاريخ القراءة', icon: History },
-  { href: '/downloads', label: 'التحميلات', icon: Download },
-  { href: '/upload', label: 'أرسل كتاباً', icon: Upload },
-  { href: '/profile', label: 'حسابي', icon: User },
-  { href: '/about', label: 'عن المكتبة', icon: Info },
+const languages = [
+  { code: 'ar' as const, name: 'العربية', flag: '🇲🇷' },
+  { code: 'en' as const, name: 'English', flag: '🇬🇧' },
+  { code: 'fr' as const, name: 'Français', flag: '🇫🇷' },
 ];
 
 export const Header = () => {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const location = useLocation();
   const { user, isAdmin, signOut } = useAuth();
-  const { t } = useLanguage();
+  const { t, language, setLanguage } = useLanguage();
+  const { theme, setTheme } = useTheme();
 
-  const navLinks = isAdmin 
-    ? [...baseNavLinks, { href: '/admin-upload-mrt', label: 'لوحة التحكم', icon: Shield }]
-    : baseNavLinks;
+  const navLinks = [
+    { href: '/', label: t('home'), icon: Home },
+    { href: '/categories', label: t('categories'), icon: Grid3X3 },
+    { href: '/store', label: t('store'), icon: ShoppingBag },
+    { href: '/author-chat', label: t('authorChat'), icon: Sparkles },
+    { href: '/eterke', label: t('eterke'), icon: Users },
+    { href: '/history', label: t('history'), icon: History },
+    { href: '/downloads', label: t('downloads'), icon: Download },
+    { href: '/upload', label: t('uploadBook'), icon: Upload },
+    { href: '/profile', label: t('profile'), icon: User },
+    { href: '/about', label: t('about'), icon: Info },
+    ...(isAdmin ? [{ href: '/admin-upload-mrt', label: t('adminPanel'), icon: Shield }] : []),
+  ];
 
   const handleSignOut = async () => {
     await signOut();
   };
+
+  const currentLanguage = languages.find((l) => l.code === language);
 
   return (
     <header className="sticky top-0 z-50 w-full border-b border-border/50 bg-card/80 backdrop-blur-md">
@@ -41,11 +54,6 @@ export const Header = () => {
         <div className="flex h-16 items-center justify-between">
           {/* Logo */}
           <Logo />
-          
-          {/* Language Selector - Mobile */}
-          <div className="lg:hidden">
-            <LanguageSelector />
-          </div>
 
           {/* Desktop Navigation */}
           <nav className="hidden lg:flex items-center gap-1">
@@ -56,6 +64,7 @@ export const Header = () => {
                 <Link key={link.href} to={link.href}>
                   <Button
                     variant="ghost"
+                    size="sm"
                     className={cn(
                       'gap-2',
                       isActive && 'bg-secondary text-primary'
@@ -67,10 +76,44 @@ export const Header = () => {
                 </Link>
               );
             })}
-            <LanguageSelector />
+            
+            {/* Theme Toggle */}
+            <Button
+              variant="ghost"
+              size="icon"
+              onClick={() => setTheme(theme === 'dark' ? 'light' : 'dark')}
+            >
+              {theme === 'dark' ? <Sun className="h-5 w-5" /> : <Moon className="h-5 w-5" />}
+            </Button>
+            
+            {/* Language Selector */}
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <Button variant="ghost" size="icon" className="relative">
+                  <Globe className="h-5 w-5" />
+                  <span className="absolute -bottom-1 -right-1 text-xs">
+                    {currentLanguage?.flag}
+                  </span>
+                </Button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="end">
+                {languages.map((lang) => (
+                  <DropdownMenuItem
+                    key={lang.code}
+                    onClick={() => setLanguage(lang.code)}
+                    className={language === lang.code ? 'bg-accent' : ''}
+                  >
+                    <span className="ml-2">{lang.flag}</span>
+                    {lang.name}
+                  </DropdownMenuItem>
+                ))}
+              </DropdownMenuContent>
+            </DropdownMenu>
+            
             {user && (
               <Button
                 variant="ghost"
+                size="sm"
                 className="gap-2 text-destructive hover:text-destructive"
                 onClick={handleSignOut}
               >
@@ -81,19 +124,53 @@ export const Header = () => {
           </nav>
 
           {/* Mobile Menu Button */}
-          <Button
-            variant="ghost"
-            size="icon"
-            className="lg:hidden"
-            onClick={() => setIsMenuOpen(!isMenuOpen)}
-          >
-            {isMenuOpen ? <X className="h-5 w-5" /> : <Menu className="h-5 w-5" />}
-          </Button>
+          <div className="flex lg:hidden items-center gap-2">
+            {/* Theme Toggle */}
+            <Button
+              variant="ghost"
+              size="icon"
+              onClick={() => setTheme(theme === 'dark' ? 'light' : 'dark')}
+            >
+              {theme === 'dark' ? <Sun className="h-5 w-5" /> : <Moon className="h-5 w-5" />}
+            </Button>
+            
+            {/* Language Selector */}
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <Button variant="ghost" size="icon" className="relative">
+                  <Globe className="h-5 w-5" />
+                  <span className="absolute -bottom-1 -right-1 text-xs">
+                    {currentLanguage?.flag}
+                  </span>
+                </Button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="end">
+                {languages.map((lang) => (
+                  <DropdownMenuItem
+                    key={lang.code}
+                    onClick={() => setLanguage(lang.code)}
+                    className={language === lang.code ? 'bg-accent' : ''}
+                  >
+                    <span className="ml-2">{lang.flag}</span>
+                    {lang.name}
+                  </DropdownMenuItem>
+                ))}
+              </DropdownMenuContent>
+            </DropdownMenu>
+            
+            <Button
+              variant="ghost"
+              size="icon"
+              onClick={() => setIsMenuOpen(!isMenuOpen)}
+            >
+              {isMenuOpen ? <X className="h-5 w-5" /> : <Menu className="h-5 w-5" />}
+            </Button>
+          </div>
         </div>
 
         {/* Mobile Navigation */}
         {isMenuOpen && (
-          <nav className="lg:hidden py-4 border-t border-border/50 animate-fade-in">
+          <nav className="lg:hidden py-4 border-t border-border/50 animate-fade-in max-h-[70vh] overflow-y-auto">
             <div className="flex flex-col gap-1">
               {navLinks.map((link) => {
                 const Icon = link.icon;

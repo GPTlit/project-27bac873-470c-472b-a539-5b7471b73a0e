@@ -16,12 +16,27 @@ const translations: Translations = {
   categories: { ar: 'التصنيفات', en: 'Categories', fr: 'Catégories' },
   search: { ar: 'بحث', en: 'Search', fr: 'Rechercher' },
   store: { ar: 'المتجر', en: 'Store', fr: 'Boutique' },
-  eterke: { ar: 'اتركه', en: 'Eterke', fr: 'Eterke' },
-  about: { ar: 'من نحن', en: 'About', fr: 'À propos' },
+  eterke: { ar: 'ETERKE', en: 'ETERKE', fr: 'ETERKE' },
+  about: { ar: 'عن المكتبة', en: 'About', fr: 'À propos' },
   profile: { ar: 'حسابي', en: 'My Account', fr: 'Mon Compte' },
   adminPanel: { ar: 'لوحة التحكم', en: 'Admin Panel', fr: 'Panneau Admin' },
   login: { ar: 'تسجيل الدخول', en: 'Login', fr: 'Connexion' },
   logout: { ar: 'تسجيل الخروج', en: 'Logout', fr: 'Déconnexion' },
+  history: { ar: 'تاريخ القراءة', en: 'Reading History', fr: 'Historique de lecture' },
+  downloads: { ar: 'التحميلات', en: 'Downloads', fr: 'Téléchargements' },
+  uploadBook: { ar: 'أرسل كتاباً', en: 'Upload Book', fr: 'Envoyer un livre' },
+  authorChat: { ar: 'المؤلف أحمد سالم', en: 'Author Ahmed Salem', fr: 'Auteur Ahmed Salem' },
+  darkMode: { ar: 'الوضع الداكن', en: 'Dark Mode', fr: 'Mode sombre' },
+  lightMode: { ar: 'الوضع الفاتح', en: 'Light Mode', fr: 'Mode clair' },
+  
+  // Hero Section
+  libraryTitle: { ar: 'مكتبة موريتانيا', en: 'Mauritania Library', fr: 'Bibliothèque Mauritanie' },
+  freeDigitalLibrary: { ar: 'مكتبة رقمية مجانية للجميع', en: 'Free digital library for everyone', fr: 'Bibliothèque numérique gratuite pour tous' },
+  discoverBooks: { ar: 'اكتشف آلاف الكتب العربية في مختلف المجالات. اقرأ وحمّل مجاناً بدون تسجيل.', en: 'Discover thousands of Arabic books in various fields. Read and download for free without registration.', fr: 'Découvrez des milliers de livres arabes dans divers domaines. Lisez et téléchargez gratuitement sans inscription.' },
+  searchPlaceholder: { ar: 'ابحث عن كتاب، مؤلف، أو تصنيف...', en: 'Search for a book, author, or category...', fr: 'Rechercher un livre, un auteur ou une catégorie...' },
+  books: { ar: 'كتاب', en: 'books', fr: 'livres' },
+  categoriesCount: { ar: 'تصنيف', en: 'categories', fr: 'catégories' },
+  freeForAll: { ar: 'مجاني للجميع', en: 'Free for all', fr: 'Gratuit pour tous' },
   
   // Book Detail
   readNow: { ar: 'اقرأ الآن', en: 'Read Now', fr: 'Lire Maintenant' },
@@ -79,6 +94,58 @@ const translations: Translations = {
   noteContent: { ar: 'محتوى الملاحظة', en: 'Note Content', fr: 'Contenu de la Note' },
   noNotes: { ar: 'لا توجد ملاحظات', en: 'No notes yet', fr: 'Pas encore de notes' },
   
+  // Featured & Recent Books
+  featuredBooks: { ar: 'كتب مختارة', en: 'Featured Books', fr: 'Livres en vedette' },
+  recentBooks: { ar: 'آخر الإضافات', en: 'Recent Additions', fr: 'Ajouts récents' },
+  viewAll: { ar: 'عرض الكل', en: 'View All', fr: 'Voir tout' },
+  
+  // Categories
+  allCategories: { ar: 'جميع التصنيفات', en: 'All Categories', fr: 'Toutes les catégories' },
+  browseCategories: { ar: 'تصفح التصنيفات', en: 'Browse Categories', fr: 'Parcourir les catégories' },
+  booksInCategory: { ar: 'كتب في هذا التصنيف', en: 'books in this category', fr: 'livres dans cette catégorie' },
+  
+  // ETERKE (Chat)
+  createGroup: { ar: 'إنشاء مجموعة', en: 'Create Group', fr: 'Créer un groupe' },
+  newGroup: { ar: 'مجموعة جديدة', en: 'New Group', fr: 'Nouveau groupe' },
+  groupName: { ar: 'اسم المجموعة', en: 'Group Name', fr: 'Nom du groupe' },
+  noGroups: { ar: 'لا توجد مجموعات بعد', en: 'No groups yet', fr: 'Aucun groupe pour le moment' },
+  startNewGroup: { ar: 'ابدأ بإنشاء مجموعة جديدة!', en: 'Start by creating a new group!', fr: 'Commencez par créer un nouveau groupe!' },
+  typeMessage: { ar: 'اكتب رسالة...', en: 'Type a message...', fr: 'Écrire un message...' },
+  send: { ar: 'إرسال', en: 'Send', fr: 'Envoyer' },
+  members: { ar: 'أعضاء', en: 'members', fr: 'membres' },
+  addMember: { ar: 'إضافة عضو', en: 'Add Member', fr: 'Ajouter un membre' },
+  username: { ar: 'اسم المستخدم', en: 'Username', fr: 'Nom d\'utilisateur' },
+  groups: { ar: 'مجموعات', en: 'Groups', fr: 'Groupes' },
+  privateChat: { ar: 'خاص', en: 'Private', fr: 'Privé' },
+  newChat: { ar: 'محادثة جديدة', en: 'New Chat', fr: 'Nouvelle conversation' },
+  searchUser: { ar: 'ابحث عن مستخدم...', en: 'Search for a user...', fr: 'Rechercher un utilisateur...' },
+  noUsers: { ar: 'لا يوجد مستخدمين', en: 'No users found', fr: 'Aucun utilisateur trouvé' },
+  noChats: { ar: 'لا توجد محادثات بعد', en: 'No chats yet', fr: 'Pas de conversations pour le moment' },
+  startChat: { ar: 'ابدأ محادثة جديدة!', en: 'Start a new chat!', fr: 'Commencez une nouvelle conversation!' },
+  groupSettings: { ar: 'إعدادات المجموعة', en: 'Group Settings', fr: 'Paramètres du groupe' },
+  clickToChangePhoto: { ar: 'انقر لتغيير الصورة', en: 'Click to change photo', fr: 'Cliquez pour changer la photo' },
+  admin: { ar: 'مشرف', en: 'Admin', fr: 'Admin' },
+  shareBook: { ar: 'شارك كتاباً', en: 'Share a Book', fr: 'Partager un livre' },
+  selectBook: { ar: 'اختر كتاباً', en: 'Select a book', fr: 'Sélectionner un livre' },
+  profileSetup: { ar: 'إعداد الملف الشخصي', en: 'Profile Setup', fr: 'Configuration du profil' },
+  profileSetupDesc: { ar: 'لاستخدام ETERKE، يرجى إنشاء اسم مستخدم', en: 'To use ETERKE, please create a username', fr: 'Pour utiliser ETERKE, veuillez créer un nom d\'utilisateur' },
+  yourName: { ar: 'اسمك', en: 'Your Name', fr: 'Votre nom' },
+  createProfile: { ar: 'إنشاء الملف الشخصي', en: 'Create Profile', fr: 'Créer le profil' },
+  selectChatToStart: { ar: 'اختر محادثة للبدء', en: 'Select a chat to start', fr: 'Sélectionnez une conversation pour commencer' },
+  privateConversation: { ar: 'محادثة خاصة', en: 'Private Conversation', fr: 'Conversation privée' },
+  authorAhmedSalem: { ar: 'المؤلف أحمد سالم', en: 'Author Ahmed Salem', fr: 'Auteur Ahmed Salem' },
+  micAccessError: { ar: 'لا يمكن الوصول للميكروفون', en: 'Cannot access microphone', fr: 'Impossible d\'accéder au microphone' },
+  uploadFailed: { ar: 'فشل رفع الملف', en: 'Upload failed', fr: 'Échec du téléchargement' },
+  voiceUploadFailed: { ar: 'فشل رفع الملف الصوتي', en: 'Voice upload failed', fr: 'Échec de l\'envoi du message vocal' },
+  voiceSendFailed: { ar: 'فشل إرسال الرسالة الصوتية', en: 'Failed to send voice message', fr: 'Échec de l\'envoi du message vocal' },
+  
+  // Store
+  orderNow: { ar: 'اطلب الآن', en: 'Order Now', fr: 'Commander maintenant' },
+  outOfStock: { ar: 'غير متوفر', en: 'Out of Stock', fr: 'En rupture de stock' },
+  price: { ar: 'السعر', en: 'Price', fr: 'Prix' },
+  quantity: { ar: 'الكمية', en: 'Quantity', fr: 'Quantité' },
+  total: { ar: 'المجموع', en: 'Total', fr: 'Total' },
+  
   // General
   loading: { ar: 'جاري التحميل...', en: 'Loading...', fr: 'Chargement...' },
   error: { ar: 'خطأ', en: 'Error', fr: 'Erreur' },
@@ -86,10 +153,38 @@ const translations: Translations = {
   save: { ar: 'حفظ', en: 'Save', fr: 'Enregistrer' },
   cancel: { ar: 'إلغاء', en: 'Cancel', fr: 'Annuler' },
   confirm: { ar: 'تأكيد', en: 'Confirm', fr: 'Confirmer' },
+  close: { ar: 'إغلاق', en: 'Close', fr: 'Fermer' },
+  create: { ar: 'إنشاء', en: 'Create', fr: 'Créer' },
+  add: { ar: 'إضافة', en: 'Add', fr: 'Ajouter' },
+  file: { ar: 'ملف', en: 'File', fr: 'Fichier' },
+  unknown: { ar: 'مجهول', en: 'Unknown', fr: 'Inconnu' },
   
   // Library name
   libraryName: { ar: 'مكتبة موريتانيا', en: 'Mauritania Library', fr: 'Bibliothèque Mauritanie' },
   librarySubtitle: { ar: 'MAURITANIA LIBRARY', en: 'MAURITANIA LIBRARY', fr: 'BIBLIOTHÈQUE MAURITANIE' },
+  
+  // Upload page
+  uploadTitle: { ar: 'أرسل كتاباً', en: 'Upload a Book', fr: 'Envoyer un livre' },
+  uploadDescription: { ar: 'شارك معرفتك مع الآخرين. أرسل كتاباً وسنقوم بمراجعته ونشره خلال 24 ساعة.', en: 'Share your knowledge with others. Upload a book and we will review and publish it within 24 hours.', fr: 'Partagez vos connaissances avec les autres. Envoyez un livre et nous le réviserons et le publierons dans les 24 heures.' },
+  bookTitle: { ar: 'عنوان الكتاب', en: 'Book Title', fr: 'Titre du livre' },
+  authorName: { ar: 'اسم المؤلف', en: 'Author Name', fr: 'Nom de l\'auteur' },
+  selectCategory: { ar: 'اختر التصنيف', en: 'Select Category', fr: 'Sélectionner une catégorie' },
+  bookFile: { ar: 'ملف الكتاب', en: 'Book File', fr: 'Fichier du livre' },
+  clickToUpload: { ar: 'اضغط لرفع ملف الكتاب', en: 'Click to upload the book file', fr: 'Cliquez pour télécharger le fichier du livre' },
+  noteOptional: { ar: 'ملاحظة (اختياري)', en: 'Note (optional)', fr: 'Note (optionnel)' },
+  addNoteOrDescription: { ar: 'أضف ملاحظة أو وصف للكتاب...', en: 'Add a note or description for the book...', fr: 'Ajoutez une note ou une description pour le livre...' },
+  sendBook: { ar: 'إرسال الكتاب', en: 'Send Book', fr: 'Envoyer le livre' },
+  sending: { ar: 'جاري الإرسال...', en: 'Sending...', fr: 'Envoi en cours...' },
+  thankYou: { ar: 'شكراً لمساهمتك!', en: 'Thank you for your contribution!', fr: 'Merci pour votre contribution!' },
+  bookWillBeReviewed: { ar: 'سيتم مراجعة كتابك ونشره خلال 24 ساعة.', en: 'Your book will be reviewed and published within 24 hours.', fr: 'Votre livre sera revu et publié dans les 24 heures.' },
+  
+  // About page
+  aboutTitle: { ar: 'عن المكتبة', en: 'About the Library', fr: 'À propos de la bibliothèque' },
+  
+  // Settings
+  settings: { ar: 'الإعدادات', en: 'Settings', fr: 'Paramètres' },
+  language: { ar: 'اللغة', en: 'Language', fr: 'Langue' },
+  theme: { ar: 'المظهر', en: 'Theme', fr: 'Thème' },
 };
 
 interface LanguageContextType {
