@@ -42,9 +42,11 @@ const AdminPanel = () => {
     author: '',
     description: '',
     categories: [] as string[],
+    pageCount: '',
   });
   const [bookFile, setBookFile] = useState<File | null>(null);
   const [coverFile, setCoverFile] = useState<File | null>(null);
+  const [uploadProgress, setUploadProgress] = useState<string>('');
   const { data: books, refetch: refetchBooks } = useBooks();
 
   // Edit state
@@ -213,6 +215,25 @@ const AdminPanel = () => {
   };
 
   // Book upload handlers
+  // Generate safe filename: only lowercase letters, numbers, underscore, hyphen
+  const generateSafeFilename = (extension: string) => {
+    const timestamp = Date.now();
+    const randomId = Math.random().toString(36).substring(2, 10);
+    return `book_${timestamp}_${randomId}.${extension}`;
+  };
+
+  // Validate file is a valid PDF
+  const validatePdfFile = (file: File): boolean => {
+    const validTypes = ['application/pdf'];
+    const validExtensions = ['.pdf'];
+    const extension = file.name.toLowerCase().slice(file.name.lastIndexOf('.'));
+    
+    if (!validTypes.includes(file.type) && !validExtensions.includes(extension)) {
+      return false;
+    }
+    return true;
+  };
+
   const handleBookSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
 
@@ -225,37 +246,67 @@ const AdminPanel = () => {
       return;
     }
 
+    // Validate PDF file
+    if (!validatePdfFile(bookFile)) {
+      toast({
+        title: 'خطأ',
+        description: 'يجب أن يكون الملف بصيغة PDF',
+        variant: 'destructive',
+      });
+      return;
+    }
+
     setIsSubmitting(true);
+    setUploadProgress('جاري رفع الملف...');
 
     try {
-      const bookFileName = `${Date.now()}-${bookFile.name}`;
+      // Generate safe filename (ASCII only, no Arabic/special chars)
+      const bookFileName = generateSafeFilename('pdf');
+      
+      console.log('Uploading book with safe filename:', bookFileName);
+      
       const { error: bookUploadError } = await supabase.storage
         .from('books')
-        .upload(bookFileName, bookFile);
+        .upload(bookFileName, bookFile, {
+          contentType: 'application/pdf',
+          cacheControl: '3600',
+        });
 
-      if (bookUploadError) throw bookUploadError;
+      if (bookUploadError) {
+        console.error('Book upload error:', bookUploadError);
+        throw new Error(`فشل رفع الملف: ${bookUploadError.message}`);
+      }
 
       const { data: bookUrlData } = supabase.storage
         .from('books')
         .getPublicUrl(bookFileName);
 
+      setUploadProgress('جاري رفع صورة الغلاف...');
+
       let coverUrl = null;
       if (coverFile) {
-        const coverFileName = `${Date.now()}-${coverFile.name}`;
+        const coverExtension = coverFile.name.split('.').pop()?.toLowerCase() || 'jpg';
+        const coverFileName = `cover_${Date.now()}_${Math.random().toString(36).substring(2, 8)}.${coverExtension}`;
+        
         const { error: coverUploadError } = await supabase.storage
           .from('covers')
           .upload(coverFileName, coverFile);
 
-        if (coverUploadError) throw coverUploadError;
-
-        const { data: coverUrlData } = supabase.storage
-          .from('covers')
-          .getPublicUrl(coverFileName);
-
-        coverUrl = coverUrlData.publicUrl;
+        if (coverUploadError) {
+          console.error('Cover upload error:', coverUploadError);
+          // Continue without cover
+        } else {
+          const { data: coverUrlData } = supabase.storage
+            .from('covers')
+            .getPublicUrl(coverFileName);
+          coverUrl = coverUrlData.publicUrl;
+        }
       }
 
-      const fileType = bookFile.name.split('.').pop()?.toLowerCase() || 'pdf';
+      setUploadProgress('جاري حفظ البيانات...');
+
+      // Parse page count
+      const pageCount = formData.pageCount ? parseInt(formData.pageCount, 10) : null;
 
       const { error: insertError } = await supabase
         .from('books')
@@ -263,31 +314,37 @@ const AdminPanel = () => {
           title: formData.title,
           author: formData.author,
           description: formData.description || null,
-          category: formData.categories[0], // Keep first category for backward compatibility
+          category: formData.categories[0],
           categories: formData.categories,
           cover_url: coverUrl,
           file_url: bookUrlData.publicUrl,
-          file_type: fileType,
+          file_type: 'pdf',
+          page_count: pageCount,
         });
 
-      if (insertError) throw insertError;
+      if (insertError) {
+        console.error('Database insert error:', insertError);
+        throw new Error(`فشل حفظ البيانات: ${insertError.message}`);
+      }
 
       toast({
         title: 'تم الرفع بنجاح',
         description: 'تم إضافة الكتاب للمكتبة',
       });
 
-      setFormData({ title: '', author: '', description: '', categories: [] });
+      setFormData({ title: '', author: '', description: '', categories: [], pageCount: '' });
       setBookFile(null);
       setCoverFile(null);
+      setUploadProgress('');
       refetchBooks();
-    } catch (error) {
+    } catch (error: any) {
       console.error('Upload error:', error);
       toast({
         title: 'خطأ',
-        description: 'حدث خطأ أثناء رفع الكتاب',
+        description: error.message || 'حدث خطأ أثناء رفع الكتاب',
         variant: 'destructive',
       });
+      setUploadProgress('');
     } finally {
       setIsSubmitting(false);
     }
@@ -461,6 +518,18 @@ const AdminPanel = () => {
                         value={formData.description}
                         onChange={(e) => setFormData({ ...formData, description: e.target.value })}
                         rows={4}
+                      />
+                    </div>
+
+                    <div className="space-y-2">
+                      <Label htmlFor="pageCount">عدد الصفحات</Label>
+                      <Input
+                        id="pageCount"
+                        type="number"
+                        placeholder="أدخل عدد صفحات الكتاب"
+                        value={formData.pageCount}
+                        onChange={(e) => setFormData({ ...formData, pageCount: e.target.value })}
+                        min="1"
                       />
                     </div>
 

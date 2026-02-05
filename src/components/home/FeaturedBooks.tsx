@@ -3,9 +3,11 @@ import { ArrowLeft, Sparkles, Loader2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { BookCard } from '@/components/books/BookCard';
 import { useBooks } from '@/hooks/useBooks';
+import { useLanguage } from '@/contexts/LanguageContext';
 
 export const FeaturedBooks = () => {
   const { data: books, isLoading } = useBooks();
+  const { t } = useLanguage();
   
   // Show first 5 books as featured
   const featuredBooks = books?.slice(0, 5) || [];
@@ -35,16 +37,16 @@ export const FeaturedBooks = () => {
             </div>
             <div>
               <h2 className="text-2xl md:text-3xl font-bold text-foreground">
-                كتب مميزة
+                {t('featuredBooks')}
               </h2>
               <p className="text-muted-foreground text-sm">
-                اختيارات مميزة من المكتبة
+                {t('libraryName')}
               </p>
             </div>
           </div>
           <Link to="/categories" className="hidden sm:block">
             <Button variant="outline" className="gap-2">
-              تصفح الكل
+              {t('viewAll')}
               <ArrowLeft className="h-4 w-4" />
             </Button>
           </Link>

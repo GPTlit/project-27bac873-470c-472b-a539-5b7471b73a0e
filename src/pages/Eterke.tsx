@@ -119,6 +119,7 @@ const Eterke = () => {
   const [audioBlob, setAudioBlob] = useState<Blob | null>(null);
   const [audioLevel, setAudioLevel] = useState(0);
   const [isTranscribing, setIsTranscribing] = useState(false);
+  const [showSidebar, setShowSidebar] = useState(true);
   
   const scrollRef = useRef<HTMLDivElement>(null);
   const mediaRecorderRef = useRef<MediaRecorder | null>(null);
@@ -989,10 +990,14 @@ const Eterke = () => {
 
   return (
     <Layout>
-      <div className="container mx-auto py-4 px-4" dir="rtl">
-        <div className="bg-card rounded-2xl border shadow-lg overflow-hidden h-[calc(100vh-200px)] flex">
-          {/* Sidebar */}
-          <div className="w-80 border-l flex flex-col">
+      <div className="container mx-auto py-2 sm:py-4 px-2 sm:px-4" dir="rtl">
+        <div className="bg-card rounded-xl sm:rounded-2xl border shadow-lg overflow-hidden h-[calc(100vh-140px)] sm:h-[calc(100vh-200px)] flex flex-col md:flex-row">
+          {/* Sidebar - Hidden on mobile when chat is selected */}
+          <div className={cn(
+            "border-l flex flex-col transition-all duration-300",
+            selectedChat && !showSidebar ? "hidden md:flex md:w-80" : "w-full md:w-80",
+            !selectedChat && "w-full md:w-80"
+          )}>
             <div className="p-4 border-b gold-gradient">
               <div className="flex items-center justify-between">
                 <h2 className="text-lg font-bold text-primary-foreground">ETERKE</h2>
@@ -1107,7 +1112,10 @@ const Eterke = () => {
                   groups.map((group) => (
                     <button
                       key={group.id}
-                      onClick={() => setSelectedChat({ type: 'group', data: group })}
+                      onClick={() => {
+                        setSelectedChat({ type: 'group', data: group });
+                        setShowSidebar(false);
+                      }}
                       className={cn(
                         "w-full p-4 flex items-center gap-3 hover:bg-muted transition-colors text-right",
                         selectedChat?.type === 'group' && selectedChat.data.id === group.id && "bg-muted"
@@ -1137,7 +1145,10 @@ const Eterke = () => {
                   privateConversations.map((conv) => (
                     <button
                       key={conv.id}
-                      onClick={() => setSelectedChat({ type: 'private', data: conv })}
+                      onClick={() => {
+                        setSelectedChat({ type: 'private', data: conv });
+                        setShowSidebar(false);
+                      }}
                       className={cn(
                         "w-full p-4 flex items-center gap-3 hover:bg-muted transition-colors text-right",
                         selectedChat?.type === 'private' && selectedChat.data.id === conv.id && "bg-muted"
@@ -1162,18 +1173,30 @@ const Eterke = () => {
 
           {/* Chat Area */}
           {selectedChat ? (
-            <div className="flex-1 flex flex-col">
+            <div className={cn(
+              "flex-1 flex flex-col",
+              showSidebar ? "hidden md:flex" : "flex"
+            )}>
               {/* Chat Header */}
-              <div className="p-4 border-b flex items-center justify-between bg-background">
-                <div className="flex items-center gap-3">
-                  <Avatar>
+              <div className="p-3 sm:p-4 border-b flex items-center justify-between bg-background gap-2">
+                {/* Back button for mobile */}
+                <Button 
+                  variant="ghost" 
+                  size="icon" 
+                  className="md:hidden shrink-0"
+                  onClick={() => setShowSidebar(true)}
+                >
+                  <X className="h-5 w-5" />
+                </Button>
+                <div className="flex items-center gap-2 sm:gap-3 flex-1 min-w-0">
+                  <Avatar className="h-8 w-8 sm:h-10 sm:w-10 shrink-0">
                     <AvatarImage src={getChatAvatar() || undefined} />
                     <AvatarFallback className={selectedChat.type === 'group' ? "gold-gradient text-primary-foreground" : "bg-primary text-primary-foreground"}>
                       {getChatName().slice(0, 2)}
                     </AvatarFallback>
                   </Avatar>
-                  <div>
-                    <h3 className="font-semibold">{getChatName()}</h3>
+                  <div className="min-w-0">
+                    <h3 className="font-semibold text-sm sm:text-base truncate">{getChatName()}</h3>
                     <p className="text-xs text-muted-foreground">
                       {selectedChat.type === 'group' ? `${groupMembers.length} أعضاء` : 'محادثة خاصة'}
                     </p>
