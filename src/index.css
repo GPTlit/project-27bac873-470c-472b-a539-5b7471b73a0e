@@ -56,42 +56,51 @@
   }
 
   .dark {
-    --background: 25 30% 10%;
-    --foreground: 40 20% 92%;
+    --background: 20 15% 8%;
+    --foreground: 40 25% 95%;
 
-    --card: 25 25% 14%;
-    --card-foreground: 40 20% 92%;
+    --card: 20 15% 12%;
+    --card-foreground: 40 25% 95%;
 
-    --popover: 25 25% 14%;
-    --popover-foreground: 40 20% 92%;
+    --popover: 20 15% 12%;
+    --popover-foreground: 40 25% 95%;
 
-    --primary: 45 70% 55%;
-    --primary-foreground: 25 40% 10%;
+    --primary: 45 80% 55%;
+    --primary-foreground: 20 30% 8%;
 
-    --secondary: 25 20% 20%;
-    --secondary-foreground: 40 20% 90%;
+    --secondary: 20 12% 18%;
+    --secondary-foreground: 40 25% 92%;
 
-    --muted: 25 20% 18%;
-    --muted-foreground: 40 15% 60%;
+    --muted: 20 12% 15%;
+    --muted-foreground: 40 15% 65%;
 
-    --accent: 32 50% 45%;
-    --accent-foreground: 40 20% 92%;
+    --accent: 38 60% 50%;
+    --accent-foreground: 40 25% 95%;
 
-    --destructive: 0 60% 45%;
+    --destructive: 0 65% 50%;
     --destructive-foreground: 0 0% 100%;
 
-    --border: 25 20% 22%;
-    --input: 25 20% 22%;
-    --ring: 45 70% 55%;
+    --border: 20 12% 20%;
+    --input: 20 12% 20%;
+    --ring: 45 80% 55%;
 
-    --sidebar-background: 25 25% 12%;
-    --sidebar-foreground: 40 20% 92%;
-    --sidebar-primary: 45 70% 55%;
-    --sidebar-primary-foreground: 25 40% 10%;
-    --sidebar-accent: 25 20% 18%;
-    --sidebar-accent-foreground: 40 20% 90%;
-    --sidebar-border: 25 20% 22%;
-    --sidebar-ring: 45 70% 55%;
+    --gold: 45 80% 55%;
+    --gold-light: 45 60% 65%;
+    --cream: 20 15% 12%;
+    --cream-dark: 20 12% 18%;
+    --brown: 40 25% 85%;
+    --brown-light: 40 20% 75%;
+    --amber: 38 60% 50%;
+    --amber-light: 38 50% 60%;
+
+    --sidebar-background: 20 15% 10%;
+    --sidebar-foreground: 40 25% 95%;
+    --sidebar-primary: 45 80% 55%;
+    --sidebar-primary-foreground: 20 30% 8%;
+    --sidebar-accent: 20 12% 18%;
+    --sidebar-accent-foreground: 40 25% 92%;
+    --sidebar-border: 20 12% 20%;
+    --sidebar-ring: 45 80% 55%;
   }
 }
 
@@ -145,8 +154,19 @@
     background: linear-gradient(135deg, hsl(var(--cream-dark)) 0%, hsl(var(--cream)) 50%, hsl(var(--gold-light) / 0.3) 100%);
   }
 
+  .dark .hero-gradient {
+    background: linear-gradient(135deg, hsl(var(--background)) 0%, hsl(var(--card)) 50%, hsl(var(--gold) / 0.15) 100%);
+  }
+
   .text-gradient {
     background: linear-gradient(135deg, hsl(var(--brown)) 0%, hsl(var(--amber)) 100%);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+  }
+
+  .dark .text-gradient {
+    background: linear-gradient(135deg, hsl(var(--gold)) 0%, hsl(var(--amber-light)) 100%);
     -webkit-background-clip: text;
     -webkit-text-fill-color: transparent;
     background-clip: text;
@@ -190,4 +210,129 @@
 /* PDF viewer styles */
 .pdf-container {
   @apply w-full h-full bg-muted rounded-lg overflow-hidden;
+}
+
+/* Mobile-first responsive utilities */
+@media (max-width: 640px) {
+  .container-library {
+    @apply px-3;
+  }
+  
+  .section-padding {
+    @apply py-6;
+  }
+}
+
+/* Tablet adjustments */
+@media (min-width: 641px) and (max-width: 1024px) {
+  .container-library {
+    @apply px-5;
+  }
+  
+  .section-padding {
+    @apply py-10;
+  }
+}
+
+/* Prevent text selection on mobile for app-like feel */
+.no-select {
+  -webkit-user-select: none;
+  -moz-user-select: none;
+  -ms-user-select: none;
+  user-select: none;
+}
+
+/* Smooth scrolling for the whole app */
+html {
+  scroll-behavior: smooth;
+  -webkit-overflow-scrolling: touch;
+}
+
+/* Fix for mobile vh units */
+@supports (height: 100dvh) {
+  .min-h-screen {
+    min-height: 100dvh;
+  }
+  
+  .h-screen {
+    height: 100dvh;
+  }
+}
+
+/* Dark mode scrollbar */
+.dark ::-webkit-scrollbar-track {
+  background: hsl(var(--muted));
+}
+
+.dark ::-webkit-scrollbar-thumb {
+  background: hsl(var(--muted-foreground) / 0.4);
+}
+
+.dark ::-webkit-scrollbar-thumb:hover {
+  background: hsl(var(--muted-foreground) / 0.6);
+}
+
+/* Ensure all text is visible in dark mode */
+.dark h1, .dark h2, .dark h3, .dark h4, .dark h5, .dark h6 {
+  color: hsl(var(--foreground));
+}
+
+.dark p {
+  color: hsl(var(--foreground));
+}
+
+.dark span:not(.text-gradient):not([class*="text-"]) {
+  color: inherit;
+}
+
+/* Button and interactive elements in dark mode */
+.dark .bg-white {
+  background-color: hsl(var(--card));
+}
+
+.dark .text-black {
+  color: hsl(var(--foreground));
+}
+
+.dark .border-gray-200 {
+  border-color: hsl(var(--border));
+}
+
+.dark .bg-gray-100 {
+  background-color: hsl(var(--muted));
+}
+
+.dark .bg-gray-50 {
+  background-color: hsl(var(--secondary));
+}
+
+/* Ensure proper contrast for inputs */
+.dark input, .dark textarea, .dark select {
+  background-color: hsl(var(--input));
+  color: hsl(var(--foreground));
+  border-color: hsl(var(--border));
+}
+
+.dark input::placeholder, .dark textarea::placeholder {
+  color: hsl(var(--muted-foreground));
+}
+
+/* Fix for shadows in dark mode */
+.dark .shadow-lg, .dark .shadow-md, .dark .shadow-sm {
+  --tw-shadow-color: hsl(0 0% 0% / 0.3);
+}
+
+/* Book shadow adjustments for dark mode */
+.dark .book-shadow {
+  box-shadow: 
+    0 4px 6px -1px hsl(0 0% 0% / 0.3),
+    0 2px 4px -2px hsl(0 0% 0% / 0.2),
+    4px 0 8px -2px hsl(0 0% 0% / 0.2);
+}
+
+.dark .book-hover:hover {
+  box-shadow: 
+    0 20px 25px -5px hsl(0 0% 0% / 0.4),
+    0 8px 10px -6px hsl(0 0% 0% / 0.3),
+    8px 0 15px -3px hsl(0 0% 0% / 0.3);
 }
