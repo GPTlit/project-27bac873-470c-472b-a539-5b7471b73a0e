@@ -138,6 +138,19 @@ export const OrderDialog = ({ open, onOpenChange, product }: OrderDialogProps) =
 
       if (orderError) throw orderError;
 
+      // Get a signed URL for the receipt to share with the admin
+      let receiptDisplayUrl = formData.receiptUrl;
+      if (formData.receiptUrl && !formData.receiptUrl.startsWith('http')) {
+        // It's a file path, create a long-lived signed URL for admin access
+        const { data: signedData, error: signError } = await supabase.storage
+          .from('payment-receipts')
+          .createSignedUrl(formData.receiptUrl, 86400 * 7); // 7 days expiry for admin review
+        
+        if (!signError && signedData) {
+          receiptDisplayUrl = signedData.signedUrl;
+        }
+      }
+
       // Send WhatsApp notification to library owner
       const whatsappMessage = `📦 طلب جديد من المتجر:
 
@@ -153,7 +166,7 @@ ${product.author ? `✍️ المؤلف: ${product.author}` : ''}
 ${formData.customerAddress ? `📍 العنوان: ${formData.customerAddress}` : ''}
 
 💳 طريقة الدفع: ${getPaymentMethodName(formData.paymentMethod!)}
-🧾 إيصال الدفع: ${formData.receiptUrl}
+🧾 إيصال الدفع: ${receiptDisplayUrl}
 ${formData.notes ? `📝 ملاحظات: ${formData.notes}` : ''}`;
 
       const encodedMessage = encodeURIComponent(whatsappMessage);
