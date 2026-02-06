@@ -185,6 +185,13 @@ const translations: Translations = {
   settings: { ar: 'الإعدادات', en: 'Settings', fr: 'Paramètres' },
   language: { ar: 'اللغة', en: 'Language', fr: 'Langue' },
   theme: { ar: 'المظهر', en: 'Theme', fr: 'Thème' },
+  
+  // Auth prompts
+  loginRequired: { ar: 'تسجيل الدخول مطلوب', en: 'Login Required', fr: 'Connexion requise' },
+  loginToRead: { ar: 'الرجاء تسجيل الدخول لقراءة الكتب', en: 'Please log in to read books', fr: 'Veuillez vous connecter pour lire les livres' },
+  loginToDownload: { ar: 'الرجاء تسجيل الدخول لتحميل الكتب', en: 'Please log in to download books', fr: 'Veuillez vous connecter pour télécharger les livres' },
+  loginToLike: { ar: 'الرجاء تسجيل الدخول للإعجاب بالكتب', en: 'Please log in to like books', fr: 'Veuillez vous connecter pour aimer les livres' },
+  loginToRate: { ar: 'الرجاء تسجيل الدخول للتقييم', en: 'Please log in to rate', fr: 'Veuillez vous connecter pour noter' },
 };
 
 interface LanguageContextType {

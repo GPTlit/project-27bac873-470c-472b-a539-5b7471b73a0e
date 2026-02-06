@@ -38,18 +38,20 @@ const App = () => (
             <BrowserRouter>
               <Routes>
                 <Route path="/auth" element={<Auth />} />
-                <Route path="/" element={<ProtectedRoute><Index /></ProtectedRoute>} />
-                <Route path="/categories" element={<ProtectedRoute><Categories /></ProtectedRoute>} />
-                <Route path="/category/:name" element={<ProtectedRoute><Category /></ProtectedRoute>} />
-                <Route path="/book/:id" element={<ProtectedRoute><BookDetail /></ProtectedRoute>} />
+                {/* Public routes - viewable without login */}
+                <Route path="/" element={<Index />} />
+                <Route path="/categories" element={<Categories />} />
+                <Route path="/category/:name" element={<Category />} />
+                <Route path="/book/:id" element={<BookDetail />} />
+                <Route path="/search" element={<Search />} />
+                <Route path="/about" element={<About />} />
+                {/* Protected routes - require authentication */}
                 <Route path="/book/:id/read" element={<ProtectedRoute><BookReader /></ProtectedRoute>} />
                 <Route path="/history" element={<ProtectedRoute><History /></ProtectedRoute>} />
                 <Route path="/downloads" element={<ProtectedRoute><Downloads /></ProtectedRoute>} />
                 <Route path="/upload" element={<ProtectedRoute><Upload /></ProtectedRoute>} />
                 <Route path="/admin-upload-mrt" element={<Navigate to="/admin-panel" replace />} />
                 <Route path="/admin-panel" element={<ProtectedRoute requireAdmin><AdminPanel /></ProtectedRoute>} />
-                <Route path="/about" element={<ProtectedRoute><About /></ProtectedRoute>} />
-                <Route path="/search" element={<ProtectedRoute><Search /></ProtectedRoute>} />
                 <Route path="/author-chat" element={<ProtectedRoute><AuthorChat /></ProtectedRoute>} />
                 <Route path="/eterke" element={<ProtectedRoute><Eterke /></ProtectedRoute>} />
                 <Route path="/store" element={<ProtectedRoute><Store /></ProtectedRoute>} />
