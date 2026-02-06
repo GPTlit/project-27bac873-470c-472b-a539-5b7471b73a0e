@@ -104,6 +104,48 @@ const translations: Translations = {
   browseCategories: { ar: 'تصفح التصنيفات', en: 'Browse Categories', fr: 'Parcourir les catégories' },
   booksInCategory: { ar: 'كتب في هذا التصنيف', en: 'books in this category', fr: 'livres dans cette catégorie' },
   
+  // Category names
+  category_novels: { ar: 'روايات', en: 'Novels', fr: 'Romans' },
+  category_religion: { ar: 'دين', en: 'Religion', fr: 'Religion' },
+  category_science: { ar: 'علوم', en: 'Science', fr: 'Sciences' },
+  category_history: { ar: 'تاريخ', en: 'History', fr: 'Histoire' },
+  category_psychology: { ar: 'علم النفس', en: 'Psychology', fr: 'Psychologie' },
+  category_philosophy: { ar: 'فلسفة', en: 'Philosophy', fr: 'Philosophie' },
+  category_kids: { ar: 'كتب أطفال', en: 'Kids Books', fr: 'Livres pour enfants' },
+  category_school: { ar: 'كتب مدرسية', en: 'School Books', fr: 'Livres scolaires' },
+  category_poetry: { ar: 'شعر', en: 'Poetry', fr: 'Poésie' },
+  'category_self-help': { ar: 'تطوير الذات', en: 'Self-Help', fr: 'Développement personnel' },
+  category_fantasy: { ar: 'فانتازيا', en: 'Fantasy', fr: 'Fantaisie' },
+  'category_sci-fi': { ar: 'خيال علمي', en: 'Science Fiction', fr: 'Science-fiction' },
+  category_horror: { ar: 'رعب', en: 'Horror', fr: 'Horreur' },
+  category_thriller: { ar: 'إثارة', en: 'Thriller', fr: 'Thriller' },
+  category_crime: { ar: 'جريمة', en: 'Crime', fr: 'Crime' },
+  category_romance: { ar: 'رومانسي', en: 'Romance', fr: 'Romance' },
+  'category_historical-fiction': { ar: 'تاريخي خيالي', en: 'Historical Fiction', fr: 'Fiction historique' },
+  category_adventure: { ar: 'مغامرات', en: 'Adventure', fr: 'Aventure' },
+  category_action: { ar: 'أكشن', en: 'Action', fr: 'Action' },
+  category_drama: { ar: 'دراما', en: 'Drama', fr: 'Drame' },
+  category_comedy: { ar: 'كوميديا', en: 'Comedy', fr: 'Comédie' },
+  category_robots: { ar: 'روبوتات', en: 'Robots', fr: 'Robots' },
+  category_mythic: { ar: 'أساطير', en: 'Mythology', fr: 'Mythologie' },
+  'category_dark-fantasy': { ar: 'فانتازيا مظلمة', en: 'Dark Fantasy', fr: 'Fantasy sombre' },
+  'category_dark-humor': { ar: 'كوميديا سوداء', en: 'Dark Humor', fr: 'Humour noir' },
+  'category_cosmic-horror': { ar: 'رعب كوني', en: 'Cosmic Horror', fr: 'Horreur cosmique' },
+  category_supernatural: { ar: 'خوارق', en: 'Supernatural', fr: 'Surnaturel' },
+  'category_uncanny-valley': { ar: 'الوادي الغريب', en: 'Uncanny Valley', fr: 'Vallée dérangeante' },
+  'category_gothic-horror': { ar: 'رعب قوطي', en: 'Gothic Horror', fr: 'Horreur gothique' },
+  'category_analog-horror': { ar: 'رعب تناظري', en: 'Analog Horror', fr: 'Horreur analogique' },
+  category_zombies: { ar: 'زومبي', en: 'Zombies', fr: 'Zombies' },
+  category_survival: { ar: 'بقاء', en: 'Survival', fr: 'Survie' },
+  category_biography: { ar: 'سيرة ذاتية', en: 'Biography', fr: 'Biographie' },
+  category_mystery: { ar: 'غموض', en: 'Mystery', fr: 'Mystère' },
+  category_dystopia: { ar: 'ديستوبيا', en: 'Dystopia', fr: 'Dystopie' },
+  category_apocalyptic: { ar: 'نهاية العالم', en: 'Apocalyptic', fr: 'Apocalyptique' },
+  category_steampunk: { ar: 'ستيم بانك', en: 'Steampunk', fr: 'Steampunk' },
+  category_cyberpunk: { ar: 'سايبر بانك', en: 'Cyberpunk', fr: 'Cyberpunk' },
+  category_military: { ar: 'عسكري', en: 'Military', fr: 'Militaire' },
+  category_sports: { ar: 'رياضة', en: 'Sports', fr: 'Sports' },
+  
   // ETERKE (Chat)
   createGroup: { ar: 'إنشاء مجموعة', en: 'Create Group', fr: 'Créer un groupe' },
   newGroup: { ar: 'مجموعة جديدة', en: 'New Group', fr: 'Nouveau groupe' },
@@ -192,6 +234,28 @@ const translations: Translations = {
   loginToDownload: { ar: 'الرجاء تسجيل الدخول لتحميل الكتب', en: 'Please log in to download books', fr: 'Veuillez vous connecter pour télécharger les livres' },
   loginToLike: { ar: 'الرجاء تسجيل الدخول للإعجاب بالكتب', en: 'Please log in to like books', fr: 'Veuillez vous connecter pour aimer les livres' },
   loginToRate: { ar: 'الرجاء تسجيل الدخول للتقييم', en: 'Please log in to rate', fr: 'Veuillez vous connecter pour noter' },
+  
+  // Footer
+  madeWith: { ar: 'صُنع بـ', en: 'Made with', fr: 'Fait avec' },
+  inMauritania: { ar: 'في موريتانيا', en: 'in Mauritania', fr: 'en Mauritanie' },
+  allRightsReserved: { ar: 'جميع الحقوق محفوظة', en: 'All rights reserved', fr: 'Tous droits réservés' },
+  copyright: { ar: 'حقوق النشر', en: 'Copyright', fr: 'Droits d\'auteur' },
+  privacyPolicy: { ar: 'سياسة الخصوصية', en: 'Privacy Policy', fr: 'Politique de confidentialité' },
+  
+  // Permissions
+  permissionDenied: { ar: 'تم رفض الإذن', en: 'Permission Denied', fr: 'Permission refusée' },
+  microphonePermissionNeeded: { ar: 'يرجى السماح بالوصول للميكروفون', en: 'Please allow microphone access', fr: 'Veuillez autoriser l\'accès au microphone' },
+  cameraPermissionNeeded: { ar: 'يرجى السماح بالوصول للكاميرا', en: 'Please allow camera access', fr: 'Veuillez autoriser l\'accès à la caméra' },
+  notificationPermissionNeeded: { ar: 'يرجى السماح بالإشعارات', en: 'Please allow notifications', fr: 'Veuillez autoriser les notifications' },
+  notSupported: { ar: 'غير مدعوم', en: 'Not Supported', fr: 'Non supporté' },
+  notificationsNotSupported: { ar: 'الإشعارات غير مدعومة في هذا المتصفح', en: 'Notifications not supported in this browser', fr: 'Notifications non prises en charge dans ce navigateur' },
+  
+  // Notifications
+  notifications: { ar: 'الإشعارات', en: 'Notifications', fr: 'Notifications' },
+  noNotifications: { ar: 'لا توجد إشعارات', en: 'No notifications', fr: 'Pas de notifications' },
+  newBookAdded: { ar: 'تمت إضافة كتاب جديد', en: 'New book added', fr: 'Nouveau livre ajouté' },
+  newStoreProduct: { ar: 'منتج جديد في المتجر', en: 'New product in store', fr: 'Nouveau produit en boutique' },
+  markAllRead: { ar: 'تحديد الكل كمقروء', en: 'Mark all as read', fr: 'Tout marquer comme lu' },
 };
 
 interface LanguageContextType {

@@ -24,6 +24,8 @@ import AuthorChat from "./pages/AuthorChat";
 import Eterke from "./pages/Eterke";
 import Store from "./pages/Store";
 import Profile from "./pages/Profile";
+import Copyright from "./pages/Copyright";
+import Privacy from "./pages/Privacy";
 
 const queryClient = new QueryClient();
 
@@ -45,6 +47,8 @@ const App = () => (
                 <Route path="/book/:id" element={<BookDetail />} />
                 <Route path="/search" element={<Search />} />
                 <Route path="/about" element={<About />} />
+                <Route path="/copyright" element={<Copyright />} />
+                <Route path="/privacy" element={<Privacy />} />
                 {/* Protected routes - require authentication */}
                 <Route path="/book/:id/read" element={<ProtectedRoute><BookReader /></ProtectedRoute>} />
                 <Route path="/history" element={<ProtectedRoute><History /></ProtectedRoute>} />
