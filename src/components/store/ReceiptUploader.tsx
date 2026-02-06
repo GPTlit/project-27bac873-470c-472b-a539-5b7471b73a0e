@@ -1,19 +1,50 @@
-import { useState, useRef } from 'react';
+import { useState, useRef, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Upload, X, Image as ImageIcon, Loader2 } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
 
 interface ReceiptUploaderProps {
-  receiptUrl: string | null;
-  onUpload: (url: string) => void;
+  receiptUrl: string | null; // This is now the file path, not a public URL
+  onUpload: (path: string) => void;
   onRemove: () => void;
 }
 
 export const ReceiptUploader = ({ receiptUrl, onUpload, onRemove }: ReceiptUploaderProps) => {
   const [uploading, setUploading] = useState(false);
+  const [signedUrl, setSignedUrl] = useState<string | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const { toast } = useToast();
+
+  // Get signed URL for display when receiptUrl (file path) changes
+  useEffect(() => {
+    const getSignedUrl = async () => {
+      if (!receiptUrl) {
+        setSignedUrl(null);
+        return;
+      }
+
+      // If it's already a full URL (legacy data), use it directly
+      if (receiptUrl.startsWith('http')) {
+        setSignedUrl(receiptUrl);
+        return;
+      }
+
+      // Create a signed URL for the private file
+      const { data, error } = await supabase.storage
+        .from('payment-receipts')
+        .createSignedUrl(receiptUrl, 3600); // 1 hour expiry
+
+      if (error) {
+        console.error('Error getting signed URL:', error);
+        return;
+      }
+
+      setSignedUrl(data.signedUrl);
+    };
+
+    getSignedUrl();
+  }, [receiptUrl]);
 
   const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
@@ -53,11 +84,9 @@ export const ReceiptUploader = ({ receiptUrl, onUpload, onRemove }: ReceiptUploa
 
       if (uploadError) throw uploadError;
 
-      const { data } = supabase.storage
-        .from('payment-receipts')
-        .getPublicUrl(fileName);
-
-      onUpload(data.publicUrl);
+      // Store just the file path (not a public URL) since bucket is now private
+      // The path will be used to create signed URLs when displaying
+      onUpload(fileName);
       toast({
         title: 'تم الرفع',
         description: 'تم رفع صورة الإيصال بنجاح',
@@ -81,10 +110,10 @@ export const ReceiptUploader = ({ receiptUrl, onUpload, onRemove }: ReceiptUploa
     <div className="space-y-3">
       <p className="text-sm font-medium text-foreground">صورة إيصال الدفع</p>
       
-      {receiptUrl ? (
+      {receiptUrl && signedUrl ? (
         <div className="relative">
           <img
-            src={receiptUrl}
+            src={signedUrl}
             alt="إيصال الدفع"
             className="w-full h-48 object-cover rounded-lg border"
           />

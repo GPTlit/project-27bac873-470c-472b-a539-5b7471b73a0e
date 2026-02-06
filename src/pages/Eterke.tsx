@@ -492,28 +492,27 @@ const Eterke = () => {
     setIsCreatingGroup(true);
 
     try {
-      const { data: group, error } = await supabase
-        .from('groups')
-        .insert({
-          name: newGroupName.trim(),
-          created_by: user.id,
-        })
-        .select()
-        .single();
+      // Use the secure RPC function for atomic group creation
+      const { data: groupId, error } = await supabase
+        .rpc('create_group_with_members', {
+          _name: newGroupName.trim(),
+          _description: null,
+          _member_ids: []
+        });
 
-      if (error || !group) {
+      if (error || !groupId) {
         throw new Error(error?.message || "فشل إنشاء المجموعة");
       }
 
-      const { error: memberError } = await supabase.from('group_members').insert({
-        group_id: group.id,
-        user_id: user.id,
-        role: 'admin',
-      });
+      // Fetch the created group
+      const { data: group, error: fetchError } = await supabase
+        .from('groups')
+        .select('*')
+        .eq('id', groupId)
+        .single();
 
-      if (memberError) {
-        await supabase.from('groups').delete().eq('id', group.id);
-        throw new Error("فشل إضافتك كعضو");
+      if (fetchError || !group) {
+        throw new Error("فشل استرداد المجموعة");
       }
 
       setGroups(prev => [group, ...prev]);
@@ -589,11 +588,12 @@ const Eterke = () => {
         return;
       }
 
-      const { error } = await supabase.from('group_members').insert({
-        group_id: selectedChat.data.id,
-        user_id: profile.user_id,
-        role: 'member'
-      });
+      // Use the secure RPC function for inviting members
+      const { error } = await supabase
+        .rpc('invite_to_group', {
+          _group_id: selectedChat.data.id,
+          _user_id: profile.user_id
+        });
 
       if (error) {
         throw new Error(error.message);
