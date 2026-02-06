@@ -1,4 +1,4 @@
-import { useParams, Link } from 'react-router-dom';
+import { useParams, Link, useNavigate } from 'react-router-dom';
 import { ArrowRight, BookOpen, Download, Share2, WifiOff, Check, Loader2, FileText } from 'lucide-react';
 import { Layout } from '@/components/layout/Layout';
 import { Button } from '@/components/ui/button';
@@ -14,11 +14,14 @@ import { BookRatingSection } from '@/components/books/BookRatingSection';
 import { BookRecommendations } from '@/components/books/BookRecommendations';
 import { useOfflineBooks } from '@/hooks/useOfflineBooks';
 import { useLanguage } from '@/contexts/LanguageContext';
+import { useAuth } from '@/contexts/AuthContext';
 
 const BookDetail = () => {
   const { id } = useParams<{ id: string }>();
   const { toast } = useToast();
   const { t } = useLanguage();
+  const { user } = useAuth();
+  const navigate = useNavigate();
   const { data: book, isLoading } = useBook(id || '');
   const { isBookOffline, saveBookOffline } = useOfflineBooks();
   const [isDownloading, setIsDownloading] = useState(false);
@@ -32,6 +35,23 @@ const BookDetail = () => {
       setIsOffline(isBookOffline(id));
     }
   }, [id, isBookOffline]);
+
+  // Helper function to require authentication
+  const requireAuth = (callback: () => void, actionDescription: string) => {
+    if (!user) {
+      toast({
+        title: t('loginRequired'),
+        description: actionDescription,
+        action: (
+          <Button size="sm" onClick={() => navigate('/auth')}>
+            {t('login')}
+          </Button>
+        ),
+      });
+      return;
+    }
+    callback();
+  };
 
   if (isLoading) {
     return (
@@ -66,20 +86,32 @@ const BookDetail = () => {
   }
 
   const handleRead = () => {
-    addToReadingHistory({
-      bookId: book.id,
-      title: book.title,
-      author: book.author,
-      coverUrl: book.cover_url || '/placeholder.svg',
-      lastRead: new Date().toISOString(),
-    });
-    toast({
-      title: t('success'),
-      description: 'تمت إضافة الكتاب لتاريخ القراءة',
-    });
+    requireAuth(() => {
+      addToReadingHistory({
+        bookId: book.id,
+        title: book.title,
+        author: book.author,
+        coverUrl: book.cover_url || '/placeholder.svg',
+        lastRead: new Date().toISOString(),
+      });
+      navigate(`/book/${book.id}/read`);
+    }, t('loginToRead'));
   };
 
   const handleDownload = async () => {
+    if (!user) {
+      toast({
+        title: t('loginRequired'),
+        description: t('loginToDownload'),
+        action: (
+          <Button size="sm" onClick={() => navigate('/auth')}>
+            {t('login')}
+          </Button>
+        ),
+      });
+      return;
+    }
+
     setIsDownloading(true);
     setDownloadProgress(0);
     
@@ -243,12 +275,10 @@ const BookDetail = () => {
 
               {/* Actions */}
               <div className="flex flex-wrap gap-4">
-                <Link to={`/book/${book.id}/read`} onClick={handleRead}>
-                  <Button variant="gold" size="xl" className="gap-3">
-                    <BookOpen className="h-5 w-5" />
-                    {t('readNow')}
-                  </Button>
-                </Link>
+                <Button variant="gold" size="xl" className="gap-3" onClick={handleRead}>
+                  <BookOpen className="h-5 w-5" />
+                  {t('readNow')}
+                </Button>
                 <Button
                   variant="outline"
                   size="xl"

@@ -820,6 +820,21 @@ export type Database = {
       }
     }
     Views: {
+      comment_like_counts_public: {
+        Row: {
+          comment_id: string | null
+          like_count: number | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "comment_likes_comment_id_fkey"
+            columns: ["comment_id"]
+            isOneToOne: false
+            referencedRelation: "comments"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       user_profiles_public: {
         Row: {
           avatar_url: string | null
