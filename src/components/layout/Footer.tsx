@@ -1,42 +1,55 @@
 import { Book, Heart } from 'lucide-react';
 import { Link } from 'react-router-dom';
+import { useLanguage } from '@/contexts/LanguageContext';
 
 export const Footer = () => {
+  const { t } = useLanguage();
+  
   return (
-    <footer className="border-t border-border/50 bg-card/50 mt-auto">
+    <footer className="border-t border-border bg-card mt-auto">
       <div className="container-library py-8">
         <div className="flex flex-col md:flex-row items-center justify-between gap-4">
           <div className="flex items-center gap-3">
             <div className="flex h-8 w-8 items-center justify-center rounded-lg gold-gradient">
               <Book className="h-4 w-4 text-primary-foreground" />
             </div>
-            <span className="font-bold text-gradient">مكتبة موريتانيا</span>
+            <span className="font-bold text-gradient">{t('libraryName')}</span>
           </div>
 
           <nav className="flex flex-wrap items-center justify-center gap-4 text-sm text-muted-foreground">
             <Link to="/" className="hover:text-primary transition-colors">
-              الرئيسية
+              {t('home')}
             </Link>
             <Link to="/categories" className="hover:text-primary transition-colors">
-              التصنيفات
+              {t('categories')}
             </Link>
             <Link to="/upload" className="hover:text-primary transition-colors">
-              أرسل كتاباً
+              {t('uploadBook')}
             </Link>
             <Link to="/about" className="hover:text-primary transition-colors">
-              عن المكتبة
+              {t('about')}
             </Link>
           </nav>
 
           <div className="flex items-center gap-1 text-sm text-muted-foreground">
-            <span>صُنع بـ</span>
+            <span>{t('madeWith')}</span>
             <Heart className="h-4 w-4 text-destructive fill-destructive" />
-            <span>في موريتانيا</span>
+            <span>{t('inMauritania')}</span>
           </div>
         </div>
 
+        {/* Legal Links */}
+        <div className="mt-6 pt-6 border-t border-border flex flex-wrap items-center justify-center gap-6 text-sm">
+          <Link to="/copyright" className="text-muted-foreground hover:text-primary transition-colors">
+            {t('copyright')}
+          </Link>
+          <Link to="/privacy" className="text-muted-foreground hover:text-primary transition-colors">
+            {t('privacyPolicy')}
+          </Link>
+        </div>
+
         {/* Contact Info */}
-        <div className="mt-6 pt-6 border-t border-border/50 flex flex-wrap items-center justify-center gap-6 text-sm text-muted-foreground">
+        <div className="mt-4 flex flex-wrap items-center justify-center gap-6 text-sm text-muted-foreground">
           <a
             href="https://wa.me/22226749039"
             target="_blank"
@@ -62,7 +75,7 @@ export const Footer = () => {
         </div>
 
         <div className="mt-4 text-center text-sm text-muted-foreground">
-          <p>© {new Date().getFullYear()} مكتبة موريتانيا. جميع الحقوق محفوظة.</p>
+          <p>© {new Date().getFullYear()} {t('libraryName')}. {t('allRightsReserved')}</p>
         </div>
       </div>
     </footer>

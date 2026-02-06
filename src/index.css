@@ -6,6 +6,7 @@
 
 @layer base {
   :root {
+    /* Light Mode - Warm, Cozy Library Theme */
     --background: 40 30% 96%;
     --foreground: 25 40% 15%;
 
@@ -36,6 +37,7 @@
 
     --radius: 0.75rem;
 
+    /* Custom Theme Colors */
     --gold: 45 70% 55%;
     --gold-light: 45 60% 75%;
     --cream: 40 30% 96%;
@@ -45,6 +47,7 @@
     --amber: 32 60% 40%;
     --amber-light: 32 50% 60%;
 
+    /* Sidebar */
     --sidebar-background: 40 25% 95%;
     --sidebar-foreground: 25 40% 15%;
     --sidebar-primary: 32 60% 40%;
@@ -53,54 +56,63 @@
     --sidebar-accent-foreground: 25 40% 20%;
     --sidebar-border: 35 20% 85%;
     --sidebar-ring: 32 60% 40%;
+
+    /* Overlay */
+    --overlay: 0 0% 0%;
   }
 
   .dark {
-    --background: 20 15% 8%;
-    --foreground: 40 25% 95%;
+    /* Dark Mode - Professional, Sophisticated Library Theme */
+    --background: 220 20% 10%;
+    --foreground: 40 15% 92%;
 
-    --card: 20 15% 12%;
-    --card-foreground: 40 25% 95%;
+    --card: 220 18% 13%;
+    --card-foreground: 40 15% 92%;
 
-    --popover: 20 15% 12%;
-    --popover-foreground: 40 25% 95%;
+    --popover: 220 18% 13%;
+    --popover-foreground: 40 15% 92%;
 
-    --primary: 45 80% 55%;
-    --primary-foreground: 20 30% 8%;
+    --primary: 38 75% 55%;
+    --primary-foreground: 220 20% 8%;
 
-    --secondary: 20 12% 18%;
-    --secondary-foreground: 40 25% 92%;
+    --secondary: 220 15% 18%;
+    --secondary-foreground: 40 15% 88%;
 
-    --muted: 20 12% 15%;
-    --muted-foreground: 40 15% 65%;
+    --muted: 220 12% 16%;
+    --muted-foreground: 40 10% 55%;
 
-    --accent: 38 60% 50%;
-    --accent-foreground: 40 25% 95%;
+    --accent: 38 65% 50%;
+    --accent-foreground: 220 20% 8%;
 
-    --destructive: 0 65% 50%;
+    --destructive: 0 62% 55%;
     --destructive-foreground: 0 0% 100%;
 
-    --border: 20 12% 20%;
-    --input: 20 12% 20%;
-    --ring: 45 80% 55%;
+    --border: 220 12% 22%;
+    --input: 220 12% 18%;
+    --ring: 38 75% 55%;
 
-    --gold: 45 80% 55%;
-    --gold-light: 45 60% 65%;
-    --cream: 20 15% 12%;
-    --cream-dark: 20 12% 18%;
-    --brown: 40 25% 85%;
-    --brown-light: 40 20% 75%;
-    --amber: 38 60% 50%;
+    /* Custom Theme Colors - Dark Mode */
+    --gold: 38 75% 55%;
+    --gold-light: 38 55% 65%;
+    --cream: 220 18% 13%;
+    --cream-dark: 220 15% 18%;
+    --brown: 40 15% 85%;
+    --brown-light: 40 12% 70%;
+    --amber: 38 65% 50%;
     --amber-light: 38 50% 60%;
 
-    --sidebar-background: 20 15% 10%;
-    --sidebar-foreground: 40 25% 95%;
-    --sidebar-primary: 45 80% 55%;
-    --sidebar-primary-foreground: 20 30% 8%;
-    --sidebar-accent: 20 12% 18%;
-    --sidebar-accent-foreground: 40 25% 92%;
-    --sidebar-border: 20 12% 20%;
-    --sidebar-ring: 45 80% 55%;
+    /* Sidebar - Dark Mode */
+    --sidebar-background: 220 18% 11%;
+    --sidebar-foreground: 40 15% 92%;
+    --sidebar-primary: 38 75% 55%;
+    --sidebar-primary-foreground: 220 20% 8%;
+    --sidebar-accent: 220 15% 18%;
+    --sidebar-accent-foreground: 40 15% 88%;
+    --sidebar-border: 220 12% 22%;
+    --sidebar-ring: 38 75% 55%;
+
+    /* Overlay */
+    --overlay: 0 0% 0%;
   }
 }
 
@@ -125,9 +137,9 @@
 
   .book-shadow {
     box-shadow: 
-      0 4px 6px -1px hsl(var(--brown) / 0.1),
-      0 2px 4px -2px hsl(var(--brown) / 0.1),
-      4px 0 8px -2px hsl(var(--brown) / 0.08);
+      0 4px 6px -1px hsl(var(--overlay) / 0.1),
+      0 2px 4px -2px hsl(var(--overlay) / 0.1),
+      4px 0 8px -2px hsl(var(--overlay) / 0.08);
   }
 
   .book-hover {
@@ -137,9 +149,9 @@
   .book-hover:hover {
     transform: translateY(-8px) rotate(-1deg);
     box-shadow: 
-      0 20px 25px -5px hsl(var(--brown) / 0.15),
-      0 8px 10px -6px hsl(var(--brown) / 0.1),
-      8px 0 15px -3px hsl(var(--brown) / 0.1);
+      0 20px 25px -5px hsl(var(--overlay) / 0.15),
+      0 8px 10px -6px hsl(var(--overlay) / 0.1),
+      8px 0 15px -3px hsl(var(--overlay) / 0.1);
   }
 
   .gold-gradient {
@@ -147,26 +159,15 @@
   }
 
   .warm-gradient {
-    background: linear-gradient(180deg, hsl(var(--cream)) 0%, hsl(var(--cream-dark)) 100%);
+    background: linear-gradient(180deg, hsl(var(--background)) 0%, hsl(var(--secondary)) 100%);
   }
 
   .hero-gradient {
-    background: linear-gradient(135deg, hsl(var(--cream-dark)) 0%, hsl(var(--cream)) 50%, hsl(var(--gold-light) / 0.3) 100%);
-  }
-
-  .dark .hero-gradient {
-    background: linear-gradient(135deg, hsl(var(--background)) 0%, hsl(var(--card)) 50%, hsl(var(--gold) / 0.15) 100%);
+    background: linear-gradient(135deg, hsl(var(--secondary)) 0%, hsl(var(--background)) 50%, hsl(var(--gold) / 0.15) 100%);
   }
 
   .text-gradient {
-    background: linear-gradient(135deg, hsl(var(--brown)) 0%, hsl(var(--amber)) 100%);
-    -webkit-background-clip: text;
-    -webkit-text-fill-color: transparent;
-    background-clip: text;
-  }
-
-  .dark .text-gradient {
-    background: linear-gradient(135deg, hsl(var(--gold)) 0%, hsl(var(--amber-light)) 100%);
+    background: linear-gradient(135deg, hsl(var(--primary)) 0%, hsl(var(--gold)) 100%);
     -webkit-background-clip: text;
     -webkit-text-fill-color: transparent;
     background-clip: text;
@@ -183,7 +184,7 @@
   }
 
   .card-cozy {
-    @apply bg-card rounded-xl border border-border/50 shadow-sm hover:shadow-md transition-shadow duration-300;
+    @apply bg-card rounded-xl border border-border shadow-sm hover:shadow-md transition-shadow duration-300;
   }
 }
 
@@ -257,82 +258,4 @@ html {
   .h-screen {
     height: 100dvh;
   }
-}
-
-/* Dark mode scrollbar */
-.dark ::-webkit-scrollbar-track {
-  background: hsl(var(--muted));
-}
-
-.dark ::-webkit-scrollbar-thumb {
-  background: hsl(var(--muted-foreground) / 0.4);
-}
-
-.dark ::-webkit-scrollbar-thumb:hover {
-  background: hsl(var(--muted-foreground) / 0.6);
-}
-
-/* Ensure all text is visible in dark mode */
-.dark h1, .dark h2, .dark h3, .dark h4, .dark h5, .dark h6 {
-  color: hsl(var(--foreground));
-}
-
-.dark p {
-  color: hsl(var(--foreground));
-}
-
-.dark span:not(.text-gradient):not([class*="text-"]) {
-  color: inherit;
-}
-
-/* Button and interactive elements in dark mode */
-.dark .bg-white {
-  background-color: hsl(var(--card));
-}
-
-.dark .text-black {
-  color: hsl(var(--foreground));
-}
-
-.dark .border-gray-200 {
-  border-color: hsl(var(--border));
-}
-
-.dark .bg-gray-100 {
-  background-color: hsl(var(--muted));
-}
-
-.dark .bg-gray-50 {
-  background-color: hsl(var(--secondary));
-}
-
-/* Ensure proper contrast for inputs */
-.dark input, .dark textarea, .dark select {
-  background-color: hsl(var(--input));
-  color: hsl(var(--foreground));
-  border-color: hsl(var(--border));
-}
-
-.dark input::placeholder, .dark textarea::placeholder {
-  color: hsl(var(--muted-foreground));
-}
-
-/* Fix for shadows in dark mode */
-.dark .shadow-lg, .dark .shadow-md, .dark .shadow-sm {
-  --tw-shadow-color: hsl(0 0% 0% / 0.3);
-}
-
-/* Book shadow adjustments for dark mode */
-.dark .book-shadow {
-  box-shadow: 
-    0 4px 6px -1px hsl(0 0% 0% / 0.3),
-    0 2px 4px -2px hsl(0 0% 0% / 0.2),
-    4px 0 8px -2px hsl(0 0% 0% / 0.2);
-}
-
-.dark .book-hover:hover {
-  box-shadow: 
-    0 20px 25px -5px hsl(0 0% 0% / 0.4),
-    0 8px 10px -6px hsl(0 0% 0% / 0.3),
-    8px 0 15px -3px hsl(0 0% 0% / 0.3);
 }
