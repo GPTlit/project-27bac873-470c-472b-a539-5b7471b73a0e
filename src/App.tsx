@@ -38,8 +38,8 @@ const App = () => (
           <TooltipProvider>
             <Toaster />
             <Sonner />
-            <ConsentDialog />
             <BrowserRouter>
+              <ConsentDialog />
               <Routes>
                 <Route path="/auth" element={<Auth />} />
                 {/* Public routes - viewable without login */}
