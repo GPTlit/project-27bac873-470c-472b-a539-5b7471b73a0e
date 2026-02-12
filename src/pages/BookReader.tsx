@@ -1,5 +1,5 @@
 import { useParams, Link } from 'react-router-dom';
-import { ArrowRight, Download, ZoomIn, ZoomOut, Loader2, WifiOff } from 'lucide-react';
+import { ArrowRight, Download, ZoomIn, ZoomOut, Loader2, WifiOff, BookmarkPlus, Bookmark as BookmarkIcon, List } from 'lucide-react';
 import { useState, useEffect, useCallback, useRef } from 'react';
 import { Document, Page, pdfjs } from 'react-pdf';
 import 'react-pdf/dist/Page/AnnotationLayer.css';
@@ -8,22 +8,35 @@ import { Button } from '@/components/ui/button';
 import { useBook } from '@/hooks/useBooks';
 import { addToReadingHistory } from '@/lib/storage';
 import { useOfflineBooks } from '@/hooks/useOfflineBooks';
+import { getBookmarks, addBookmark, removeBookmark, getLastBookmark, Bookmark } from '@/lib/bookmarks';
+import BookmarkPanel from '@/components/books/BookmarkPanel';
+import { toast } from 'sonner';
 
-// Set up PDF.js worker
 pdfjs.GlobalWorkerOptions.workerSrc = `//unpkg.com/pdfjs-dist@${pdfjs.version}/build/pdf.worker.min.mjs`;
 
 const BookReader = () => {
   const { id } = useParams<{ id: string }>();
   const { data: book, isLoading } = useBook(id || '');
-  const { isBookOffline, getOfflineBookUrl } = useOfflineBooks();
+  const { getOfflineBookUrl } = useOfflineBooks();
   const [numPages, setNumPages] = useState<number>(0);
   const [scale, setScale] = useState(1.0);
   const [isOfflineMode, setIsOfflineMode] = useState(false);
   const [fileUrl, setFileUrl] = useState<string | null>(null);
   const [loadedPages, setLoadedPages] = useState<Set<number>>(new Set());
+  const [bookmarks, setBookmarks] = useState<Bookmark[]>([]);
+  const [panelOpen, setPanelOpen] = useState(false);
+  const [currentPage, setCurrentPage] = useState(1);
   const containerRef = useRef<HTMLDivElement>(null);
   const observerRef = useRef<IntersectionObserver | null>(null);
+  const pageElementsRef = useRef<Map<number, HTMLDivElement>>(new Map());
+  const shouldRestoreRef = useRef(true);
 
+  // Load bookmarks
+  useEffect(() => {
+    if (id) setBookmarks(getBookmarks(id));
+  }, [id]);
+
+  // Setup book file + history
   useEffect(() => {
     if (id && book) {
       const offlineUrl = getOfflineBookUrl(id);
@@ -34,30 +47,70 @@ const BookReader = () => {
         setFileUrl(book.file_url);
         setIsOfflineMode(false);
       }
-
       addToReadingHistory({
-        bookId: book.id,
-        title: book.title,
-        author: book.author,
-        coverUrl: book.cover_url || '/placeholder.svg',
-        lastRead: new Date().toISOString(),
+        bookId: book.id, title: book.title, author: book.author,
+        coverUrl: book.cover_url || '/placeholder.svg', lastRead: new Date().toISOString(),
       });
     }
   }, [book, id, getOfflineBookUrl]);
 
-  const onDocumentLoadSuccess = ({ numPages }: { numPages: number }) => {
-    setNumPages(numPages);
-    // Initially load first 3 pages
+  // Restore last bookmark position after pages render
+  useEffect(() => {
+    if (!shouldRestoreRef.current || numPages === 0 || !id) return;
+    const last = getLastBookmark(id);
+    if (last) {
+      shouldRestoreRef.current = false;
+      // Delay to let pages mount
+      setTimeout(() => navigateToPage(last.page, last.scrollOffset), 500);
+    }
+  }, [numPages, id]);
+
+  const onDocumentLoadSuccess = ({ numPages: n }: { numPages: number }) => {
+    setNumPages(n);
     setLoadedPages(new Set([1, 2, 3]));
   };
 
   const handleZoomIn = () => setScale((prev) => Math.min(prev + 0.2, 3));
   const handleZoomOut = () => setScale((prev) => Math.max(prev - 0.2, 0.5));
 
-  // Use IntersectionObserver for smooth lazy loading
+  const navigateToPage = (page: number, _scrollOffset: number = 0) => {
+    // Ensure page is loaded
+    setLoadedPages((prev) => {
+      const next = new Set(prev);
+      for (let i = Math.max(1, page - 1); i <= Math.min(numPages, page + 2); i++) next.add(i);
+      return next;
+    });
+    setTimeout(() => {
+      const el = pageElementsRef.current.get(page);
+      if (el) {
+        el.scrollIntoView({ behavior: 'smooth', block: 'start' });
+      }
+    }, 100);
+  };
+
+  const handleAddBookmark = () => {
+    if (!id) return;
+    const bm = addBookmark(id, currentPage, 0);
+    setBookmarks(getBookmarks(id));
+    toast.success(`تمت إضافة علامة: ${bm.name}`);
+  };
+
+  const handleRemoveBookmark = (bmId: string) => {
+    if (!id) return;
+    removeBookmark(bmId);
+    setBookmarks(getBookmarks(id));
+    toast.success('تم حذف العلامة');
+  };
+
+  const refreshBookmarks = () => {
+    if (id) setBookmarks(getBookmarks(id));
+  };
+
+  // Track current page via IntersectionObserver
   const pageRef = useCallback((node: HTMLDivElement | null, pageNum: number) => {
     if (!node) return;
-    
+    pageElementsRef.current.set(pageNum, node);
+
     if (!observerRef.current) {
       observerRef.current = new IntersectionObserver(
         (entries) => {
@@ -65,31 +118,27 @@ const BookReader = () => {
             if (entry.isIntersecting) {
               const pg = Number(entry.target.getAttribute('data-page'));
               if (pg) {
+                setCurrentPage(pg);
                 setLoadedPages((prev) => {
                   const next = new Set(prev);
-                  // Load this page and 2 ahead
-                  for (let i = Math.max(1, pg - 1); i <= Math.min(numPages, pg + 2); i++) {
-                    next.add(i);
-                  }
+                  for (let i = Math.max(1, pg - 1); i <= Math.min(numPages, pg + 2); i++) next.add(i);
                   return next;
                 });
               }
             }
           });
         },
-        { rootMargin: '600px 0px', threshold: 0.01 }
+        { rootMargin: '600px 0px', threshold: 0.5 }
       );
     }
-    
     observerRef.current.observe(node);
   }, [numPages]);
 
-  // Cleanup observer
   useEffect(() => {
-    return () => {
-      observerRef.current?.disconnect();
-    };
+    return () => { observerRef.current?.disconnect(); };
   }, []);
+
+  const currentPageBookmarked = bookmarks.some((b) => b.page === currentPage);
 
   if (isLoading) {
     return (
@@ -103,15 +152,8 @@ const BookReader = () => {
     return (
       <div className="min-h-screen bg-background flex items-center justify-center">
         <div className="text-center">
-          <h1 className="text-2xl font-bold text-foreground mb-4">
-            الكتاب غير موجود
-          </h1>
-          <Link to="/">
-            <Button variant="outline" className="gap-2">
-              <ArrowRight className="h-4 w-4" />
-              العودة للرئيسية
-            </Button>
-          </Link>
+          <h1 className="text-2xl font-bold text-foreground mb-4">الكتاب غير موجود</h1>
+          <Link to="/"><Button variant="outline" className="gap-2"><ArrowRight className="h-4 w-4" />العودة للرئيسية</Button></Link>
         </div>
       </div>
     );
@@ -123,11 +165,9 @@ const BookReader = () => {
       <div className="sticky top-0 z-50 bg-card border-b border-border shadow-sm">
         <div className="container-library">
           <div className="flex items-center justify-between h-14">
-            <div className="flex items-center gap-4">
+            <div className="flex items-center gap-2 sm:gap-4">
               <Link to={`/book/${book.id}`}>
-                <Button variant="ghost" size="icon">
-                  <ArrowRight className="h-5 w-5" />
-                </Button>
+                <Button variant="ghost" size="icon"><ArrowRight className="h-5 w-5" /></Button>
               </Link>
               <div className="hidden sm:block">
                 <h1 className="font-bold text-foreground line-clamp-1">{book.title}</h1>
@@ -136,28 +176,45 @@ const BookReader = () => {
               {isOfflineMode && (
                 <div className="flex items-center gap-1 px-2 py-1 rounded-full bg-accent/10 text-accent text-xs">
                   <WifiOff className="h-3 w-3" />
-                  <span className="hidden sm:inline">بدون إنترنت</span>
                 </div>
               )}
             </div>
 
             <div className="flex items-center gap-1 sm:gap-2">
-              <span className="text-sm text-muted-foreground">{numPages} صفحة</span>
-              <div className="h-6 w-px bg-border mx-1 sm:mx-2" />
-              <Button variant="ghost" size="icon" onClick={handleZoomOut}>
-                <ZoomOut className="h-4 w-4" />
+              {/* Bookmark controls */}
+              <Button
+                variant="ghost"
+                size="icon"
+                onClick={() => setPanelOpen(!panelOpen)}
+                className="relative"
+                title="العلامات المرجعية"
+              >
+                <List className="h-4 w-4" />
+                {bookmarks.length > 0 && (
+                  <span className="absolute -top-0.5 -right-0.5 bg-primary text-primary-foreground text-[9px] rounded-full w-4 h-4 flex items-center justify-center">
+                    {bookmarks.length}
+                  </span>
+                )}
               </Button>
-              <span className="text-sm text-muted-foreground min-w-[3rem] text-center hidden sm:block">
-                {Math.round(scale * 100)}%
-              </span>
-              <Button variant="ghost" size="icon" onClick={handleZoomIn}>
-                <ZoomIn className="h-4 w-4" />
+              <Button
+                variant={currentPageBookmarked ? 'default' : 'ghost'}
+                size="icon"
+                onClick={handleAddBookmark}
+                title={`إضافة علامة - صفحة ${currentPage}`}
+              >
+                {currentPageBookmarked ? <BookmarkIcon className="h-4 w-4" /> : <BookmarkPlus className="h-4 w-4" />}
               </Button>
-              <div className="h-6 w-px bg-border mx-1 sm:mx-2" />
+
+              <div className="h-6 w-px bg-border mx-1" />
+              <span className="text-xs text-muted-foreground">{currentPage}/{numPages}</span>
+              <div className="h-6 w-px bg-border mx-1" />
+              <Button variant="ghost" size="icon" onClick={handleZoomOut}><ZoomOut className="h-4 w-4" /></Button>
+              <span className="text-xs text-muted-foreground min-w-[2.5rem] text-center hidden sm:block">{Math.round(scale * 100)}%</span>
+              <Button variant="ghost" size="icon" onClick={handleZoomIn}><ZoomIn className="h-4 w-4" /></Button>
+              <div className="h-6 w-px bg-border mx-1" />
               <a href={book.file_url} download target="_blank" rel="noopener noreferrer">
                 <Button variant="outline" size="sm" className="gap-2">
-                  <Download className="h-4 w-4" />
-                  <span className="hidden sm:inline">تحميل</span>
+                  <Download className="h-4 w-4" /><span className="hidden sm:inline">تحميل</span>
                 </Button>
               </a>
             </div>
@@ -165,7 +222,17 @@ const BookReader = () => {
         </div>
       </div>
 
-      {/* PDF Viewer - Lazy loaded with IntersectionObserver */}
+      {/* Bookmark Panel */}
+      <BookmarkPanel
+        bookmarks={bookmarks}
+        onNavigate={navigateToPage}
+        onRemove={handleRemoveBookmark}
+        onUpdate={refreshBookmarks}
+        isOpen={panelOpen}
+        onClose={() => setPanelOpen(false)}
+      />
+
+      {/* PDF Viewer */}
       <div className="flex-1 overflow-auto p-4" ref={containerRef}>
         <div className="flex justify-center">
           {fileUrl && (
@@ -181,10 +248,7 @@ const BookReader = () => {
                 <div className="flex flex-col items-center justify-center py-20 text-center">
                   <p className="text-destructive mb-4">فشل في تحميل الملف</p>
                   <a href={book.file_url} download target="_blank" rel="noopener noreferrer">
-                    <Button variant="outline" className="gap-2">
-                      <Download className="h-4 w-4" />
-                      تحميل الملف مباشرة
-                    </Button>
+                    <Button variant="outline" className="gap-2"><Download className="h-4 w-4" />تحميل الملف مباشرة</Button>
                   </a>
                 </div>
               }
@@ -193,12 +257,28 @@ const BookReader = () => {
               {Array.from(new Array(numPages), (_, index) => {
                 const pageNum = index + 1;
                 const isLoaded = loadedPages.has(pageNum);
+                const pageBookmarks = bookmarks.filter((b) => b.page === pageNum);
                 return (
                   <div
                     key={`page_wrapper_${pageNum}`}
                     data-page={pageNum}
                     ref={(node) => pageRef(node, pageNum)}
+                    className="relative"
                   >
+                    {/* Bookmark indicators on the page */}
+                    {pageBookmarks.length > 0 && (
+                      <div className="absolute top-0 right-1 z-10 flex flex-col gap-0.5">
+                        {pageBookmarks.map((bm) => (
+                          <div
+                            key={bm.id}
+                            className="w-5 h-7 rounded-b-sm shadow-md cursor-pointer hover:h-9 transition-all"
+                            style={{ backgroundColor: bm.color }}
+                            title={bm.name}
+                            onClick={() => setPanelOpen(true)}
+                          />
+                        ))}
+                      </div>
+                    )}
                     {isLoaded ? (
                       <Page
                         pageNumber={pageNum}
