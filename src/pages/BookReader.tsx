@@ -12,8 +12,6 @@ import { useOfflineBooks } from '@/hooks/useOfflineBooks';
 // Set up PDF.js worker
 pdfjs.GlobalWorkerOptions.workerSrc = `//unpkg.com/pdfjs-dist@${pdfjs.version}/build/pdf.worker.min.mjs`;
 
-const VISIBLE_BUFFER = 3; // pages before/after viewport to render
-
 const BookReader = () => {
   const { id } = useParams<{ id: string }>();
   const { data: book, isLoading } = useBook(id || '');
@@ -22,12 +20,12 @@ const BookReader = () => {
   const [scale, setScale] = useState(1.0);
   const [isOfflineMode, setIsOfflineMode] = useState(false);
   const [fileUrl, setFileUrl] = useState<string | null>(null);
-  const [visibleRange, setVisibleRange] = useState({ start: 1, end: 5 });
+  const [loadedPages, setLoadedPages] = useState<Set<number>>(new Set());
   const containerRef = useRef<HTMLDivElement>(null);
+  const observerRef = useRef<IntersectionObserver | null>(null);
 
   useEffect(() => {
     if (id && book) {
-      // Check if book is available offline
       const offlineUrl = getOfflineBookUrl(id);
       if (offlineUrl) {
         setFileUrl(offlineUrl);
@@ -49,24 +47,49 @@ const BookReader = () => {
 
   const onDocumentLoadSuccess = ({ numPages }: { numPages: number }) => {
     setNumPages(numPages);
+    // Initially load first 3 pages
+    setLoadedPages(new Set([1, 2, 3]));
   };
 
   const handleZoomIn = () => setScale((prev) => Math.min(prev + 0.2, 3));
   const handleZoomOut = () => setScale((prev) => Math.max(prev - 0.2, 0.5));
 
-  // Virtualized scrolling: only render pages near the viewport
-  const handleScroll = useCallback(() => {
-    const container = containerRef.current;
-    if (!container || numPages === 0) return;
-    const scrollTop = container.scrollTop;
-    const viewportHeight = container.clientHeight;
-    const pageHeight = (viewportHeight * scale) + 16; // approx page height + gap
-    const currentPage = Math.max(1, Math.floor(scrollTop / pageHeight) + 1);
-    setVisibleRange({
-      start: Math.max(1, currentPage - VISIBLE_BUFFER),
-      end: Math.min(numPages, currentPage + VISIBLE_BUFFER),
-    });
-  }, [numPages, scale]);
+  // Use IntersectionObserver for smooth lazy loading
+  const pageRef = useCallback((node: HTMLDivElement | null, pageNum: number) => {
+    if (!node) return;
+    
+    if (!observerRef.current) {
+      observerRef.current = new IntersectionObserver(
+        (entries) => {
+          entries.forEach((entry) => {
+            if (entry.isIntersecting) {
+              const pg = Number(entry.target.getAttribute('data-page'));
+              if (pg) {
+                setLoadedPages((prev) => {
+                  const next = new Set(prev);
+                  // Load this page and 2 ahead
+                  for (let i = Math.max(1, pg - 1); i <= Math.min(numPages, pg + 2); i++) {
+                    next.add(i);
+                  }
+                  return next;
+                });
+              }
+            }
+          });
+        },
+        { rootMargin: '600px 0px', threshold: 0.01 }
+      );
+    }
+    
+    observerRef.current.observe(node);
+  }, [numPages]);
+
+  // Cleanup observer
+  useEffect(() => {
+    return () => {
+      observerRef.current?.disconnect();
+    };
+  }, []);
 
   if (isLoading) {
     return (
@@ -100,7 +123,6 @@ const BookReader = () => {
       <div className="sticky top-0 z-50 bg-card border-b border-border shadow-sm">
         <div className="container-library">
           <div className="flex items-center justify-between h-14">
-            {/* Back & Title */}
             <div className="flex items-center gap-4">
               <Link to={`/book/${book.id}`}>
                 <Button variant="ghost" size="icon">
@@ -108,30 +130,20 @@ const BookReader = () => {
                 </Button>
               </Link>
               <div className="hidden sm:block">
-                <h1 className="font-bold text-foreground line-clamp-1">
-                  {book.title}
-                </h1>
+                <h1 className="font-bold text-foreground line-clamp-1">{book.title}</h1>
                 <p className="text-xs text-muted-foreground">{book.author}</p>
               </div>
-              {/* Offline indicator */}
               {isOfflineMode && (
-                <div className="flex items-center gap-1 px-2 py-1 rounded-full bg-green-500/10 text-green-600 text-xs">
+                <div className="flex items-center gap-1 px-2 py-1 rounded-full bg-accent/10 text-accent text-xs">
                   <WifiOff className="h-3 w-3" />
                   <span className="hidden sm:inline">بدون إنترنت</span>
                 </div>
               )}
             </div>
 
-            {/* Controls */}
             <div className="flex items-center gap-1 sm:gap-2">
-              {/* Page count */}
-              <span className="text-sm text-muted-foreground">
-                {numPages} صفحة
-              </span>
-              
+              <span className="text-sm text-muted-foreground">{numPages} صفحة</span>
               <div className="h-6 w-px bg-border mx-1 sm:mx-2" />
-              
-              {/* Zoom */}
               <Button variant="ghost" size="icon" onClick={handleZoomOut}>
                 <ZoomOut className="h-4 w-4" />
               </Button>
@@ -141,9 +153,7 @@ const BookReader = () => {
               <Button variant="ghost" size="icon" onClick={handleZoomIn}>
                 <ZoomIn className="h-4 w-4" />
               </Button>
-              
               <div className="h-6 w-px bg-border mx-1 sm:mx-2" />
-              
               <a href={book.file_url} download target="_blank" rel="noopener noreferrer">
                 <Button variant="outline" size="sm" className="gap-2">
                   <Download className="h-4 w-4" />
@@ -155,8 +165,8 @@ const BookReader = () => {
         </div>
       </div>
 
-      {/* PDF Viewer - Scrollable with virtualization */}
-      <div className="flex-1 overflow-auto p-4" ref={containerRef} onScroll={handleScroll}>
+      {/* PDF Viewer - Lazy loaded with IntersectionObserver */}
+      <div className="flex-1 overflow-auto p-4" ref={containerRef}>
         <div className="flex justify-center">
           {fileUrl && (
             <Document
@@ -182,22 +192,30 @@ const BookReader = () => {
             >
               {Array.from(new Array(numPages), (_, index) => {
                 const pageNum = index + 1;
-                const isVisible = pageNum >= visibleRange.start && pageNum <= visibleRange.end;
-                return isVisible ? (
-                  <Page
-                    key={`page_${pageNum}`}
-                    pageNumber={pageNum}
-                    scale={scale}
-                    className="shadow-xl rounded-lg overflow-hidden"
-                    renderTextLayer={false}
-                    renderAnnotationLayer={false}
-                  />
-                ) : (
+                const isLoaded = loadedPages.has(pageNum);
+                return (
                   <div
-                    key={`placeholder_${pageNum}`}
-                    style={{ height: `${800 * scale}px`, width: `${600 * scale}px` }}
-                    className="bg-muted rounded-lg"
-                  />
+                    key={`page_wrapper_${pageNum}`}
+                    data-page={pageNum}
+                    ref={(node) => pageRef(node, pageNum)}
+                  >
+                    {isLoaded ? (
+                      <Page
+                        pageNumber={pageNum}
+                        scale={scale}
+                        className="shadow-xl rounded-lg overflow-hidden"
+                        renderTextLayer={false}
+                        renderAnnotationLayer={false}
+                      />
+                    ) : (
+                      <div
+                        style={{ height: `${800 * scale}px`, width: `${600 * scale}px` }}
+                        className="bg-card rounded-lg flex items-center justify-center"
+                      >
+                        <Loader2 className="h-6 w-6 animate-spin text-muted-foreground" />
+                      </div>
+                    )}
+                  </div>
                 );
               })}
             </Document>
