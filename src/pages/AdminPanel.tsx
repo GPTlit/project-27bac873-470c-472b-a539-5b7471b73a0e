@@ -18,7 +18,8 @@ import { useFeatureToggles, useActiveTheme, useInvalidateConfig } from '@/hooks/
 import { useBooks, Book } from '@/hooks/useBooks';
 import { allCategories } from '@/hooks/useCategories';
 import { StoreManagement } from '@/components/admin/StoreManagement';
-import { Bot, Send, Loader2, Settings, Palette, ToggleLeft, Sparkles, Upload, FileText, Image, Save, Trash2, Pencil, X, ShoppingBag, MoreVertical } from 'lucide-react';
+import { NotificationBroadcast } from '@/components/admin/NotificationBroadcast';
+import { Bot, Send, Loader2, Settings, Palette, ToggleLeft, Sparkles, Upload, FileText, Image, Save, Trash2, Pencil, X, ShoppingBag, MoreVertical, Bell } from 'lucide-react';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
 
 interface ChatMessage {
@@ -468,6 +469,10 @@ const AdminPanel = () => {
               <Palette className="h-4 w-4" />
               المظهر
             </TabsTrigger>
+            <TabsTrigger value="notifications" className="flex items-center gap-2 px-4 py-2">
+              <Bell className="h-4 w-4" />
+              الإشعارات
+            </TabsTrigger>
           </TabsList>
 
           {/* Store Management Tab */}
@@ -867,6 +872,15 @@ const AdminPanel = () => {
                     </p>
                   </div>
                 )}
+              </CardContent>
+            </Card>
+          </TabsContent>
+
+          {/* Notifications Tab */}
+          <TabsContent value="notifications">
+            <Card>
+              <CardContent className="p-6">
+                <NotificationBroadcast />
               </CardContent>
             </Card>
           </TabsContent>
