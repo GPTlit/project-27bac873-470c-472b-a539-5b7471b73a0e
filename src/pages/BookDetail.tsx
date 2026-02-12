@@ -189,7 +189,7 @@ const BookDetail = () => {
                   to={`/category/${category.name}`}
                   className="hover:text-primary transition-colors"
                 >
-                  {category.nameAr}
+                  {(() => { const key = `category_${category.name}`; const translated = t(key); return translated !== key ? translated : category.nameAr; })()}
                 </Link>
                 <span>/</span>
               </>
@@ -225,7 +225,7 @@ const BookDetail = () => {
                   className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-secondary text-sm text-secondary-foreground hover:bg-secondary/80 transition-colors mb-4"
                 >
                   <span>{category.icon}</span>
-                  {category.nameAr}
+                  {(() => { const key = `category_${category.name}`; const translated = t(key); return translated !== key ? translated : category.nameAr; })()}
                 </Link>
               )}
 
@@ -255,7 +255,7 @@ const BookDetail = () => {
 
               {/* Offline Badge */}
               {isOffline && (
-                <div className="inline-flex items-center gap-2 px-3 py-2 rounded-lg bg-green-500/10 text-green-600 mb-6">
+                <div className="inline-flex items-center gap-2 px-3 py-2 rounded-lg bg-accent/10 text-accent mb-6">
                   <WifiOff className="h-4 w-4" />
                   <span className="text-sm font-medium">{t('savedOnDevice')}</span>
                 </div>
@@ -289,7 +289,7 @@ const BookDetail = () => {
                   {isDownloading ? (
                     <Loader2 className="h-5 w-5 animate-spin" />
                   ) : isOffline ? (
-                    <Check className="h-5 w-5 text-green-600" />
+                    <Check className="h-5 w-5 text-accent" />
                   ) : (
                     <Download className="h-5 w-5" />
                   )}
@@ -319,7 +319,7 @@ const BookDetail = () => {
                   <div>
                     <p className="text-sm text-muted-foreground">{t('category')}</p>
                     <p className="font-medium text-foreground">
-                      {category?.nameAr}
+                      {category ? (() => { const key = `category_${category.name}`; const translated = t(key); return translated !== key ? translated : category.nameAr; })() : '—'}
                     </p>
                   </div>
                   <div>
