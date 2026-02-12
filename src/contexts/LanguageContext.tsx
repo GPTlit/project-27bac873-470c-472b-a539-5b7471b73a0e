@@ -32,7 +32,7 @@ const translations: Translations = {
   // Hero Section
   libraryTitle: { ar: 'مكتبة موريتانيا', en: 'Mauritania Library', fr: 'Bibliothèque Mauritanie' },
   freeDigitalLibrary: { ar: 'مكتبة رقمية مجانية للجميع', en: 'Free digital library for everyone', fr: 'Bibliothèque numérique gratuite pour tous' },
-  discoverBooks: { ar: 'اكتشف آلاف الكتب العربية في مختلف المجالات. اقرأ وحمّل مجاناً بدون تسجيل.', en: 'Discover thousands of Arabic books in various fields. Read and download for free without registration.', fr: 'Découvrez des milliers de livres arabes dans divers domaines. Lisez et téléchargez gratuitement sans inscription.' },
+  discoverBooks: { ar: 'اكتشف آلاف الكتب مجاناً واقرأها في أي وقت.', en: 'Discover thousands of books for free, anytime.', fr: 'Découvrez des milliers de livres gratuitement, à tout moment.' },
   searchPlaceholder: { ar: 'ابحث عن كتاب، مؤلف، أو تصنيف...', en: 'Search for a book, author, or category...', fr: 'Rechercher un livre, un auteur ou une catégorie...' },
   books: { ar: 'كتاب', en: 'books', fr: 'livres' },
   categoriesCount: { ar: 'تصنيف', en: 'categories', fr: 'catégories' },

@@ -34,36 +34,31 @@ export function ThemeProvider({
 
   useEffect(() => {
     const root = window.document.documentElement;
-
     root.classList.remove('light', 'dark');
 
+    // Clear any inline style overrides from DB theme so CSS variables take effect
+    const cssVarsToClear = [
+      'background', 'foreground', 'card', 'card-foreground', 'popover', 'popover-foreground',
+      'primary', 'primary-foreground', 'secondary', 'secondary-foreground',
+      'muted', 'muted-foreground', 'accent', 'accent-foreground',
+      'destructive', 'destructive-foreground', 'border', 'input', 'ring',
+      'gold', 'gold-light', 'cream', 'cream-dark', 'brown', 'brown-light', 'amber', 'amber-light',
+      'sidebar-background', 'sidebar-foreground', 'sidebar-primary', 'sidebar-primary-foreground',
+      'sidebar-accent', 'sidebar-accent-foreground', 'sidebar-border', 'sidebar-ring',
+    ];
+    cssVarsToClear.forEach(v => root.style.removeProperty(`--${v}`));
+
+    let resolvedTheme: string = theme;
     if (theme === 'system') {
-      const systemTheme = window.matchMedia('(prefers-color-scheme: dark)')
-        .matches
+      resolvedTheme = window.matchMedia('(prefers-color-scheme: dark)').matches
         ? 'dark'
         : 'light';
-
-      root.classList.add(systemTheme);
-      return;
     }
 
-    root.classList.add(theme);
+    root.classList.add(resolvedTheme);
   }, [theme]);
-
-  // Apply database theme colors
-  useEffect(() => {
-    if (!dbTheme?.colors) return;
-
-    const root = document.documentElement;
-    const colors = dbTheme.colors as Record<string, string>;
-
-    // Apply each color from the database to CSS variables
-    Object.entries(colors).forEach(([key, value]) => {
-      if (value) {
-        root.style.setProperty(`--${key}`, value);
-      }
-    });
-  }, [dbTheme]);
+  // DB theme colors disabled - they override dark/light CSS variables via inline styles.
+  // Theme is managed entirely via index.css :root and .dark selectors.
 
   const value = {
     theme,
