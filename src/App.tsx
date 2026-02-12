@@ -7,6 +7,7 @@ import { AuthProvider } from "@/contexts/AuthContext";
 import { LanguageProvider } from "@/contexts/LanguageContext";
 import { ThemeProvider } from "@/components/ThemeProvider";
 import { ProtectedRoute } from "@/components/ProtectedRoute";
+import { ConsentDialog } from "@/components/ConsentDialog";
 import Index from "./pages/Index";
 import Auth from "./pages/Auth";
 import Categories from "./pages/Categories";
@@ -37,6 +38,7 @@ const App = () => (
           <TooltipProvider>
             <Toaster />
             <Sonner />
+            <ConsentDialog />
             <BrowserRouter>
               <Routes>
                 <Route path="/auth" element={<Auth />} />
