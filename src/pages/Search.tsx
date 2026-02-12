@@ -6,12 +6,14 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { useSearchBooks } from '@/hooks/useBooks';
 import { useState, useEffect } from 'react';
+import { useLanguage } from '@/contexts/LanguageContext';
 
 const Search = () => {
   const [searchParams] = useSearchParams();
   const query = searchParams.get('q') || '';
   const [searchQuery, setSearchQuery] = useState(query);
   const navigate = useNavigate();
+  const { t } = useLanguage();
 
   const { data: results, isLoading } = useSearchBooks(query);
 
@@ -35,7 +37,7 @@ const Search = () => {
             <div className="relative">
               <Input
                 type="text"
-                placeholder="ابحث عن كتاب، مؤلف، أو تصنيف..."
+                placeholder={t('searchPlaceholder')}
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
                 className="h-14 pr-5 pl-32 text-lg"
@@ -47,7 +49,7 @@ const Search = () => {
                 className="absolute left-2 top-1/2 -translate-y-1/2"
               >
                 <SearchIcon className="h-5 w-5 ml-2" />
-                بحث
+                {t('search')}
               </Button>
             </div>
           </form>
@@ -56,10 +58,10 @@ const Search = () => {
           {query && (
             <div className="mb-8">
               <h1 className="text-2xl font-bold text-foreground mb-2">
-                نتائج البحث عن "{query}"
+                {t('searchResults')} "{query}"
               </h1>
               <p className="text-muted-foreground">
-                {isLoading ? 'جاري البحث...' : `تم العثور على ${results?.length || 0} نتيجة`}
+                {isLoading ? t('searching') : `${t('resultsFound')} ${results?.length || 0} ${t('result')}`}
               </p>
             </div>
           )}
@@ -85,15 +87,15 @@ const Search = () => {
             <div className="text-center py-16">
               <div className="text-6xl mb-6">🔍</div>
               <h2 className="text-xl font-bold text-foreground mb-2">
-                لم يتم العثور على نتائج
+                {t('noResultsFound')}
               </h2>
               <p className="text-muted-foreground mb-6">
-                جرّب البحث بكلمات مختلفة
+                {t('tryDifferentWords')}
               </p>
               <Link to="/">
                 <Button variant="outline" className="gap-2">
                   <ArrowRight className="h-4 w-4" />
-                  العودة للرئيسية
+                  {t('backToHome')}
                 </Button>
               </Link>
             </div>
@@ -104,10 +106,10 @@ const Search = () => {
             <div className="text-center py-16">
               <div className="text-6xl mb-6">📚</div>
               <h2 className="text-xl font-bold text-foreground mb-2">
-                ابحث في مكتبتنا
+                {t('searchOurLibrary')}
               </h2>
               <p className="text-muted-foreground">
-                اكتب اسم الكتاب أو المؤلف أو التصنيف للبحث
+                {t('typeToSearch')}
               </p>
             </div>
           )}

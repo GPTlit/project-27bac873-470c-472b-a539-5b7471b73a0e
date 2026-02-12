@@ -2,6 +2,7 @@ import { Link } from 'react-router-dom';
 import { cn } from '@/lib/utils';
 import { Book as MockBook } from '@/lib/types';
 import { Book as DbBook } from '@/hooks/useBooks';
+import { useLanguage } from '@/contexts/LanguageContext';
 
 // Accept both the mock Book type and database Book type
 type AnyBook = MockBook | DbBook | {
@@ -20,6 +21,8 @@ interface BookCardProps {
 }
 
 export const BookCard = ({ book, index = 0 }: BookCardProps) => {
+  const { t } = useLanguage();
+  
   // Handle both coverUrl (mock) and cover_url (database)
   const coverImage = ('coverUrl' in book && book.coverUrl) || 
                      ('cover_url' in book && book.cover_url) || 
@@ -44,16 +47,16 @@ export const BookCard = ({ book, index = 0 }: BookCardProps) => {
           />
           
           {/* Hover Overlay */}
-          <div className="absolute inset-0 bg-brown/60 opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex items-center justify-center">
-            <span className="text-primary-foreground font-medium px-4 py-2 rounded-lg bg-primary/90">
-              اقرأ الآن
+          <div className="absolute inset-0 bg-foreground/60 opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex items-center justify-center">
+            <span className="text-background font-medium px-4 py-2 rounded-lg bg-primary/90">
+              {t('readNowOverlay')}
             </span>
           </div>
 
           {/* Featured Badge */}
           {'featured' in book && book.featured && (
             <div className="absolute top-3 right-3 px-2 py-1 rounded-md gold-gradient text-xs font-medium text-primary-foreground">
-              مميز
+              {t('featured')}
             </div>
           )}
         </div>

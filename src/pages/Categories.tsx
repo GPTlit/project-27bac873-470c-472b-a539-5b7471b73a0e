@@ -2,9 +2,11 @@ import { Layout } from '@/components/layout/Layout';
 import { CategoryCard } from '@/components/home/CategoryCard';
 import { useCategories } from '@/hooks/useCategories';
 import { Skeleton } from '@/components/ui/skeleton';
+import { useLanguage } from '@/contexts/LanguageContext';
 
 const Categories = () => {
   const { data: categories, isLoading } = useCategories();
+  const { t } = useLanguage();
 
   return (
     <Layout>
@@ -13,10 +15,10 @@ const Categories = () => {
           {/* Header */}
           <div className="text-center mb-12">
             <h1 className="text-3xl md:text-4xl font-bold text-foreground mb-4">
-              جميع التصنيفات
+              {t('allCategories')}
             </h1>
             <p className="text-muted-foreground max-w-xl mx-auto">
-              تصفح مكتبتنا الغنية بـ {categories?.length || 40} تصنيف ومجال معرفي مختلف
+              {t('categoriesPageDesc')} {categories?.length || 40} {t('categoriesPageDescSuffix')}
             </p>
           </div>
 

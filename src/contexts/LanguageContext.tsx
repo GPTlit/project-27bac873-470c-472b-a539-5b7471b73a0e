@@ -256,6 +256,79 @@ const translations: Translations = {
   newBookAdded: { ar: 'تمت إضافة كتاب جديد', en: 'New book added', fr: 'Nouveau livre ajouté' },
   newStoreProduct: { ar: 'منتج جديد في المتجر', en: 'New product in store', fr: 'Nouveau produit en boutique' },
   markAllRead: { ar: 'تحديد الكل كمقروء', en: 'Mark all as read', fr: 'Tout marquer comme lu' },
+
+  // Auth page
+  loginToAccess: { ar: 'سجل دخولك للوصول للمكتبة', en: 'Log in to access the library', fr: 'Connectez-vous pour accéder à la bibliothèque' },
+  createNewAccount: { ar: 'أنشئ حساباً جديداً', en: 'Create a new account', fr: 'Créer un nouveau compte' },
+  password: { ar: 'كلمة المرور', en: 'Password', fr: 'Mot de passe' },
+  invalidEmail: { ar: 'البريد الإلكتروني غير صالح', en: 'Invalid email', fr: 'Email invalide' },
+  passwordMinLength: { ar: 'كلمة المرور يجب أن تكون 6 أحرف على الأقل', en: 'Password must be at least 6 characters', fr: 'Le mot de passe doit comporter au moins 6 caractères' },
+  loginError: { ar: 'خطأ', en: 'Error', fr: 'Erreur' },
+  invalidCredentials: { ar: 'البريد الإلكتروني أو كلمة المرور غير صحيحة', en: 'Invalid email or password', fr: 'Email ou mot de passe invalide' },
+  alreadyRegistered: { ar: 'هذا البريد الإلكتروني مسجل بالفعل', en: 'This email is already registered', fr: 'Cet email est déjà enregistré' },
+  welcome: { ar: 'مرحباً', en: 'Welcome', fr: 'Bienvenue' },
+  loginSuccess: { ar: 'تم تسجيل الدخول بنجاح', en: 'Logged in successfully', fr: 'Connexion réussie' },
+  accountCreated: { ar: 'تم إنشاء الحساب بنجاح', en: 'Account created successfully', fr: 'Compte créé avec succès' },
+  unexpectedError: { ar: 'حدث خطأ غير متوقع', en: 'An unexpected error occurred', fr: 'Une erreur inattendue est survenue' },
+  noAccount: { ar: 'ليس لديك حساب؟ أنشئ واحداً', en: "Don't have an account? Create one", fr: "Pas de compte ? Créez-en un" },
+  hasAccount: { ar: 'لديك حساب بالفعل؟ سجل دخولك', en: 'Already have an account? Log in', fr: 'Vous avez déjà un compte ? Connectez-vous' },
+  createAccount: { ar: 'إنشاء حساب', en: 'Create Account', fr: 'Créer un compte' },
+
+  // Categories page
+  categoriesPageDesc: { ar: 'تصفح مكتبتنا الغنية بـ', en: 'Browse our rich library with', fr: 'Parcourez notre riche bibliothèque avec' },
+  categoriesPageDescSuffix: { ar: 'تصنيف ومجال معرفي مختلف', en: 'different categories and fields of knowledge', fr: 'catégories et domaines de connaissance différents' },
+
+  // Category page
+  categoryNotFound: { ar: 'التصنيف غير موجود', en: 'Category not found', fr: 'Catégorie non trouvée' },
+  backToCategories: { ar: 'العودة للتصنيفات', en: 'Back to Categories', fr: 'Retour aux catégories' },
+  booksInThisCategory: { ar: 'كتاب في هذا التصنيف', en: 'books in this category', fr: 'livres dans cette catégorie' },
+  noBooksInCategory: { ar: 'لا توجد كتب في هذا التصنيف حالياً', en: 'No books in this category yet', fr: 'Pas encore de livres dans cette catégorie' },
+
+  // Search page
+  searchResults: { ar: 'نتائج البحث عن', en: 'Search results for', fr: 'Résultats de recherche pour' },
+  searching: { ar: 'جاري البحث...', en: 'Searching...', fr: 'Recherche en cours...' },
+  resultsFound: { ar: 'تم العثور على', en: 'Found', fr: 'Trouvé' },
+  result: { ar: 'نتيجة', en: 'result(s)', fr: 'résultat(s)' },
+  noResultsFound: { ar: 'لم يتم العثور على نتائج', en: 'No results found', fr: 'Aucun résultat trouvé' },
+  tryDifferentWords: { ar: 'جرّب البحث بكلمات مختلفة', en: 'Try searching with different words', fr: 'Essayez de chercher avec des mots différents' },
+  searchOurLibrary: { ar: 'ابحث في مكتبتنا', en: 'Search our library', fr: 'Recherchez dans notre bibliothèque' },
+  typeToSearch: { ar: 'اكتب اسم الكتاب أو المؤلف أو التصنيف للبحث', en: 'Type a book name, author, or category to search', fr: 'Tapez un nom de livre, auteur ou catégorie pour rechercher' },
+
+  // Store page
+  bookStore: { ar: 'متجر الكتب', en: 'Book Store', fr: 'Librairie' },
+  bookStoreDesc: { ar: 'اشترِ الكتب الورقية واستلمها في منزلك', en: 'Buy physical books and get them delivered to your home', fr: 'Achetez des livres physiques et recevez-les chez vous' },
+  searchForBook: { ar: 'ابحث عن كتاب...', en: 'Search for a book...', fr: 'Rechercher un livre...' },
+  all: { ar: 'الكل', en: 'All', fr: 'Tout' },
+  noProducts: { ar: 'لا توجد منتجات', en: 'No products', fr: 'Aucun produit' },
+  noSearchResults: { ar: 'لم يتم العثور على نتائج للبحث', en: 'No search results found', fr: 'Aucun résultat de recherche' },
+  noProductsYet: { ar: 'لم تتم إضافة منتجات بعد', en: 'No products added yet', fr: 'Aucun produit ajouté pour le moment' },
+
+  // About page
+  aboutLibrary: { ar: 'عن مكتبة موريتانيا', en: 'About Mauritania Library', fr: 'À propos de la Bibliothèque Mauritanie' },
+  freeDigitalLibraryDesc: { ar: 'مكتبة رقمية مجانية للجميع', en: 'Free digital library for everyone', fr: 'Bibliothèque numérique gratuite pour tous' },
+  ourMission: { ar: 'رسالتنا', en: 'Our Mission', fr: 'Notre Mission' },
+  ourMissionDesc: { ar: 'نسعى لنشر المعرفة والثقافة العربية من خلال توفير مكتبة رقمية شاملة ومجانية للجميع. نؤمن بأن المعرفة حق للجميع، ونعمل على جعل الكتب في متناول كل قارئ عربي في موريتانيا والعالم.', en: 'We strive to spread Arabic knowledge and culture by providing a comprehensive and free digital library for everyone. We believe knowledge is a right for all, and we work to make books accessible to every Arabic reader in Mauritania and the world.', fr: 'Nous nous efforçons de diffuser les connaissances et la culture arabes en fournissant une bibliothèque numérique complète et gratuite pour tous.' },
+  ourValues: { ar: 'قيمنا', en: 'Our Values', fr: 'Nos Valeurs' },
+  value1: { ar: 'المعرفة للجميع بدون قيود', en: 'Knowledge for all without restrictions', fr: 'La connaissance pour tous sans restrictions' },
+  value2: { ar: 'الحفاظ على التراث العربي والإسلامي', en: 'Preserving Arab and Islamic heritage', fr: 'Préserver le patrimoine arabe et islamique' },
+  value3: { ar: 'تشجيع القراءة والتعلم المستمر', en: 'Encouraging reading and continuous learning', fr: 'Encourager la lecture et l\'apprentissage continu' },
+  value4: { ar: 'المشاركة المجتمعية في نشر المعرفة', en: 'Community participation in spreading knowledge', fr: 'Participation communautaire à la diffusion du savoir' },
+  howToContribute: { ar: 'كيف تساهم معنا؟', en: 'How to contribute?', fr: 'Comment contribuer ?' },
+  contributeDesc1: { ar: 'يمكنك المساهمة في إثراء المكتبة من خلال إرسال كتب جديدة عبر صفحة "أرسل كتاباً". سنقوم بمراجعة الكتب ونشرها خلال 24 ساعة.', en: 'You can contribute to enriching the library by sending new books via the "Upload Book" page. We will review and publish them within 24 hours.', fr: 'Vous pouvez contribuer à enrichir la bibliothèque en envoyant de nouveaux livres via la page "Envoyer un livre". Nous les examinerons et les publierons dans les 24 heures.' },
+  contributeDesc2: { ar: 'نرحب بجميع المساهمات في مختلف المجالات: الأدب، التاريخ، العلوم، الدين، الفلسفة، وغيرها.', en: 'We welcome all contributions in various fields: literature, history, science, religion, philosophy, and more.', fr: 'Nous accueillons toutes les contributions dans divers domaines : littérature, histoire, sciences, religion, philosophie, et plus.' },
+  contactUs: { ar: 'تواصل معنا', en: 'Contact Us', fr: 'Contactez-nous' },
+  whatsapp: { ar: 'واتساب', en: 'WhatsApp', fr: 'WhatsApp' },
+  snapchat: { ar: 'سناب شات', en: 'Snapchat', fr: 'Snapchat' },
+
+  // BookCard
+  readNowOverlay: { ar: 'اقرأ الآن', en: 'Read Now', fr: 'Lire Maintenant' },
+  featured: { ar: 'مميز', en: 'Featured', fr: 'En vedette' },
+
+  // BookDetail
+  savedForOffline: { ar: 'تم حفظ الكتاب على جهازك للقراءة بدون إنترنت', en: 'Book saved on your device for offline reading', fr: 'Livre enregistré sur votre appareil pour la lecture hors ligne' },
+  storageFull: { ar: 'مساحة التخزين غير كافية أو حدث خطأ', en: 'Insufficient storage or an error occurred', fr: 'Stockage insuffisant ou erreur survenue' },
+  downloadFailed: { ar: 'تعذر تحميل الكتاب', en: 'Could not download the book', fr: 'Impossible de télécharger le livre' },
+  linkCopied: { ar: 'تم نسخ رابط الكتاب', en: 'Book link copied', fr: 'Lien du livre copié' },
 };
 
 interface LanguageContextType {

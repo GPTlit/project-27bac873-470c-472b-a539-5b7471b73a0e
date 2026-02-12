@@ -8,9 +8,11 @@ import { useStoreProducts, StoreProduct } from '@/hooks/useStoreProducts';
 import { OrderDialog } from '@/components/store/OrderDialog';
 import { ShoppingBag, Search, ShoppingCart, BookOpen, Loader2 } from 'lucide-react';
 import { allCategories } from '@/hooks/useCategories';
+import { useLanguage } from '@/contexts/LanguageContext';
 
 const Store = () => {
   const { data: products, isLoading } = useStoreProducts();
+  const { t } = useLanguage();
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedCategory, setSelectedCategory] = useState<string | null>(null);
   const [selectedProduct, setSelectedProduct] = useState<StoreProduct | null>(null);
@@ -33,6 +35,9 @@ const Store = () => {
   };
 
   const getCategoryName = (categoryKey: string) => {
+    const key = `category_${categoryKey}`;
+    const translated = t(key);
+    if (translated !== key) return translated;
     const cat = allCategories.find(c => c.name === categoryKey);
     return cat ? `${cat.icon} ${cat.nameAr}` : categoryKey;
   };
@@ -47,10 +52,10 @@ const Store = () => {
               <ShoppingBag className="h-8 w-8 text-primary-foreground" />
             </div>
             <h1 className="text-3xl md:text-4xl font-bold text-foreground mb-4">
-              متجر الكتب
+              {t('bookStore')}
             </h1>
             <p className="text-muted-foreground max-w-md mx-auto">
-              اشترِ الكتب الورقية واستلمها في منزلك
+              {t('bookStoreDesc')}
             </p>
           </div>
 
@@ -59,7 +64,7 @@ const Store = () => {
             <div className="relative flex-1">
               <Search className="absolute right-3 top-1/2 -translate-y-1/2 h-5 w-5 text-muted-foreground" />
               <Input
-                placeholder="ابحث عن كتاب..."
+                placeholder={t('searchForBook')}
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
                 className="pr-10"
@@ -71,7 +76,7 @@ const Store = () => {
                 size="sm"
                 onClick={() => setSelectedCategory(null)}
               >
-                الكل
+                {t('all')}
               </Button>
               {allCategories.slice(0, 5).map(cat => (
                 <Button
@@ -80,7 +85,7 @@ const Store = () => {
                   size="sm"
                   onClick={() => setSelectedCategory(cat.name)}
                 >
-                  {cat.icon} {cat.nameAr}
+                  {cat.icon} {getCategoryName(cat.name)}
                 </Button>
               ))}
             </div>
@@ -130,7 +135,7 @@ const Store = () => {
                       onClick={() => openOrderDialog(product)}
                     >
                       <ShoppingCart className="h-4 w-4" />
-                      اطلب الآن
+                      {t('orderNow')}
                     </Button>
                   </CardContent>
                 </Card>
@@ -139,9 +144,9 @@ const Store = () => {
           ) : (
             <div className="text-center py-20">
               <ShoppingBag className="h-16 w-16 text-muted-foreground mx-auto mb-4" />
-              <h2 className="text-xl font-semibold mb-2">لا توجد منتجات</h2>
+              <h2 className="text-xl font-semibold mb-2">{t('noProducts')}</h2>
               <p className="text-muted-foreground">
-                {searchQuery ? 'لم يتم العثور على نتائج للبحث' : 'لم تتم إضافة منتجات بعد'}
+                {searchQuery ? t('noSearchResults') : t('noProductsYet')}
               </p>
             </div>
           )}
