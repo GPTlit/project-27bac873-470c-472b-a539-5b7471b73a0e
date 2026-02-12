@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { Link, useLocation } from 'react-router-dom';
-import { Menu, X, Home, Grid3X3, History, Download, Upload, LogOut, Shield, Info, Sparkles, Users, ShoppingBag, User, Moon, Sun, Globe } from 'lucide-react';
+import { Menu, X, Home, Grid3X3, History, Download, Upload, LogOut, Shield, Info, Sparkles, Users, ShoppingBag, User, Moon, Sun, Globe, Lock, FileText } from 'lucide-react';
 import { NotificationBell } from '@/components/NotificationBell';
 import { Button } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
@@ -41,6 +41,8 @@ export const Header = () => {
     { href: '/profile', label: t('profile'), icon: User },
     { href: '/about', label: t('about'), icon: Info },
     ...(isAdmin ? [{ href: '/admin-upload-mrt', label: t('adminPanel'), icon: Shield }] : []),
+    { href: '/privacy', label: language === 'ar' ? 'سياسة الخصوصية' : language === 'fr' ? 'Politique de Confidentialité' : 'Privacy Policy', icon: Lock },
+    { href: '/copyright', label: language === 'ar' ? 'حقوق النشر' : language === 'fr' ? 'Droits d\'Auteur' : 'Copyright', icon: FileText },
   ];
 
   const handleSignOut = async () => {
