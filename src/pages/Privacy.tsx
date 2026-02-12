@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Lock, CheckCircle, AlertTriangle, Mail, Phone, Database, Eye, Shield } from 'lucide-react';
+import { Lock, CheckCircle, AlertTriangle, Mail, Phone, Database, Eye, Shield, Smartphone, BookOpen } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Layout } from '@/components/layout/Layout';
 import { useLanguage } from '@/contexts/LanguageContext';
@@ -12,9 +12,7 @@ const Privacy = () => {
 
   useEffect(() => {
     const agreed = localStorage.getItem('privacy-agreed');
-    if (agreed === 'true') {
-      setHasAgreed(true);
-    }
+    if (agreed === 'true') setHasAgreed(true);
   }, []);
 
   const handleAgree = () => {
@@ -26,11 +24,13 @@ const Privacy = () => {
   const content = {
     ar: {
       title: 'سياسة الخصوصية',
+      subtitle: 'مكتبة موريتانيا',
+      welcome: 'مرحباً بك في مكتبة موريتانيا. خصوصيتك مهمة بالنسبة لنا. توضح هذه السياسة كيف نجمع ونستخدم ونحمي معلوماتك الشخصية.',
       tldr: 'ملخص سريع',
       tldrPoints: [
-        'نجمع فقط المعلومات الأساسية: البريد الإلكتروني، بيانات الحساب، ونشاط القراءة.',
-        'لا نبيع معلوماتك الشخصية أبداً.',
-        'بياناتك محمية وتُستخدم فقط لتحسين تجربة المكتبة.',
+        'نجمع فقط المعلومات الأساسية لتقديم تجربة قراءة سلسة.',
+        'لا نشارك معلوماتك الشخصية مع أي طرف ثالث بدون موافقتك.',
+        'يمكنك تحديث أو حذف معلوماتك الشخصية في أي وقت من الإعدادات.',
       ],
       agreeButton: 'موافق ومتابعة',
       alreadyAgreed: 'لقد وافقت بالفعل على سياسة الخصوصية',
@@ -38,69 +38,47 @@ const Privacy = () => {
       fullPolicy: 'سياسة الخصوصية الكاملة',
       sections: {
         collected: {
-          title: 'البيانات التي نجمعها',
+          title: 'المعلومات التي نجمعها',
           items: [
-            'عنوان البريد الإلكتروني',
-            'معلومات الحساب الأساسية (الاسم، الصورة الشخصية)',
-            'بيانات استخدام التطبيق (الصفحات المشاهدة، تقدم القراءة)',
-            'الإعجابات والتقييمات والتعليقات'
-          ]
-        },
-        notCollected: {
-          title: 'ما لا نجمعه',
-          items: [
-            'لا نبيع أي بيانات شخصية',
-            'لا نصل إلى ملفاتك الخاصة',
-            'لا نتتبع موقعك الجغرافي',
-            'لا نشارك بياناتك مع جهات تسويقية'
+            'معلومات شخصية: الاسم، البريد الإلكتروني، وتفاصيل الحساب عند التسجيل.',
+            'بيانات الاستخدام: الكتب المقروءة، العلامات المرجعية، تقدم القراءة، والتفاعلات داخل التطبيق.',
+            'معلومات الجهاز: نوع الجهاز، نظام التشغيل، إصدار التطبيق.',
           ]
         },
         usage: {
-          title: 'كيف نستخدم بياناتك',
+          title: 'كيف نستخدم معلوماتك',
           items: [
-            'المصادقة وتسجيل الدخول',
-            'تحسين تجربة المكتبة',
-            'توصيات الكتب المخصصة',
-            'الأمان ومنع إساءة الاستخدام'
+            'لتقديم تجربة قراءة سلسة وتتبع تقدم القراءة.',
+            'لتوصية الكتب والمحتوى المخصص.',
+            'لتحسين تطبيقنا وإصلاح الأخطاء.',
           ]
-        },
-        protection: {
-          title: 'حماية البيانات',
-          content: 'نستخدم تقنيات تشفير متقدمة لحماية بياناتك. الوصول إلى البيانات مقيد ومراقب.'
-        },
-        storage: {
-          title: 'التخزين المحلي',
-          content: 'نستخدم ملفات تعريف الارتباط والتخزين المحلي لحفظ تفضيلاتك وتحسين الأداء.'
-        },
-        thirdParty: {
-          title: 'خدمات الطرف الثالث',
-          content: 'نستخدم خدمات موثوقة لتوفير بعض الميزات (المصادقة، التخزين). هذه الخدمات ملتزمة بمعايير الخصوصية.'
         },
         rights: {
           title: 'حقوقك',
           items: [
-            'طلب نسخة من بياناتك',
-            'طلب حذف حسابك وبياناتك',
-            'تعديل معلوماتك الشخصية',
-            'إلغاء الاشتراك في الإشعارات'
+            'يمكنك تحديث أو حذف معلوماتك الشخصية في أي وقت من الإعدادات.',
+            'لا نشارك معلوماتك الشخصية مع أطراف ثالثة بدون موافقتك، إلا كما يقتضيه القانون.',
           ]
+        },
+        security: {
+          title: 'الأمان',
+          content: 'نأخذ الأمان على محمل الجد ونستخدم تدابير معيارية في الصناعة لحماية بياناتك.',
         },
         contact: {
           title: 'تواصل معنا',
-          content: 'لأي استفسارات حول الخصوصية:'
+          content: 'لأي استفسارات حول الخصوصية:',
         },
-        disclaimer: {
-          content: 'بياناتك لن تُباع أبداً. نحن ملتزمون بحماية خصوصيتك.'
-        }
       }
     },
     en: {
       title: 'Privacy Policy',
+      subtitle: 'Mauritania Library',
+      welcome: 'Welcome to مكتبة موريتانيا. Your privacy is important to us. This policy explains how we collect, use, and protect your personal information.',
       tldr: 'Quick Summary',
       tldrPoints: [
-        'We collect only basic info: email, account data, and reading activity.',
-        'We DO NOT sell your personal info.',
-        'Your data is protected and used to improve the library experience.',
+        'We collect only essential information to provide a seamless reading experience.',
+        'We do not share your personal information with third parties without your consent.',
+        'You can update or delete your personal information anytime in settings.',
       ],
       agreeButton: 'Agree & Continue',
       alreadyAgreed: 'You have already agreed to the Privacy Policy',
@@ -108,69 +86,47 @@ const Privacy = () => {
       fullPolicy: 'Full Privacy Policy',
       sections: {
         collected: {
-          title: 'Data We Collect',
+          title: 'Information We Collect',
           items: [
-            'Email address',
-            'Basic account information (name, profile picture)',
-            'App usage data (pages viewed, reading progress)',
-            'Likes, ratings, and comments'
-          ]
-        },
-        notCollected: {
-          title: 'What We Do NOT Collect',
-          items: [
-            'We never sell personal data',
-            'We do not access your private files',
-            'We do not track your geographic location',
-            'We do not share data with marketing agencies'
+            'Personal information: Name, email, and account details when you sign up.',
+            'Usage data: Books read, bookmarks, reading progress, and interactions within the app.',
+            'Device information: Device type, operating system, app version.',
           ]
         },
         usage: {
-          title: 'How We Use Your Data',
+          title: 'How We Use Your Information',
           items: [
-            'Authentication and login',
-            'Improving library experience',
-            'Personalized book recommendations',
-            'Security and abuse prevention'
+            'To provide a seamless reading experience and track reading progress.',
+            'To recommend books and personalized content.',
+            'To improve our app and fix bugs.',
           ]
-        },
-        protection: {
-          title: 'Data Protection',
-          content: 'We use advanced encryption technologies to protect your data. Access to data is restricted and monitored.'
-        },
-        storage: {
-          title: 'Local Storage',
-          content: 'We use cookies and local storage to save your preferences and improve performance.'
-        },
-        thirdParty: {
-          title: 'Third-Party Services',
-          content: 'We use trusted services for some features (authentication, storage). These services comply with privacy standards.'
         },
         rights: {
           title: 'Your Rights',
           items: [
-            'Request a copy of your data',
-            'Request deletion of your account and data',
-            'Modify your personal information',
-            'Unsubscribe from notifications'
+            'You can update or delete your personal information anytime in settings.',
+            'We do not share your personal information with third parties without your consent, except as required by law.',
           ]
+        },
+        security: {
+          title: 'Security',
+          content: 'We take security seriously and use industry-standard measures to protect your data.',
         },
         contact: {
           title: 'Contact Us',
-          content: 'For any privacy inquiries:'
+          content: 'For any privacy inquiries:',
         },
-        disclaimer: {
-          content: 'Your data will never be sold. We are committed to protecting your privacy.'
-        }
       }
     },
     fr: {
       title: 'Politique de Confidentialité',
+      subtitle: 'Bibliothèque Mauritanie',
+      welcome: 'Bienvenue dans مكتبة موريتانيا. Votre vie privée est importante pour nous. Cette politique explique comment nous collectons, utilisons et protégeons vos informations personnelles.',
       tldr: 'Résumé Rapide',
       tldrPoints: [
-        'Nous collectons uniquement les informations de base : email, données du compte et activité de lecture.',
-        'Nous NE vendons PAS vos informations personnelles.',
-        'Vos données sont protégées et utilisées pour améliorer l\'expérience de la bibliothèque.',
+        'Nous collectons uniquement les informations essentielles pour offrir une expérience de lecture fluide.',
+        'Nous ne partageons pas vos informations personnelles avec des tiers sans votre consentement.',
+        'Vous pouvez mettre à jour ou supprimer vos informations personnelles à tout moment dans les paramètres.',
       ],
       agreeButton: 'Accepter et Continuer',
       alreadyAgreed: 'Vous avez déjà accepté la Politique de Confidentialité',
@@ -178,60 +134,36 @@ const Privacy = () => {
       fullPolicy: 'Politique de Confidentialité Complète',
       sections: {
         collected: {
-          title: 'Données Collectées',
+          title: 'Informations Collectées',
           items: [
-            'Adresse email',
-            'Informations de compte de base (nom, photo de profil)',
-            'Données d\'utilisation (pages consultées, progression de lecture)',
-            'J\'aime, évaluations et commentaires'
-          ]
-        },
-        notCollected: {
-          title: 'Ce que Nous NE Collectons PAS',
-          items: [
-            'Nous ne vendons jamais les données personnelles',
-            'Nous n\'accédons pas à vos fichiers privés',
-            'Nous ne suivons pas votre localisation',
-            'Nous ne partageons pas les données avec des agences marketing'
+            'Informations personnelles : nom, email et détails du compte lors de l\'inscription.',
+            'Données d\'utilisation : livres lus, signets, progression de lecture et interactions dans l\'application.',
+            'Informations sur l\'appareil : type d\'appareil, système d\'exploitation, version de l\'application.',
           ]
         },
         usage: {
-          title: 'Comment Nous Utilisons Vos Données',
+          title: 'Comment Nous Utilisons Vos Informations',
           items: [
-            'Authentification et connexion',
-            'Amélioration de l\'expérience bibliothèque',
-            'Recommandations de livres personnalisées',
-            'Sécurité et prévention des abus'
+            'Pour offrir une expérience de lecture fluide et suivre la progression.',
+            'Pour recommander des livres et du contenu personnalisé.',
+            'Pour améliorer notre application et corriger les bugs.',
           ]
-        },
-        protection: {
-          title: 'Protection des Données',
-          content: 'Nous utilisons des technologies de cryptage avancées pour protéger vos données.'
-        },
-        storage: {
-          title: 'Stockage Local',
-          content: 'Nous utilisons des cookies et le stockage local pour sauvegarder vos préférences.'
-        },
-        thirdParty: {
-          title: 'Services Tiers',
-          content: 'Nous utilisons des services de confiance pour certaines fonctionnalités.'
         },
         rights: {
           title: 'Vos Droits',
           items: [
-            'Demander une copie de vos données',
-            'Demander la suppression de votre compte',
-            'Modifier vos informations personnelles',
-            'Se désabonner des notifications'
+            'Vous pouvez mettre à jour ou supprimer vos informations personnelles à tout moment.',
+            'Nous ne partageons pas vos informations avec des tiers sans votre consentement, sauf obligation légale.',
           ]
+        },
+        security: {
+          title: 'Sécurité',
+          content: 'Nous prenons la sécurité au sérieux et utilisons des mesures standard pour protéger vos données.',
         },
         contact: {
           title: 'Nous Contacter',
-          content: 'Pour toute question sur la confidentialité:'
+          content: 'Pour toute question sur la confidentialité :',
         },
-        disclaimer: {
-          content: 'Vos données ne seront jamais vendues. Nous nous engageons à protéger votre vie privée.'
-        }
       }
     }
   };
@@ -247,10 +179,12 @@ const Privacy = () => {
             <div className="inline-flex h-16 w-16 items-center justify-center rounded-2xl gold-gradient mb-6">
               <Lock className="h-8 w-8 text-primary-foreground" />
             </div>
-            <h1 className="text-3xl md:text-4xl font-bold text-foreground mb-4">
-              {c.title}
-            </h1>
+            <h1 className="text-3xl md:text-4xl font-bold text-foreground mb-2">{c.title}</h1>
+            <p className="text-muted-foreground">{c.subtitle}</p>
           </div>
+
+          {/* Welcome */}
+          <p className="text-muted-foreground text-center mb-8 leading-relaxed">{c.welcome}</p>
 
           {/* TL;DR Summary */}
           <div className="card-cozy p-6 mb-8 bg-primary/5 border-primary/20">
@@ -266,13 +200,13 @@ const Privacy = () => {
                 </li>
               ))}
             </ul>
-            
+
             {!hasAgreed && (
               <Button onClick={handleAgree} className="w-full mt-6 gold-gradient text-primary-foreground">
                 {c.agreeButton}
               </Button>
             )}
-            
+
             {hasAgreed && (
               <div className="mt-6 p-4 bg-primary/10 rounded-xl">
                 <div className="flex items-center gap-2 text-primary">
@@ -293,7 +227,7 @@ const Privacy = () => {
               {c.fullPolicy}
             </h2>
 
-            {/* Collected Data */}
+            {/* Information We Collect */}
             <div className="card-cozy p-6">
               <h3 className="text-lg font-bold text-foreground mb-3 flex items-center gap-2">
                 <Database className="h-5 w-5 text-primary" />
@@ -301,79 +235,63 @@ const Privacy = () => {
               </h3>
               <ul className="space-y-2">
                 {c.sections.collected.items.map((item, index) => (
-                  <li key={index} className="flex items-center gap-2 text-muted-foreground">
-                    <span className="text-primary">•</span>
-                    {item}
+                  <li key={index} className="flex items-start gap-2 text-muted-foreground">
+                    <span className="text-primary mt-1">•</span>
+                    <span>{item}</span>
                   </li>
                 ))}
               </ul>
             </div>
 
-            {/* Not Collected */}
+            {/* How We Use */}
+            <div className="card-cozy p-6">
+              <h3 className="text-lg font-bold text-foreground mb-3 flex items-center gap-2">
+                <BookOpen className="h-5 w-5 text-primary" />
+                {c.sections.usage.title}
+              </h3>
+              <ul className="space-y-2">
+                {c.sections.usage.items.map((item, index) => (
+                  <li key={index} className="flex items-start gap-2 text-muted-foreground">
+                    <span className="text-primary mt-1">•</span>
+                    <span>{item}</span>
+                  </li>
+                ))}
+              </ul>
+            </div>
+
+            {/* Your Rights */}
             <div className="card-cozy p-6 bg-primary/5">
               <h3 className="text-lg font-bold text-foreground mb-3 flex items-center gap-2">
                 <Eye className="h-5 w-5 text-primary" />
-                {c.sections.notCollected.title}
+                {c.sections.rights.title}
               </h3>
               <ul className="space-y-2">
-                {c.sections.notCollected.items.map((item, index) => (
-                  <li key={index} className="flex items-center gap-2 text-muted-foreground">
-                    <CheckCircle className="h-4 w-4 text-primary" />
-                    {item}
-                  </li>
-                ))}
-              </ul>
-            </div>
-
-            {/* Data Usage */}
-            <div className="card-cozy p-6">
-              <h3 className="text-lg font-bold text-foreground mb-3">{c.sections.usage.title}</h3>
-              <ul className="space-y-2">
-                {c.sections.usage.items.map((item, index) => (
-                  <li key={index} className="flex items-center gap-2 text-muted-foreground">
-                    <span className="text-primary">•</span>
-                    {item}
-                  </li>
-                ))}
-              </ul>
-            </div>
-
-            {/* Protection */}
-            <div className="card-cozy p-6">
-              <h3 className="text-lg font-bold text-foreground mb-3">{c.sections.protection.title}</h3>
-              <p className="text-muted-foreground leading-relaxed">{c.sections.protection.content}</p>
-            </div>
-
-            {/* Storage */}
-            <div className="card-cozy p-6">
-              <h3 className="text-lg font-bold text-foreground mb-3">{c.sections.storage.title}</h3>
-              <p className="text-muted-foreground leading-relaxed">{c.sections.storage.content}</p>
-            </div>
-
-            {/* Third Party */}
-            <div className="card-cozy p-6">
-              <h3 className="text-lg font-bold text-foreground mb-3">{c.sections.thirdParty.title}</h3>
-              <p className="text-muted-foreground leading-relaxed">{c.sections.thirdParty.content}</p>
-            </div>
-
-            {/* Rights */}
-            <div className="card-cozy p-6">
-              <h3 className="text-lg font-bold text-foreground mb-3">{c.sections.rights.title}</h3>
-              <ul className="space-y-2">
                 {c.sections.rights.items.map((item, index) => (
-                  <li key={index} className="flex items-center gap-2 text-muted-foreground">
-                    <CheckCircle className="h-4 w-4 text-primary" />
-                    {item}
+                  <li key={index} className="flex items-start gap-2 text-muted-foreground">
+                    <CheckCircle className="h-4 w-4 text-primary mt-1 flex-shrink-0" />
+                    <span>{item}</span>
                   </li>
                 ))}
               </ul>
+            </div>
+
+            {/* Security */}
+            <div className="card-cozy p-6">
+              <h3 className="text-lg font-bold text-foreground mb-3 flex items-center gap-2">
+                <Shield className="h-5 w-5 text-primary" />
+                {c.sections.security.title}
+              </h3>
+              <p className="text-muted-foreground leading-relaxed">{c.sections.security.content}</p>
             </div>
 
             {/* Contact */}
             <div className="card-cozy p-6">
-              <h3 className="text-lg font-bold text-foreground mb-3">{c.sections.contact.title}</h3>
+              <h3 className="text-lg font-bold text-foreground mb-3 flex items-center gap-2">
+                <Mail className="h-5 w-5 text-primary" />
+                {c.sections.contact.title}
+              </h3>
               <p className="text-muted-foreground mb-4">{c.sections.contact.content}</p>
-              <div className="flex flex-wrap gap-4">
+              <div className="flex flex-col sm:flex-row gap-3">
                 <a href="mailto:salemmoustapha15@gmail.com" className="flex items-center gap-2 text-primary hover:underline">
                   <Mail className="h-4 w-4" />
                   salemmoustapha15@gmail.com
@@ -383,12 +301,12 @@ const Privacy = () => {
                   +222 26749039
                 </a>
               </div>
+              <p className="text-sm text-muted-foreground mt-3">Snapchat: myself15_10</p>
             </div>
 
-            {/* Disclaimer */}
+            {/* Footer */}
             <div className="text-center p-6 bg-primary/5 rounded-xl">
-              <p className="font-bold text-foreground">{c.sections.disclaimer.content}</p>
-              <p className="text-sm text-muted-foreground mt-2">salem4library.lovable.app</p>
+              <p className="font-bold text-foreground">salem4library.lovable.app</p>
             </div>
           </div>
         </div>
