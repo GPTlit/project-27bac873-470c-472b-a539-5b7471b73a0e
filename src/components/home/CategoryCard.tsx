@@ -26,18 +26,18 @@ export const CategoryCard = ({ category, index }: CategoryCardProps) => {
       style={{ animationDelay: `${index * 0.05}s` }}
     >
       <div className={cn(
-        "relative overflow-hidden rounded-xl p-3 sm:p-4 transition-all duration-300",
+        "relative overflow-hidden rounded-lg p-2 sm:p-3 transition-all duration-300",
         "bg-card border border-border shadow-sm",
         "hover:shadow-md hover:border-primary/20 hover:-translate-y-0.5"
       )}>
         {/* Icon */}
-        <div className="text-2xl sm:text-3xl mb-2">{category.icon}</div>
+        <div className="text-xl sm:text-2xl mb-1">{category.icon}</div>
 
         {/* Content */}
-        <h3 className="text-xs sm:text-sm font-bold text-foreground mb-0.5 group-hover:text-primary transition-colors line-clamp-1">
+        <h3 className="text-[10px] sm:text-xs font-bold text-foreground mb-0 group-hover:text-primary transition-colors line-clamp-1">
           {getCategoryName()}
         </h3>
-        <p className="text-[10px] sm:text-xs text-muted-foreground">
+        <p className="text-[9px] sm:text-[10px] text-muted-foreground">
           {category.bookCount} {t('books')}
         </p>
       </div>

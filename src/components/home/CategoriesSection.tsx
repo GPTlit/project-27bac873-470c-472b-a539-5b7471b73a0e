@@ -10,8 +10,8 @@ export const CategoriesSection = () => {
   const { data: categories, isLoading } = useCategories();
   const { t } = useLanguage();
   
-  // Show first 10 categories on home page
-  const displayCategories = categories?.slice(0, 10) || [];
+  // Show first 8 categories on home page
+  const displayCategories = categories?.slice(0, 8) || [];
 
   return (
     <section className="section-padding bg-background">
@@ -35,9 +35,9 @@ export const CategoriesSection = () => {
         </div>
 
         {/* Categories Grid */}
-        <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-5 lg:grid-cols-6 gap-3">
+        <div className="grid grid-cols-4 sm:grid-cols-4 md:grid-cols-5 lg:grid-cols-6 gap-2 sm:gap-3">
           {isLoading ? (
-            Array.from({ length: 10 }).map((_, i) => (
+            Array.from({ length: 8 }).map((_, i) => (
               <Skeleton key={i} className="h-32 rounded-2xl" />
             ))
           ) : (
