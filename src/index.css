@@ -259,3 +259,10 @@ html {
     height: 100dvh;
   }
 }
+
+/* Hide Lovable branding */
+[data-lovable-badge],
+a[href*="lovable.dev"],
+a[href*="lovable.app"]:not([href*="salem4library"]) {
+  display: none !important;
+}

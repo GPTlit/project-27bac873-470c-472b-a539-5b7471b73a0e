@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { Link, useLocation } from 'react-router-dom';
 import { Menu, X, Home, Grid3X3, History, Download, Upload, LogOut, Shield, Info, Sparkles, Users, ShoppingBag, User, Moon, Sun, Globe } from 'lucide-react';
+import { NotificationBell } from '@/components/NotificationBell';
 import { Button } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
 import { useAuth } from '@/contexts/AuthContext';
@@ -77,6 +78,9 @@ export const Header = () => {
               );
             })}
             
+            {/* Notifications */}
+            <NotificationBell />
+            
             {/* Theme Toggle */}
             <Button
               variant="ghost"
@@ -125,6 +129,9 @@ export const Header = () => {
 
           {/* Mobile Menu Button */}
           <div className="flex lg:hidden items-center gap-2">
+            {/* Notifications */}
+            <NotificationBell />
+            
             {/* Theme Toggle */}
             <Button
               variant="ghost"
