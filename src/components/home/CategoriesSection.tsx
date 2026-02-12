@@ -35,7 +35,7 @@ export const CategoriesSection = () => {
         </div>
 
         {/* Categories Grid */}
-        <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-4">
+        <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-5 lg:grid-cols-6 gap-3">
           {isLoading ? (
             Array.from({ length: 10 }).map((_, i) => (
               <Skeleton key={i} className="h-32 rounded-2xl" />

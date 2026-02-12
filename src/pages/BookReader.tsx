@@ -1,6 +1,6 @@
 import { useParams, Link } from 'react-router-dom';
 import { ArrowRight, Download, ZoomIn, ZoomOut, Loader2, WifiOff } from 'lucide-react';
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback, useRef } from 'react';
 import { Document, Page, pdfjs } from 'react-pdf';
 import 'react-pdf/dist/Page/AnnotationLayer.css';
 import 'react-pdf/dist/Page/TextLayer.css';
@@ -12,6 +12,8 @@ import { useOfflineBooks } from '@/hooks/useOfflineBooks';
 // Set up PDF.js worker
 pdfjs.GlobalWorkerOptions.workerSrc = `//unpkg.com/pdfjs-dist@${pdfjs.version}/build/pdf.worker.min.mjs`;
 
+const VISIBLE_BUFFER = 3; // pages before/after viewport to render
+
 const BookReader = () => {
   const { id } = useParams<{ id: string }>();
   const { data: book, isLoading } = useBook(id || '');
@@ -20,6 +22,8 @@ const BookReader = () => {
   const [scale, setScale] = useState(1.0);
   const [isOfflineMode, setIsOfflineMode] = useState(false);
   const [fileUrl, setFileUrl] = useState<string | null>(null);
+  const [visibleRange, setVisibleRange] = useState({ start: 1, end: 5 });
+  const containerRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     if (id && book) {
@@ -49,6 +53,20 @@ const BookReader = () => {
 
   const handleZoomIn = () => setScale((prev) => Math.min(prev + 0.2, 3));
   const handleZoomOut = () => setScale((prev) => Math.max(prev - 0.2, 0.5));
+
+  // Virtualized scrolling: only render pages near the viewport
+  const handleScroll = useCallback(() => {
+    const container = containerRef.current;
+    if (!container || numPages === 0) return;
+    const scrollTop = container.scrollTop;
+    const viewportHeight = container.clientHeight;
+    const pageHeight = (viewportHeight * scale) + 16; // approx page height + gap
+    const currentPage = Math.max(1, Math.floor(scrollTop / pageHeight) + 1);
+    setVisibleRange({
+      start: Math.max(1, currentPage - VISIBLE_BUFFER),
+      end: Math.min(numPages, currentPage + VISIBLE_BUFFER),
+    });
+  }, [numPages, scale]);
 
   if (isLoading) {
     return (
@@ -137,8 +155,8 @@ const BookReader = () => {
         </div>
       </div>
 
-      {/* PDF Viewer - Scrollable */}
-      <div className="flex-1 overflow-auto p-4">
+      {/* PDF Viewer - Scrollable with virtualization */}
+      <div className="flex-1 overflow-auto p-4" ref={containerRef} onScroll={handleScroll}>
         <div className="flex justify-center">
           {fileUrl && (
             <Document
@@ -162,16 +180,26 @@ const BookReader = () => {
               }
               className="flex flex-col items-center gap-4"
             >
-              {Array.from(new Array(numPages), (_, index) => (
-                <Page
-                  key={`page_${index + 1}`}
-                  pageNumber={index + 1}
-                  scale={scale}
-                  className="shadow-xl rounded-lg overflow-hidden"
-                  renderTextLayer={true}
-                  renderAnnotationLayer={true}
-                />
-              ))}
+              {Array.from(new Array(numPages), (_, index) => {
+                const pageNum = index + 1;
+                const isVisible = pageNum >= visibleRange.start && pageNum <= visibleRange.end;
+                return isVisible ? (
+                  <Page
+                    key={`page_${pageNum}`}
+                    pageNumber={pageNum}
+                    scale={scale}
+                    className="shadow-xl rounded-lg overflow-hidden"
+                    renderTextLayer={false}
+                    renderAnnotationLayer={false}
+                  />
+                ) : (
+                  <div
+                    key={`placeholder_${pageNum}`}
+                    style={{ height: `${800 * scale}px`, width: `${600 * scale}px` }}
+                    className="bg-muted rounded-lg"
+                  />
+                );
+              })}
             </Document>
           )}
         </div>
