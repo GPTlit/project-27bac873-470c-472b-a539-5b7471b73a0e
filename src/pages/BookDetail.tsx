@@ -1,6 +1,6 @@
 import { useParams, Link, useNavigate } from 'react-router-dom';
 import { ArrowRight, BookOpen, Download, Share2, WifiOff, Check, Loader2, FileText } from 'lucide-react';
-import { BookLoader } from '@/components/ui/BookLoader';
+
 import { Layout } from '@/components/layout/Layout';
 import { Button } from '@/components/ui/button';
 import { Progress } from '@/components/ui/progress';
@@ -59,7 +59,7 @@ const BookDetail = () => {
       <Layout>
         <div className="section-padding">
           <div className="container-library flex justify-center py-20">
-            <BookLoader size="lg" />
+            <Loader2 className="h-10 w-10 animate-spin text-primary" />
           </div>
         </div>
       </Layout>
