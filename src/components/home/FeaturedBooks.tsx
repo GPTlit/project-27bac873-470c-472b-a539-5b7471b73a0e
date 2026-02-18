@@ -1,5 +1,6 @@
 import { Link } from 'react-router-dom';
-import { ArrowLeft, Sparkles, Loader2 } from 'lucide-react';
+import { ArrowLeft, Sparkles } from 'lucide-react';
+import { BookLoader } from '@/components/ui/BookLoader';
 import { Button } from '@/components/ui/button';
 import { BookCard } from '@/components/books/BookCard';
 import { useBooks } from '@/hooks/useBooks';
@@ -16,7 +17,7 @@ export const FeaturedBooks = () => {
     return (
       <section className="section-padding bg-secondary/30">
         <div className="container-library flex justify-center py-12">
-          <Loader2 className="h-8 w-8 animate-spin text-primary" />
+          <BookLoader size="md" />
         </div>
       </section>
     );
