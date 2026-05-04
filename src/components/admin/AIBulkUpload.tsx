@@ -5,7 +5,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { useToast } from '@/hooks/use-toast';
 import { supabase } from '@/integrations/supabase/client';
-import { extractPdfSample } from '@/lib/pdfExtract';
+import { extractPdfSample, extractPdfFirstPageImage } from '@/lib/pdfExtract';
 
 type Status = 'pending' | 'extracting' | 'analyzing' | 'uploading' | 'done' | 'error';
 
@@ -43,7 +43,10 @@ export const AIBulkUpload = ({ onDone }: { onDone?: () => void }) => {
   const processJob = async (idx: number, job: BookJob) => {
     try {
       updateJob(idx, { status: 'extracting' });
-      const sample = await extractPdfSample(job.file).catch(() => '');
+      const [sample, coverBlob] = await Promise.all([
+        extractPdfSample(job.file).catch(() => ''),
+        extractPdfFirstPageImage(job.file).catch(() => null),
+      ]);
 
       updateJob(idx, { status: 'analyzing' });
       const { data, error } = await supabase.functions.invoke('ai-book-metadata', {
@@ -61,8 +64,18 @@ export const AIBulkUpload = ({ onDone }: { onDone?: () => void }) => {
         .from('books')
         .upload(filename, job.file, { contentType: 'application/pdf', cacheControl: '3600' });
       if (upErr) throw new Error(`فشل رفع الملف: ${upErr.message}`);
-
       const { data: urlData } = supabase.storage.from('books').getPublicUrl(filename);
+
+      let coverUrl: string | null = null;
+      if (coverBlob) {
+        const coverName = safeName('jpg');
+        const { error: covErr } = await supabase.storage
+          .from('covers')
+          .upload(coverName, coverBlob, { contentType: 'image/jpeg', cacheControl: '3600' });
+        if (!covErr) {
+          coverUrl = supabase.storage.from('covers').getPublicUrl(coverName).data.publicUrl;
+        }
+      }
 
       const { error: insErr } = await supabase.from('books').insert({
         title: metadata.title,
@@ -72,6 +85,7 @@ export const AIBulkUpload = ({ onDone }: { onDone?: () => void }) => {
         categories: metadata.categories,
         file_url: urlData.publicUrl,
         file_type: 'pdf',
+        cover_url: coverUrl,
       });
       if (insErr) throw new Error(insErr.message);
 
@@ -84,11 +98,18 @@ export const AIBulkUpload = ({ onDone }: { onDone?: () => void }) => {
   const startAll = async () => {
     if (!jobs.length) return;
     setRunning(true);
-    for (let i = 0; i < jobs.length; i++) {
-      await processJob(i, jobs[i]);
-    }
+    // Process up to 3 in parallel for speed
+    const concurrency = 3;
+    let cursor = 0;
+    const workers = Array.from({ length: Math.min(concurrency, jobs.length) }, async () => {
+      while (true) {
+        const i = cursor++;
+        if (i >= jobs.length) break;
+        await processJob(i, jobs[i]);
+      }
+    });
+    await Promise.all(workers);
     setRunning(false);
-    const ok = jobs.filter((j) => j.status === 'done').length;
     toast({ title: 'انتهى', description: `تمت معالجة ${jobs.length} كتاب` });
     onDone?.();
   };
