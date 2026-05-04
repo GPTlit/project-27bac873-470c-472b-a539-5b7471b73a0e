@@ -6,6 +6,7 @@ import { Badge } from '@/components/ui/badge';
 import { useToast } from '@/hooks/use-toast';
 import { supabase } from '@/integrations/supabase/client';
 import { extractPdfSample, extractPdfFirstPageImage } from '@/lib/pdfExtract';
+import { getPdfPageCount } from '@/lib/pdfExtract';
 
 type Status = 'pending' | 'extracting' | 'analyzing' | 'uploading' | 'done' | 'error';
 
@@ -43,9 +44,10 @@ export const AIBulkUpload = ({ onDone }: { onDone?: () => void }) => {
   const processJob = async (idx: number, job: BookJob) => {
     try {
       updateJob(idx, { status: 'extracting' });
-      const [sample, coverBlob] = await Promise.all([
+      const [sample, coverBlob, pageCount] = await Promise.all([
         extractPdfSample(job.file).catch(() => ''),
         extractPdfFirstPageImage(job.file).catch(() => null),
+        getPdfPageCount(job.file).catch(() => null),
       ]);
 
       updateJob(idx, { status: 'analyzing' });
@@ -86,6 +88,7 @@ export const AIBulkUpload = ({ onDone }: { onDone?: () => void }) => {
         file_url: urlData.publicUrl,
         file_type: 'pdf',
         cover_url: coverUrl,
+        page_count: pageCount,
       });
       if (insErr) throw new Error(insErr.message);
 
