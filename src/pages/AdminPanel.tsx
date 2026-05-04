@@ -19,6 +19,7 @@ import { useBooks, Book } from '@/hooks/useBooks';
 import { allCategories } from '@/hooks/useCategories';
 import { StoreManagement } from '@/components/admin/StoreManagement';
 import { NotificationBroadcast } from '@/components/admin/NotificationBroadcast';
+import { AIBulkUpload } from '@/components/admin/AIBulkUpload';
 import { Bot, Send, Loader2, Settings, Palette, ToggleLeft, Sparkles, Upload, FileText, Image, Save, Trash2, Pencil, X, ShoppingBag, MoreVertical, Bell } from 'lucide-react';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
 
@@ -487,6 +488,9 @@ const AdminPanel = () => {
           {/* Book Upload Tab */}
           <TabsContent value="upload">
             <div className="grid lg:grid-cols-2 gap-8">
+              <div className="lg:col-span-2">
+                <AIBulkUpload onDone={() => refetchBooks()} />
+              </div>
               <Card>
                 <CardHeader>
                   <CardTitle>رفع كتاب جديد</CardTitle>
