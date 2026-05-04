@@ -11,6 +11,12 @@ import { useOfflineBooks } from '@/hooks/useOfflineBooks';
 import { getBookmarks, addBookmark, removeBookmark, getLastBookmark, Bookmark } from '@/lib/bookmarks';
 import BookmarkPanel from '@/components/books/BookmarkPanel';
 import { toast } from 'sonner';
+import { AmbientPlayer } from '@/components/books/AmbientPlayer';
+import { AskTheBook } from '@/components/books/AskTheBook';
+import { useReadingPresence } from '@/hooks/useReadingPresence';
+import { supabase } from '@/integrations/supabase/client';
+import { useAuth } from '@/contexts/AuthContext';
+import { Sparkles } from 'lucide-react';
 
 pdfjs.GlobalWorkerOptions.workerSrc = `//unpkg.com/pdfjs-dist@${pdfjs.version}/build/pdf.worker.min.mjs`;
 
@@ -18,6 +24,8 @@ const BookReader = () => {
   const { id } = useParams<{ id: string }>();
   const { data: book, isLoading } = useBook(id || '');
   const { getOfflineBookUrl } = useOfflineBooks();
+  const { user } = useAuth();
+  useReadingPresence(id);
   const [numPages, setNumPages] = useState<number>(0);
   const [scale, setScale] = useState(1.0);
   const [isOfflineMode, setIsOfflineMode] = useState(false);
@@ -26,6 +34,8 @@ const BookReader = () => {
   const [bookmarks, setBookmarks] = useState<Bookmark[]>([]);
   const [panelOpen, setPanelOpen] = useState(false);
   const [currentPage, setCurrentPage] = useState(1);
+  const [selection, setSelection] = useState('');
+  const [askOpen, setAskOpen] = useState(false);
   const containerRef = useRef<HTMLDivElement>(null);
   const observerRef = useRef<IntersectionObserver | null>(null);
   const pageElementsRef = useRef<Map<number, HTMLDivElement>>(new Map());
@@ -68,6 +78,10 @@ const BookReader = () => {
   const onDocumentLoadSuccess = ({ numPages: n }: { numPages: number }) => {
     setNumPages(n);
     setLoadedPages(new Set([1, 2, 3]));
+    // Cache page count to DB if missing
+    if (book && !(book as any).page_count) {
+      supabase.from('books').update({ page_count: n }).eq('id', book.id);
+    }
   };
 
   const handleZoomIn = () => setScale((prev) => Math.min(prev + 0.2, 3));
@@ -139,6 +153,26 @@ const BookReader = () => {
   }, []);
 
   const currentPageBookmarked = bookmarks.some((b) => b.page === currentPage);
+
+  // Track text selection for "Ask the book" + highlight save
+  useEffect(() => {
+    const onUp = () => {
+      const sel = window.getSelection?.()?.toString().trim() || '';
+      setSelection(sel);
+    };
+    document.addEventListener('mouseup', onUp);
+    document.addEventListener('touchend', onUp);
+    return () => {
+      document.removeEventListener('mouseup', onUp);
+      document.removeEventListener('touchend', onUp);
+    };
+  }, []);
+
+  const saveHighlight = async () => {
+    if (!user || !id || !selection) return;
+    await supabase.from('book_highlights').insert({ book_id: id, user_id: user.id, page: currentPage, text: selection });
+    toast.success('تم تمييز النص');
+  };
 
   if (isLoading) {
     return (
@@ -302,6 +336,28 @@ const BookReader = () => {
           )}
         </div>
       </div>
+
+      {/* Selection action bar */}
+      {selection && (
+        <div className="fixed bottom-20 left-1/2 -translate-x-1/2 z-40 bg-card border border-border rounded-full shadow-2xl px-2 py-1 flex items-center gap-1 animate-fade-in">
+          <Button size="sm" variant="ghost" onClick={saveHighlight}>تمييز</Button>
+          <div className="h-5 w-px bg-border" />
+          <Button size="sm" variant="gold" className="gap-1" onClick={() => setAskOpen(true)}>
+            <Sparkles className="h-3 w-3" /> اسأل الكتاب
+          </Button>
+        </div>
+      )}
+
+      <AmbientPlayer />
+
+      {askOpen && book && (
+        <AskTheBook
+          bookTitle={book.title}
+          author={book.author}
+          passage={selection}
+          onClose={() => setAskOpen(false)}
+        />
+      )}
     </div>
   );
 };

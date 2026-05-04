@@ -16,6 +16,11 @@ import { BookRecommendations } from '@/components/books/BookRecommendations';
 import { useOfflineBooks } from '@/hooks/useOfflineBooks';
 import { useLanguage } from '@/contexts/LanguageContext';
 import { useAuth } from '@/contexts/AuthContext';
+import { GhostReaders } from '@/components/books/GhostReaders';
+import { BookLayers } from '@/components/books/BookLayers';
+import { ReadingJourney } from '@/components/books/ReadingJourney';
+import { getPdfPageCount } from '@/lib/pdfExtract';
+import { supabase } from '@/integrations/supabase/client';
 
 const BookDetail = () => {
   const { id } = useParams<{ id: string }>();
@@ -36,6 +41,18 @@ const BookDetail = () => {
       setIsOffline(isBookOffline(id));
     }
   }, [id, isBookOffline]);
+
+  // Auto compute page count on first open
+  useEffect(() => {
+    if (!book || (book as any).page_count || !book.file_url) return;
+    let cancelled = false;
+    (async () => {
+      const pages = await getPdfPageCount(book.file_url);
+      if (cancelled || !pages) return;
+      await supabase.from('books').update({ page_count: pages }).eq('id', book.id);
+    })();
+    return () => { cancelled = true; };
+  }, [book?.id, book?.file_url]);
 
   // Helper function to require authentication
   const requireAuth = (callback: () => void, actionDescription: string) => {
@@ -342,6 +359,21 @@ const BookDetail = () => {
                 {/* Recommendations */}
                 <div className="mt-12 pt-8 border-t border-border">
                   <BookRecommendations currentBook={book} />
+                </div>
+
+                {/* Ghost readers */}
+                <div className="mt-12 pt-8 border-t border-border">
+                  <GhostReaders bookId={book.id} />
+                </div>
+
+                {/* Hidden layers */}
+                <div className="mt-12 pt-8 border-t border-border">
+                  <BookLayers bookId={book.id} bookTitle={book.title} author={book.author} />
+                </div>
+
+                {/* Reading journey guestbook */}
+                <div className="mt-12 pt-8 border-t border-border">
+                  <ReadingJourney bookId={book.id} />
                 </div>
               </div>
             </div>

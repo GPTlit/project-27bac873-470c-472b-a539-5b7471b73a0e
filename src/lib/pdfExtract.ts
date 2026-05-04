@@ -42,3 +42,20 @@ export async function extractPdfFirstPageImage(
     return null;
   }
 }
+
+export async function getPdfPageCount(source: File | string): Promise<number | null> {
+  try {
+    let task;
+    if (typeof source === 'string') {
+      task = pdfjsLib.getDocument({ url: source });
+    } else {
+      const buf = await source.arrayBuffer();
+      task = pdfjsLib.getDocument({ data: buf });
+    }
+    const pdf = await task.promise;
+    return pdf.numPages;
+  } catch (e) {
+    console.error('page count failed', e);
+    return null;
+  }
+}

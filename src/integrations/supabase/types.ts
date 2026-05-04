@@ -38,6 +38,33 @@ export type Database = {
         }
         Relationships: []
       }
+      ambient_preferences: {
+        Row: {
+          book_id: string | null
+          id: string
+          sound_key: string
+          updated_at: string
+          user_id: string
+          volume: number | null
+        }
+        Insert: {
+          book_id?: string | null
+          id?: string
+          sound_key: string
+          updated_at?: string
+          user_id: string
+          volume?: number | null
+        }
+        Update: {
+          book_id?: string | null
+          id?: string
+          sound_key?: string
+          updated_at?: string
+          user_id?: string
+          volume?: number | null
+        }
+        Relationships: []
+      }
       app_config: {
         Row: {
           description: string | null
@@ -89,6 +116,84 @@ export type Database = {
           rating?: number
           updated_at?: string | null
           user_id?: string
+        }
+        Relationships: []
+      }
+      book_highlights: {
+        Row: {
+          book_id: string
+          color: string | null
+          created_at: string
+          id: string
+          page: number
+          text: string
+          user_id: string
+        }
+        Insert: {
+          book_id: string
+          color?: string | null
+          created_at?: string
+          id?: string
+          page: number
+          text: string
+          user_id: string
+        }
+        Update: {
+          book_id?: string
+          color?: string | null
+          created_at?: string
+          id?: string
+          page?: number
+          text?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
+      book_layer_unlocks: {
+        Row: {
+          book_id: string
+          id: string
+          layer_type: string
+          unlocked_at: string
+          user_id: string
+        }
+        Insert: {
+          book_id: string
+          id?: string
+          layer_type: string
+          unlocked_at?: string
+          user_id: string
+        }
+        Update: {
+          book_id?: string
+          id?: string
+          layer_type?: string
+          unlocked_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
+      book_layers: {
+        Row: {
+          book_id: string
+          content: string
+          created_at: string
+          id: string
+          layer_type: string
+        }
+        Insert: {
+          book_id: string
+          content: string
+          created_at?: string
+          id?: string
+          layer_type: string
+        }
+        Update: {
+          book_id?: string
+          content?: string
+          created_at?: string
+          id?: string
+          layer_type?: string
         }
         Relationships: []
       }
@@ -626,6 +731,63 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      reading_journeys: {
+        Row: {
+          book_id: string
+          created_at: string
+          finished_at: string | null
+          id: string
+          note: string | null
+          started_at: string | null
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          book_id: string
+          created_at?: string
+          finished_at?: string | null
+          id?: string
+          note?: string | null
+          started_at?: string | null
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          book_id?: string
+          created_at?: string
+          finished_at?: string | null
+          id?: string
+          note?: string | null
+          started_at?: string | null
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
+      reading_sessions: {
+        Row: {
+          book_id: string
+          city: string | null
+          id: string
+          last_seen_at: string
+          user_id: string
+        }
+        Insert: {
+          book_id: string
+          city?: string | null
+          id?: string
+          last_seen_at?: string
+          user_id: string
+        }
+        Update: {
+          book_id?: string
+          city?: string | null
+          id?: string
+          last_seen_at?: string
+          user_id?: string
+        }
+        Relationships: []
       }
       store_orders: {
         Row: {
