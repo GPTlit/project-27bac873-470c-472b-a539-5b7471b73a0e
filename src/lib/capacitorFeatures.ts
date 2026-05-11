@@ -6,7 +6,8 @@ const OFFLINE_STORE_KEY = 'maktaba-offline-data';
 async function tryCapacitorFs(): Promise<any | null> {
   try {
     // Dynamic import so this works whether or not Capacitor is installed
-    const mod: any = await import(/* @vite-ignore */ '@capacitor/filesystem');
+    // @ts-ignore - optional dependency, present only on Capacitor builds
+    const mod: any = await import(/* @vite-ignore */ ('@capacitor/' + 'filesystem'));
     return mod;
   } catch {
     return null;
