@@ -732,6 +732,42 @@ export type Database = {
           },
         ]
       }
+      push_subscriptions: {
+        Row: {
+          created_at: string
+          device_info: Json
+          enabled: boolean
+          id: string
+          last_seen_at: string
+          platform: string
+          token: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          device_info?: Json
+          enabled?: boolean
+          id?: string
+          last_seen_at?: string
+          platform?: string
+          token: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          device_info?: Json
+          enabled?: boolean
+          id?: string
+          last_seen_at?: string
+          platform?: string
+          token?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       reading_journeys: {
         Row: {
           book_id: string
@@ -1069,6 +1105,10 @@ export type Database = {
         Args: { _description?: string; _member_ids?: string[]; _name: string }
         Returns: string
       }
+      disable_push_subscription: {
+        Args: { _token: string }
+        Returns: undefined
+      }
       has_role: {
         Args: {
           _role: Database["public"]["Enums"]["app_role"]
@@ -1083,6 +1123,10 @@ export type Database = {
       is_group_member: {
         Args: { _group_id: string; _user_id: string }
         Returns: boolean
+      }
+      register_push_subscription: {
+        Args: { _device_info?: Json; _platform?: string; _token: string }
+        Returns: undefined
       }
       send_admin_notification: {
         Args: { _message: string; _title: string }
