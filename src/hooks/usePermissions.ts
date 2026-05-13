@@ -2,7 +2,7 @@ import { useState, useCallback } from 'react';
 import { useToast } from '@/hooks/use-toast';
 import { useLanguage } from '@/contexts/LanguageContext';
 
-type PermissionName = 'microphone' | 'camera' | 'notifications' | 'photos' | 'videos' | 'audio';
+type AppPermissionName = 'microphone' | 'camera' | 'notifications' | 'photos' | 'videos' | 'audio';
 
 interface PermissionStatus {
   microphone: boolean;
@@ -179,7 +179,7 @@ export const usePermissions = () => {
     }
   }, [toast, t]);
 
-  const requestPermission = useCallback(async (name: PermissionName): Promise<boolean> => {
+  const requestPermission = useCallback(async (name: AppPermissionName): Promise<boolean> => {
     setIsRequesting(true);
     let result = false;
     
@@ -238,12 +238,12 @@ export const usePermissions = () => {
     return newPermissions;
   }, [requestMicrophonePermission, requestCameraPermission, requestNotificationPermission, requestPhotosPermission, requestVideosPermission, requestAudioPermission]);
 
-  const checkPermission = useCallback(async (name: PermissionName): Promise<boolean> => {
+  const checkPermission = useCallback(async (name: AppPermissionName): Promise<boolean> => {
     try {
       if (name === 'audio') return true;
       if (name === 'photos' || name === 'videos') return permissions[name];
       if ('permissions' in navigator) {
-        const status = await navigator.permissions.query({ name: name as PermissionName });
+        const status = await navigator.permissions.query({ name: name as globalThis.PermissionName });
         return status.state === 'granted';
       }
       return false;
