@@ -1,6 +1,8 @@
+import { useEffect } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
+import { showForegroundNotification } from '@/lib/pushNotifications';
 
 export interface Notification {
   id: string;
@@ -15,6 +17,30 @@ export interface Notification {
 
 export const useNotifications = () => {
   const { user } = useAuth();
+  const queryClient = useQueryClient();
+
+  useEffect(() => {
+    if (!user) return;
+    const channel = supabase
+      .channel(`notifications-${user.id}`)
+      .on(
+        'postgres_changes',
+        {
+          event: 'INSERT',
+          schema: 'public',
+          table: 'notifications',
+          filter: `user_id=eq.${user.id}`,
+        },
+        (payload) => {
+          const next = payload.new as Notification;
+          queryClient.invalidateQueries({ queryKey: ['notifications', user.id] });
+          showForegroundNotification(next.title, next.message);
+        }
+      )
+      .subscribe();
+
+    return () => { supabase.removeChannel(channel); };
+  }, [queryClient, user]);
 
   return useQuery({
     queryKey: ['notifications', user?.id],
@@ -76,6 +102,9 @@ export const useSendAdminNotification = () => {
         _message: message,
       });
       if (error) throw error;
+      await supabase.functions.invoke('send-push-notifications', {
+        body: { title, message },
+      });
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['notifications'] });

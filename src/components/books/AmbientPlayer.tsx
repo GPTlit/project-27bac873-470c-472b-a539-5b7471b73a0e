@@ -1,19 +1,20 @@
 import { useEffect, useRef, useState } from 'react';
-import { Music, Volume2, VolumeX, X } from 'lucide-react';
+import { Loader2, Music, Volume2, VolumeX, X } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Slider } from '@/components/ui/slider';
 
 const SOUNDS: { key: string; label: string; emoji: string; url: string }[] = [
-  { key: 'rain', label: 'مطر', emoji: '🌧️', url: 'https://cdn.pixabay.com/audio/2022/03/15/audio_8cb749cb6c.mp3' },
-  { key: 'cafe', label: 'مقهى', emoji: '☕', url: 'https://cdn.pixabay.com/audio/2022/03/10/audio_270f49b83a.mp3' },
-  { key: 'wind', label: 'رياح', emoji: '🍃', url: 'https://cdn.pixabay.com/audio/2022/10/25/audio_2dde668f60.mp3' },
-  { key: 'desert', label: 'صحراء', emoji: '🏜️', url: 'https://cdn.pixabay.com/audio/2022/03/24/audio_6dad2d8e34.mp3' },
-  { key: 'space', label: 'فضاء', emoji: '🌌', url: 'https://cdn.pixabay.com/audio/2022/10/30/audio_347111d57a.mp3' },
+  { key: 'rain', label: 'مطر', emoji: '🌧️', url: '/audio/ambient/rain.wav' },
+  { key: 'cafe', label: 'مقهى', emoji: '☕', url: '/audio/ambient/cafe.wav' },
+  { key: 'wind', label: 'رياح', emoji: '🍃', url: '/audio/ambient/wind.wav' },
+  { key: 'desert', label: 'صحراء', emoji: '🏜️', url: '/audio/ambient/desert.wav' },
+  { key: 'space', label: 'فضاء', emoji: '🌌', url: '/audio/ambient/space.wav' },
 ];
 
 export const AmbientPlayer = () => {
   const [open, setOpen] = useState(false);
   const [active, setActive] = useState<string | null>(null);
+  const [loading, setLoading] = useState<string | null>(null);
   const [volume, setVolume] = useState(0.4);
   const audioRef = useRef<HTMLAudioElement | null>(null);
 
@@ -22,24 +23,40 @@ export const AmbientPlayer = () => {
     audioRef.current.volume = volume;
   }, [volume]);
 
-  const play = (key: string) => {
+  const play = async (key: string) => {
     const sound = SOUNDS.find((s) => s.key === key);
     if (!sound) return;
     if (audioRef.current) {
       audioRef.current.pause();
+      audioRef.current.currentTime = 0;
       audioRef.current = null;
     }
+    setLoading(key);
     const audio = new Audio(sound.url);
     audio.loop = true;
+    audio.preload = 'auto';
     audio.volume = volume;
-    audio.play().catch(() => {});
     audioRef.current = audio;
-    setActive(key);
+    audio.addEventListener('error', () => {
+      if (audioRef.current === audio) audioRef.current = null;
+      setLoading(null);
+      setActive(null);
+    }, { once: true });
+    try {
+      await audio.play();
+      setActive(key);
+    } catch {
+      if (audioRef.current === audio) audioRef.current = null;
+      setActive(null);
+    } finally {
+      setLoading(null);
+    }
   };
 
   const stop = () => {
     audioRef.current?.pause();
     audioRef.current = null;
+    setLoading(null);
     setActive(null);
   };
 
@@ -65,7 +82,7 @@ export const AmbientPlayer = () => {
                 }`}
                 title={s.label}
               >
-                <span className="text-lg">{s.emoji}</span>
+                <span className="text-lg">{loading === s.key ? <Loader2 className="h-4 w-4 animate-spin" /> : s.emoji}</span>
                 <span className="text-[10px]">{s.label}</span>
               </button>
             ))}

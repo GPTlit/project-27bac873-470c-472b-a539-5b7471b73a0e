@@ -8,6 +8,7 @@ import { LanguageProvider } from "@/contexts/LanguageContext";
 import { ThemeProvider } from "@/components/ThemeProvider";
 import { ProtectedRoute } from "@/components/ProtectedRoute";
 import { ConsentDialog } from "@/components/ConsentDialog";
+import { DevicePermissionPrompt } from "@/components/DevicePermissionPrompt";
 import Index from "./pages/Index";
 import Auth from "./pages/Auth";
 import Categories from "./pages/Categories";
@@ -40,6 +41,7 @@ const App = () => (
             <Sonner />
             <BrowserRouter>
               <ConsentDialog />
+              <DevicePermissionPrompt />
               <Routes>
                 <Route path="/auth" element={<Auth />} />
                 {/* Public routes - viewable without login */}
