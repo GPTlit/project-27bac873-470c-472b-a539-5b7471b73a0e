@@ -102,6 +102,9 @@ export const useSendAdminNotification = () => {
         _message: message,
       });
       if (error) throw error;
+      await supabase.functions.invoke('send-push-notifications', {
+        body: { title, message },
+      });
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['notifications'] });
