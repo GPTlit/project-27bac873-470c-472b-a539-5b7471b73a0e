@@ -4,11 +4,15 @@ import { Button } from '@/components/ui/button';
 import { Slider } from '@/components/ui/slider';
 
 const SOUNDS: { key: string; label: string; emoji: string; url: string }[] = [
-  { key: 'rain', label: 'مطر', emoji: '🌧️', url: '/audio/ambient/rain.wav' },
-  { key: 'cafe', label: 'مقهى', emoji: '☕', url: '/audio/ambient/cafe.wav' },
-  { key: 'wind', label: 'رياح', emoji: '🍃', url: '/audio/ambient/wind.wav' },
-  { key: 'desert', label: 'صحراء', emoji: '🏜️', url: '/audio/ambient/desert.wav' },
-  { key: 'space', label: 'فضاء', emoji: '🌌', url: '/audio/ambient/space.wav' },
+  { key: 'rain',   label: 'مطر',     emoji: '🌧️', url: '/audio/ambient/rain.mp3' },
+  { key: 'ocean',  label: 'بحر',     emoji: '🌊', url: '/audio/ambient/ocean.mp3' },
+  { key: 'wind',   label: 'رياح',    emoji: '🍃', url: '/audio/ambient/wind.mp3' },
+  { key: 'fire',   label: 'موقد',    emoji: '🔥', url: '/audio/ambient/fire.mp3' },
+  { key: 'cafe',   label: 'مقهى',    emoji: '☕', url: '/audio/ambient/cafe.mp3' },
+  { key: 'desert', label: 'صحراء',   emoji: '🏜️', url: '/audio/ambient/desert.mp3' },
+  { key: 'space',  label: 'فضاء',    emoji: '🌌', url: '/audio/ambient/space.mp3' },
+  { key: 'piano',  label: 'بيانو',   emoji: '🎹', url: '/audio/ambient/piano.mp3' },
+  { key: 'pad',    label: 'تأمل',    emoji: '🧘', url: '/audio/ambient/pad.mp3' },
 ];
 
 export const AmbientPlayer = () => {
