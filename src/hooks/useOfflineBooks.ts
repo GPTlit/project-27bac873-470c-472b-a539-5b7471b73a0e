@@ -314,11 +314,39 @@ export const useOfflineBooks = () => {
     return offlineBooks.find((b) => b.id === bookId) || null;
   };
 
-  const removeOfflineBook = (bookId: string): void => {
+  const removeOfflineBook = async (bookId: string): Promise<void> => {
     try {
-      const filtered = offlineBooks.filter((b) => b.id !== bookId);
-      localStorage.setItem(OFFLINE_BOOKS_KEY, JSON.stringify(filtered));
-      setOfflineBooks(filtered);
+      if (isNative()) {
+        const fs = await getFs();
+        const index = loadNativeIndex();
+        const entry = index.find((e) => e.id === bookId);
+        if (fs && entry) {
+          try {
+            await fs.Filesystem.deleteFile({
+              path: `${OFFLINE_DIR}/${entry.filename}`,
+              directory: fs.Directory.Data,
+            });
+          } catch (e) {
+            console.warn('deleteFile failed', e);
+          }
+        }
+        saveNativeIndex(index.filter((e) => e.id !== bookId));
+        // Revoke and drop blob URL
+        if (nativeUrls[bookId]) {
+          try { URL.revokeObjectURL(nativeUrls[bookId]); } catch {}
+          setNativeUrls((prev) => {
+            const next = { ...prev };
+            delete next[bookId];
+            return next;
+          });
+        }
+      } else {
+        const data = localStorage.getItem(OFFLINE_BOOKS_KEY);
+        const existing: OfflineBook[] = data ? JSON.parse(data) : [];
+        const filtered = existing.filter((b) => b.id !== bookId);
+        localStorage.setItem(OFFLINE_BOOKS_KEY, JSON.stringify(filtered));
+      }
+      setOfflineBooks((prev) => prev.filter((b) => b.id !== bookId));
     } catch (error) {
       console.error('Error removing offline book:', error);
     }
@@ -329,9 +357,13 @@ export const useOfflineBooks = () => {
   };
 
   const getOfflineBookUrl = (bookId: string): string | null => {
+    // On native, return the blob URL produced from the on-device file.
+    if (isNative()) {
+      return nativeUrls[bookId] || null;
+    }
     const book = getOfflineBook(bookId);
     if (!book) return null;
-    return book.fileData; // Returns the data URL directly
+    return book.fileData; // base64 data URL on web
   };
 
   const getTotalStorageUsed = (): number => {
