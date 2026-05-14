@@ -69,7 +69,7 @@ export const AmbientPlayer = () => {
   return (
     <div className="fixed bottom-4 left-4 z-40">
       {open ? (
-        <div className="bg-card/90 backdrop-blur-md border border-border rounded-2xl shadow-2xl p-3 w-64 animate-fade-in">
+        <div className="bg-card/90 backdrop-blur-md border border-border rounded-2xl shadow-2xl p-3 w-72 animate-fade-in">
           <div className="flex items-center justify-between mb-2">
             <span className="text-sm font-medium">صوت محيط</span>
             <Button variant="ghost" size="icon" className="h-6 w-6" onClick={() => setOpen(false)}>
