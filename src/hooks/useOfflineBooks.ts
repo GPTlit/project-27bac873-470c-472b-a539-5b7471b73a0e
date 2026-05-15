@@ -176,6 +176,25 @@ export const useOfflineBooks = () => {
 
       onProgress?.(50);
 
+      // On web: also trigger a real browser download so the file lands in the
+      // user's Downloads folder (in addition to the offline-cache copy below).
+      if (!isNative()) {
+        try {
+          const safeTitle = (book.title || book.id).replace(/[\\/:*?"<>|]+/g, '_').slice(0, 80);
+          const ext = (book.fileType || 'pdf').toLowerCase().replace(/[^a-z0-9]/g, '') || 'pdf';
+          const dlUrl = URL.createObjectURL(blob);
+          const a = document.createElement('a');
+          a.href = dlUrl;
+          a.download = `${safeTitle}.${ext}`;
+          document.body.appendChild(a);
+          a.click();
+          a.remove();
+          setTimeout(() => URL.revokeObjectURL(dlUrl), 5000);
+        } catch (e) {
+          console.warn('Browser download trigger failed', e);
+        }
+      }
+
       // Native path: write to private app sandbox via Capacitor Filesystem.
       // Files in Directory.Data are NOT visible in the device's gallery / file
       // manager — they live in the app's internal storage and are only
