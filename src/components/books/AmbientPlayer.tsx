@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from 'react';
-import { Loader2, Music, Volume2, VolumeX, X } from 'lucide-react';
+import { Loader2, Music, Volume2, VolumeX, X, Upload } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Slider } from '@/components/ui/slider';
 
@@ -21,6 +21,9 @@ export const AmbientPlayer = () => {
   const [loading, setLoading] = useState<string | null>(null);
   const [volume, setVolume] = useState(0.4);
   const audioRef = useRef<HTMLAudioElement | null>(null);
+  const fileInputRef = useRef<HTMLInputElement | null>(null);
+  const customUrlRef = useRef<string | null>(null);
+  const [customName, setCustomName] = useState<string | null>(null);
 
   useEffect(() => {
     if (!audioRef.current) return;
@@ -66,6 +69,39 @@ export const AmbientPlayer = () => {
 
   useEffect(() => () => { audioRef.current?.pause(); }, []);
 
+  // Cleanup custom audio object URL
+  useEffect(() => () => {
+    if (customUrlRef.current) {
+      try { URL.revokeObjectURL(customUrlRef.current); } catch {}
+    }
+  }, []);
+
+  const playCustom = async (file: File) => {
+    if (audioRef.current) {
+      audioRef.current.pause();
+      audioRef.current = null;
+    }
+    if (customUrlRef.current) {
+      try { URL.revokeObjectURL(customUrlRef.current); } catch {}
+    }
+    const url = URL.createObjectURL(file);
+    customUrlRef.current = url;
+    setCustomName(file.name);
+    setLoading('custom');
+    const audio = new Audio(url);
+    audio.loop = true;
+    audio.volume = volume;
+    audioRef.current = audio;
+    try {
+      await audio.play();
+      setActive('custom');
+    } catch {
+      setActive(null);
+    } finally {
+      setLoading(null);
+    }
+  };
+
   return (
     <div className="fixed bottom-4 left-4 z-40">
       {open ? (
@@ -94,6 +130,31 @@ export const AmbientPlayer = () => {
           <div className="flex items-center gap-2">
             {volume === 0 ? <VolumeX className="h-3 w-3" /> : <Volume2 className="h-3 w-3" />}
             <Slider value={[volume * 100]} onValueChange={(v) => setVolume(v[0] / 100)} max={100} step={5} />
+          </div>
+          <div className="mt-2 pt-2 border-t border-border/50">
+            <input
+              ref={fileInputRef}
+              type="file"
+              accept="audio/*"
+              className="hidden"
+              onChange={(e) => {
+                const f = e.target.files?.[0];
+                if (f) playCustom(f);
+                e.target.value = '';
+              }}
+            />
+            <button
+              onClick={() => (active === 'custom' ? stop() : fileInputRef.current?.click())}
+              className={`w-full flex items-center justify-center gap-2 p-2 rounded-lg transition-colors text-xs ${
+                active === 'custom' ? 'bg-primary/20 text-primary' : 'hover:bg-secondary'
+              }`}
+              title="أضف موسيقى من جهازك"
+            >
+              {loading === 'custom' ? <Loader2 className="h-3 w-3 animate-spin" /> : <Upload className="h-3 w-3" />}
+              <span className="truncate">
+                {active === 'custom' && customName ? `▶ ${customName}` : 'موسيقى من جهازك'}
+              </span>
+            </button>
           </div>
         </div>
       ) : (

@@ -40,6 +40,7 @@ const BookReader = () => {
   const observerRef = useRef<IntersectionObserver | null>(null);
   const pageElementsRef = useRef<Map<number, HTMLDivElement>>(new Map());
   const shouldRestoreRef = useRef(true);
+  const pinchRef = useRef<{ startDist: number; startScale: number } | null>(null);
 
   // Load bookmarks
   useEffect(() => {
@@ -86,6 +87,31 @@ const BookReader = () => {
 
   const handleZoomIn = () => setScale((prev) => Math.min(prev + 0.2, 3));
   const handleZoomOut = () => setScale((prev) => Math.max(prev - 0.2, 0.5));
+
+  // Pinch-to-zoom handlers (touch)
+  const getDist = (t1: React.Touch, t2: React.Touch) =>
+    Math.hypot(t1.clientX - t2.clientX, t1.clientY - t2.clientY);
+
+  const onTouchStart = (e: React.TouchEvent) => {
+    if (e.touches.length === 2) {
+      pinchRef.current = {
+        startDist: getDist(e.touches[0], e.touches[1]),
+        startScale: scale,
+      };
+    }
+  };
+  const onTouchMove = (e: React.TouchEvent) => {
+    if (e.touches.length === 2 && pinchRef.current) {
+      e.preventDefault();
+      const dist = getDist(e.touches[0], e.touches[1]);
+      const ratio = dist / pinchRef.current.startDist;
+      const next = Math.min(3, Math.max(0.5, pinchRef.current.startScale * ratio));
+      setScale(next);
+    }
+  };
+  const onTouchEnd = (e: React.TouchEvent) => {
+    if (e.touches.length < 2) pinchRef.current = null;
+  };
 
   const navigateToPage = (page: number, _scrollOffset: number = 0) => {
     // Ensure page is loaded
@@ -267,7 +293,14 @@ const BookReader = () => {
       />
 
       {/* PDF Viewer */}
-      <div className="flex-1 overflow-auto p-4" ref={containerRef}>
+      <div
+        className="flex-1 overflow-auto p-4 touch-pan-y"
+        ref={containerRef}
+        onTouchStart={onTouchStart}
+        onTouchMove={onTouchMove}
+        onTouchEnd={onTouchEnd}
+        style={{ touchAction: 'pan-x pan-y' }}
+      >
         <div className="flex justify-center">
           {fileUrl && (
             <Document

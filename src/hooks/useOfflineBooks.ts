@@ -2,7 +2,7 @@ import { useState, useEffect, useCallback } from 'react';
 
 const OFFLINE_BOOKS_KEY = 'maktaba-mauritania-offline-books';
 const OFFLINE_INDEX_KEY = 'maktaba-mauritania-offline-index';
-const OFFLINE_DIR = 'offline-books';
+const OFFLINE_DIR = 'MauritaniaLibrary';
 
 // Detect Capacitor native runtime
 const isNative = (): boolean => {
@@ -70,7 +70,7 @@ const nativeFileToBlobUrl = async (filename: string, mimeType: string): Promise<
   try {
     const res = await fs.Filesystem.readFile({
       path: `${OFFLINE_DIR}/${filename}`,
-      directory: fs.Directory.Data,
+      directory: fs.Directory.Documents,
     });
     const base64 = typeof res.data === 'string' ? res.data : '';
     if (!base64) return null;
@@ -100,7 +100,7 @@ export const useOfflineBooks = () => {
           try {
             await fs.Filesystem.mkdir({
               path: OFFLINE_DIR,
-              directory: fs.Directory.Data,
+              directory: fs.Directory.Documents,
               recursive: true,
             });
           } catch {/* exists */}
@@ -176,6 +176,25 @@ export const useOfflineBooks = () => {
 
       onProgress?.(50);
 
+      // On web: also trigger a real browser download so the file lands in the
+      // user's Downloads folder (in addition to the offline-cache copy below).
+      if (!isNative()) {
+        try {
+          const safeTitle = (book.title || book.id).replace(/[\\/:*?"<>|]+/g, '_').slice(0, 80);
+          const ext = (book.fileType || 'pdf').toLowerCase().replace(/[^a-z0-9]/g, '') || 'pdf';
+          const dlUrl = URL.createObjectURL(blob);
+          const a = document.createElement('a');
+          a.href = dlUrl;
+          a.download = `${safeTitle}.${ext}`;
+          document.body.appendChild(a);
+          a.click();
+          a.remove();
+          setTimeout(() => URL.revokeObjectURL(dlUrl), 5000);
+        } catch (e) {
+          console.warn('Browser download trigger failed', e);
+        }
+      }
+
       // Native path: write to private app sandbox via Capacitor Filesystem.
       // Files in Directory.Data are NOT visible in the device's gallery / file
       // manager — they live in the app's internal storage and are only
@@ -200,17 +219,22 @@ export const useOfflineBooks = () => {
           try {
             await fs.Filesystem.mkdir({
               path: OFFLINE_DIR,
-              directory: fs.Directory.Data,
+              directory: fs.Directory.Documents,
               recursive: true,
             });
           } catch {/* exists */}
-          // Hidden-style filename (UUID, no human-readable title) so even if
-          // the user browses internal storage there's nothing recognizable.
-          const filename = `.${book.id}.bin`;
+          // Save with a readable filename so the user can see the downloaded
+          // book in their phone's file manager (Documents/MauritaniaLibrary).
+          const safeTitle = (book.title || book.id)
+            .replace(/[\\/:*?"<>|]+/g, '_')
+            .slice(0, 80)
+            .trim() || book.id;
+          const ext = (book.fileType || 'pdf').toLowerCase().replace(/[^a-z0-9]/g, '') || 'pdf';
+          const filename = `${safeTitle}__${book.id}.${ext}`;
           await fs.Filesystem.writeFile({
             path: `${OFFLINE_DIR}/${filename}`,
             data: base64,
-            directory: fs.Directory.Data,
+            directory: fs.Directory.Documents,
           });
           // Update index
           const index = loadNativeIndex().filter((e) => e.id !== book.id);
@@ -324,7 +348,7 @@ export const useOfflineBooks = () => {
           try {
             await fs.Filesystem.deleteFile({
               path: `${OFFLINE_DIR}/${entry.filename}`,
-              directory: fs.Directory.Data,
+              directory: fs.Directory.Documents,
             });
           } catch (e) {
             console.warn('deleteFile failed', e);
