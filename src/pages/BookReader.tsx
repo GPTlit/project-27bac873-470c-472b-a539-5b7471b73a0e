@@ -89,7 +89,7 @@ const BookReader = () => {
   const handleZoomOut = () => setScale((prev) => Math.max(prev - 0.2, 0.5));
 
   // Pinch-to-zoom handlers (touch)
-  const getDist = (t1: Touch, t2: Touch) =>
+  const getDist = (t1: React.Touch, t2: React.Touch) =>
     Math.hypot(t1.clientX - t2.clientX, t1.clientY - t2.clientY);
 
   const onTouchStart = (e: React.TouchEvent) => {
