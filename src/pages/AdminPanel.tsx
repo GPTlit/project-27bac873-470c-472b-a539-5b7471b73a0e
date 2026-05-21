@@ -20,8 +20,7 @@ import { allCategories } from '@/hooks/useCategories';
 import { StoreManagement } from '@/components/admin/StoreManagement';
 import { NotificationBroadcast } from '@/components/admin/NotificationBroadcast';
 import { AIBulkUpload } from '@/components/admin/AIBulkUpload';
-import { Bot, Send, Loader2, Settings, Palette, ToggleLeft, Sparkles, Upload, FileText, Image, Save, Trash2, Pencil, X, ShoppingBag, MoreVertical, Bell } from 'lucide-react';
-import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
+import { Bot, Send, Loader2, Settings, Palette, ToggleLeft, Sparkles, Upload, FileText, Image, Save, Trash2, Pencil, X, ShoppingBag, Bell } from 'lucide-react';
 import { MarqueeText } from '@/components/MarqueeText';
 
 interface ChatMessage {
@@ -673,8 +672,8 @@ const AdminPanel = () => {
                   <ScrollArea className="h-[500px] w-full">
                     <div className="space-y-3 min-w-0">
                       {books?.map((book) => (
-                        <div key={book.id} className="flex items-center justify-between gap-2 p-3 bg-secondary/50 rounded-lg overflow-hidden w-full max-w-full">
-                          <div className="flex-1 min-w-0 max-w-full overflow-hidden">
+                        <div key={book.id} className="flex items-center gap-2 p-3 bg-secondary/50 rounded-lg overflow-hidden w-full max-w-full">
+                          <div className="min-w-0 basis-1/2 max-w-[50%] overflow-hidden">
                             <MarqueeText
                               text={book.title}
                               forceMarquee={book.title.trim().split(/\s+/).length >= 4}
@@ -697,26 +696,28 @@ const AdminPanel = () => {
                               )}
                             </div>
                           </div>
-                          <DropdownMenu>
-                            <DropdownMenuTrigger asChild>
-                              <Button variant="ghost" size="icon" className="h-8 w-8 shrink-0">
-                                <MoreVertical className="h-4 w-4" />
-                              </Button>
-                            </DropdownMenuTrigger>
-                            <DropdownMenuContent align="end">
-                              <DropdownMenuItem onClick={() => openEditDialog(book)}>
-                                <Pencil className="h-4 w-4 ml-2" />
-                                تعديل
-                              </DropdownMenuItem>
-                              <DropdownMenuItem
-                                onClick={() => handleDelete(book.id)}
-                                className="text-destructive"
-                              >
-                                <Trash2 className="h-4 w-4 ml-2" />
-                                حذف
-                              </DropdownMenuItem>
-                            </DropdownMenuContent>
-                          </DropdownMenu>
+                          <div className="ms-auto flex shrink-0 items-center gap-1">
+                            <Button
+                              variant="ghost"
+                              size="icon"
+                              className="h-8 w-8 shrink-0"
+                              onClick={() => openEditDialog(book)}
+                              aria-label="تعديل الكتاب"
+                              title="تعديل"
+                            >
+                              <Pencil className="h-4 w-4" />
+                            </Button>
+                            <Button
+                              variant="ghost"
+                              size="icon"
+                              className="h-8 w-8 shrink-0 text-destructive hover:text-destructive"
+                              onClick={() => handleDelete(book.id)}
+                              aria-label="حذف الكتاب"
+                              title="حذف"
+                            >
+                              <Trash2 className="h-4 w-4" />
+                            </Button>
+                          </div>
                         </div>
                       ))}
                       {(!books || books.length === 0) && (
