@@ -672,9 +672,9 @@ const AdminPanel = () => {
                   <ScrollArea className="h-[500px]">
                     <div className="space-y-3">
                       {books?.map((book) => (
-                        <div key={book.id} className="flex items-center justify-between p-3 bg-secondary/50 rounded-lg">
+                        <div key={book.id} className="flex items-center justify-between gap-2 p-3 bg-secondary/50 rounded-lg overflow-hidden">
                           <div className="flex-1 min-w-0">
-                            <p className="font-medium text-foreground truncate">{book.title}</p>
+                            <MarqueeText text={book.title} className="font-medium text-foreground" />
                             <p className="text-sm text-muted-foreground">{book.author}</p>
                             <div className="flex flex-wrap gap-1 mt-1">
                               {(book.categories || [book.category]).filter(Boolean).slice(0, 3).map(cat => {
