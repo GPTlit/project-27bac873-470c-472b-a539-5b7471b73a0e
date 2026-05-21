@@ -266,3 +266,30 @@ a[href*="lovable.dev"],
 a[href*="lovable.app"]:not([href*="salem4library"]) {
   display: none !important;
 }
+
+/* Marquee (news-ticker) for long titles */
+.marquee {
+  display: flex;
+  overflow: hidden;
+  width: 100%;
+}
+.marquee__track {
+  display: inline-flex;
+  white-space: nowrap;
+  animation: marquee-scroll 14s linear infinite;
+  min-width: 100%;
+}
+.marquee__track > span {
+  padding-inline-end: 2.5rem;
+}
+@keyframes marquee-scroll {
+  0% { transform: translateX(0); }
+  100% { transform: translateX(-50%); }
+}
+[dir="rtl"] .marquee__track {
+  animation-name: marquee-scroll-rtl;
+}
+@keyframes marquee-scroll-rtl {
+  0% { transform: translateX(0); }
+  100% { transform: translateX(50%); }
+}

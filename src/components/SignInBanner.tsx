@@ -1,11 +1,8 @@
-import { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
-import { X, LogIn } from 'lucide-react';
+import { LogIn } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { useAuth } from '@/contexts/AuthContext';
 import { useLanguage } from '@/contexts/LanguageContext';
-
-const STORAGE_KEY = 'signin-banner-dismissed';
 
 const text = {
   ar: {
@@ -25,21 +22,9 @@ const text = {
 export const SignInBanner = () => {
   const { user, loading } = useAuth();
   const { language } = useLanguage();
-  const [show, setShow] = useState(false);
 
-  useEffect(() => {
-    if (loading || user) return;
-    const dismissed = localStorage.getItem(STORAGE_KEY);
-    if (!dismissed) setShow(true);
-  }, [user, loading]);
-
-  if (!show || user) return null;
+  if (loading || user) return null;
   const t = text[language] ?? text.ar;
-
-  const dismiss = () => {
-    localStorage.setItem(STORAGE_KEY, '1');
-    setShow(false);
-  };
 
   return (
     <div className="sticky top-0 z-40 w-full bg-primary text-primary-foreground shadow-md">
@@ -51,13 +36,6 @@ export const SignInBanner = () => {
             {t.cta}
           </Link>
         </Button>
-        <button
-          onClick={dismiss}
-          aria-label="dismiss"
-          className="shrink-0 rounded-md p-1 hover:bg-primary-foreground/10"
-        >
-          <X className="h-4 w-4" />
-        </button>
       </div>
     </div>
   );
