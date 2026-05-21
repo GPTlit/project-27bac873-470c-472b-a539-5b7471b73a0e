@@ -4,9 +4,10 @@ import { cn } from '@/lib/utils';
 interface MarqueeTextProps {
   text: string;
   className?: string;
+  forceMarquee?: boolean;
 }
 
-export const MarqueeText = ({ text, className }: MarqueeTextProps) => {
+export const MarqueeText = ({ text, className, forceMarquee = false }: MarqueeTextProps) => {
   const containerRef = useRef<HTMLDivElement>(null);
   const contentRef = useRef<HTMLSpanElement>(null);
   const [overflow, setOverflow] = useState(false);
@@ -22,7 +23,7 @@ export const MarqueeText = ({ text, className }: MarqueeTextProps) => {
     return () => ro.disconnect();
   }, [text]);
 
-  if (!overflow) {
+  if (!overflow && !forceMarquee) {
     return (
       <div ref={containerRef} className={cn('overflow-hidden', className)}>
         <span ref={contentRef} className="block truncate">{text}</span>
@@ -31,7 +32,7 @@ export const MarqueeText = ({ text, className }: MarqueeTextProps) => {
   }
 
   return (
-    <div ref={containerRef} className={cn('marquee', className)}>
+    <div ref={containerRef} className={cn('marquee w-full max-w-full overflow-hidden', className)}>
       <div className="marquee__track">
         <span ref={contentRef}>{text}</span>
         <span aria-hidden="true">{text}</span>
