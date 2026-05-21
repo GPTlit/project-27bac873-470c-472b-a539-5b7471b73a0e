@@ -488,8 +488,8 @@ const AdminPanel = () => {
 
           {/* Book Upload Tab */}
           <TabsContent value="upload">
-            <div className="grid lg:grid-cols-2 gap-8">
-              <div className="lg:col-span-2">
+            <div className="grid lg:grid-cols-2 gap-8 min-w-0">
+              <div className="lg:col-span-2 min-w-0">
                 <AIBulkUpload onDone={() => refetchBooks()} />
               </div>
               <Card>
