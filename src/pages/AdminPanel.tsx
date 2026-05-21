@@ -488,8 +488,8 @@ const AdminPanel = () => {
 
           {/* Book Upload Tab */}
           <TabsContent value="upload">
-            <div className="grid lg:grid-cols-2 gap-8">
-              <div className="lg:col-span-2">
+            <div className="grid lg:grid-cols-2 gap-8 min-w-0">
+              <div className="lg:col-span-2 min-w-0">
                 <AIBulkUpload onDone={() => refetchBooks()} />
               </div>
               <Card>
@@ -665,18 +665,22 @@ const AdminPanel = () => {
                 </CardContent>
               </Card>
 
-              <Card>
+              <Card className="min-w-0 overflow-hidden">
                 <CardHeader>
                   <CardTitle>الكتب الموجودة ({books?.length || 0})</CardTitle>
                 </CardHeader>
-                <CardContent>
-                  <ScrollArea className="h-[500px]">
-                    <div className="space-y-3">
+                <CardContent className="min-w-0">
+                  <ScrollArea className="h-[500px] w-full">
+                    <div className="space-y-3 min-w-0">
                       {books?.map((book) => (
-                        <div key={book.id} className="flex items-center justify-between gap-2 p-3 bg-secondary/50 rounded-lg overflow-hidden">
-                          <div className="flex-1 min-w-0">
-                            <MarqueeText text={book.title} className="font-medium text-foreground" />
-                            <p className="text-sm text-muted-foreground">{book.author}</p>
+                        <div key={book.id} className="flex items-center justify-between gap-2 p-3 bg-secondary/50 rounded-lg overflow-hidden w-full max-w-full">
+                          <div className="flex-1 min-w-0 max-w-full overflow-hidden">
+                            <MarqueeText
+                              text={book.title}
+                              forceMarquee={book.title.trim().split(/\s+/).length >= 4}
+                              className="font-medium text-foreground w-full max-w-full"
+                            />
+                            <p className="text-sm text-muted-foreground truncate">{book.author}</p>
                             <div className="flex flex-wrap gap-1 mt-1">
                               {(book.categories || [book.category]).filter(Boolean).slice(0, 3).map(cat => {
                                 const category = allCategories.find(c => c.name === cat);
