@@ -22,6 +22,7 @@ import { NotificationBroadcast } from '@/components/admin/NotificationBroadcast'
 import { AIBulkUpload } from '@/components/admin/AIBulkUpload';
 import { Bot, Send, Loader2, Settings, Palette, ToggleLeft, Sparkles, Upload, FileText, Image, Save, Trash2, Pencil, X, ShoppingBag, MoreVertical, Bell } from 'lucide-react';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
+import { MarqueeText } from '@/components/MarqueeText';
 
 interface ChatMessage {
   role: 'user' | 'assistant';
