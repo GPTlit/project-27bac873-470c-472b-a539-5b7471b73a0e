@@ -696,11 +696,12 @@ const AdminPanel = () => {
                       {books?.map((book) => (
                         <div key={book.id} className="flex items-center gap-2 p-3 bg-secondary/50 rounded-lg overflow-hidden w-full max-w-full">
                           <div className="min-w-0 basis-1/2 max-w-[50%] overflow-hidden">
-                            <MarqueeText
-                              text={book.title}
-                              forceMarquee={book.title.trim().split(/\s+/).length >= 4}
-                              className="font-medium text-foreground w-full max-w-full"
-                            />
+                            <p
+                              className="font-medium text-foreground truncate"
+                              title={book.title}
+                            >
+                              {truncateTitle(book.title, 4)}
+                            </p>
                             <p className="text-sm text-muted-foreground truncate">{book.author}</p>
                             <div className="flex flex-wrap gap-1 mt-1">
                               {(book.categories || [book.category]).filter(Boolean).slice(0, 3).map(cat => {
