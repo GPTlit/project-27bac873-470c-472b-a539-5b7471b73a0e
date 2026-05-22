@@ -1,4 +1,5 @@
 import { useState, useRef, useEffect } from 'react';
+import { useSearchParams } from 'react-router-dom';
 import { Layout } from '@/components/layout/Layout';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -21,7 +22,13 @@ import { StoreManagement } from '@/components/admin/StoreManagement';
 import { NotificationBroadcast } from '@/components/admin/NotificationBroadcast';
 import { AIBulkUpload } from '@/components/admin/AIBulkUpload';
 import { Bot, Send, Loader2, Settings, Palette, ToggleLeft, Sparkles, Upload, FileText, Image, Save, Trash2, Pencil, X, ShoppingBag, Bell } from 'lucide-react';
-import { MarqueeText } from '@/components/MarqueeText';
+
+// Truncate a title to the first 4 words followed by … when longer
+const truncateTitle = (title: string, maxWords = 4) => {
+  const words = title.trim().split(/\s+/);
+  if (words.length <= maxWords) return title;
+  return words.slice(0, maxWords).join(' ') + '…';
+};
 
 interface ChatMessage {
   role: 'user' | 'assistant';
@@ -63,6 +70,21 @@ const AdminPanel = () => {
 
   const { data: features, refetch: refetchFeatures } = useFeatureToggles();
   const { data: theme, refetch: refetchTheme } = useActiveTheme();
+  const [searchParams, setSearchParams] = useSearchParams();
+
+  // Auto-open edit dialog when navigated with ?edit=<bookId>
+  useEffect(() => {
+    const editId = searchParams.get('edit');
+    if (editId && books?.length) {
+      const book = books.find(b => b.id === editId);
+      if (book) {
+        openEditDialog(book);
+        searchParams.delete('edit');
+        setSearchParams(searchParams, { replace: true });
+      }
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [books, searchParams]);
 
   useEffect(() => {
     if (scrollRef.current) {
@@ -674,11 +696,12 @@ const AdminPanel = () => {
                       {books?.map((book) => (
                         <div key={book.id} className="flex items-center gap-2 p-3 bg-secondary/50 rounded-lg overflow-hidden w-full max-w-full">
                           <div className="min-w-0 basis-1/2 max-w-[50%] overflow-hidden">
-                            <MarqueeText
-                              text={book.title}
-                              forceMarquee={book.title.trim().split(/\s+/).length >= 4}
-                              className="font-medium text-foreground w-full max-w-full"
-                            />
+                            <p
+                              className="font-medium text-foreground truncate"
+                              title={book.title}
+                            >
+                              {truncateTitle(book.title, 4)}
+                            </p>
                             <p className="text-sm text-muted-foreground truncate">{book.author}</p>
                             <div className="flex flex-wrap gap-1 mt-1">
                               {(book.categories || [book.category]).filter(Boolean).slice(0, 3).map(cat => {
