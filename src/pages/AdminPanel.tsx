@@ -719,11 +719,11 @@ const AdminPanel = () => {
                               )}
                             </div>
                           </div>
-                          <div className="ms-auto flex shrink-0 items-center gap-1">
+                          <div className="ms-auto flex shrink-0 items-center gap-2">
                             <Button
-                              variant="ghost"
+                              variant="outline"
                               size="icon"
-                              className="h-8 w-8 shrink-0"
+                              className="h-9 w-9 shrink-0 border-primary/40 bg-background text-primary hover:bg-primary hover:text-primary-foreground"
                               onClick={() => openEditDialog(book)}
                               aria-label="تعديل الكتاب"
                               title="تعديل"
@@ -731,9 +731,9 @@ const AdminPanel = () => {
                               <Pencil className="h-4 w-4" />
                             </Button>
                             <Button
-                              variant="ghost"
+                              variant="outline"
                               size="icon"
-                              className="h-8 w-8 shrink-0 text-destructive hover:text-destructive"
+                              className="h-9 w-9 shrink-0 border-destructive/50 bg-background text-destructive hover:bg-destructive hover:text-destructive-foreground"
                               onClick={() => handleDelete(book.id)}
                               aria-label="حذف الكتاب"
                               title="حذف"
