@@ -1,4 +1,5 @@
 import { useState, useRef, useEffect } from 'react';
+import { useSearchParams } from 'react-router-dom';
 import { Layout } from '@/components/layout/Layout';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -21,7 +22,13 @@ import { StoreManagement } from '@/components/admin/StoreManagement';
 import { NotificationBroadcast } from '@/components/admin/NotificationBroadcast';
 import { AIBulkUpload } from '@/components/admin/AIBulkUpload';
 import { Bot, Send, Loader2, Settings, Palette, ToggleLeft, Sparkles, Upload, FileText, Image, Save, Trash2, Pencil, X, ShoppingBag, Bell } from 'lucide-react';
-import { MarqueeText } from '@/components/MarqueeText';
+
+// Truncate a title to the first 4 words followed by … when longer
+const truncateTitle = (title: string, maxWords = 4) => {
+  const words = title.trim().split(/\s+/);
+  if (words.length <= maxWords) return title;
+  return words.slice(0, maxWords).join(' ') + '…';
+};
 
 interface ChatMessage {
   role: 'user' | 'assistant';
@@ -63,6 +70,21 @@ const AdminPanel = () => {
 
   const { data: features, refetch: refetchFeatures } = useFeatureToggles();
   const { data: theme, refetch: refetchTheme } = useActiveTheme();
+  const [searchParams, setSearchParams] = useSearchParams();
+
+  // Auto-open edit dialog when navigated with ?edit=<bookId>
+  useEffect(() => {
+    const editId = searchParams.get('edit');
+    if (editId && books?.length) {
+      const book = books.find(b => b.id === editId);
+      if (book) {
+        openEditDialog(book);
+        searchParams.delete('edit');
+        setSearchParams(searchParams, { replace: true });
+      }
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [books, searchParams]);
 
   useEffect(() => {
     if (scrollRef.current) {
