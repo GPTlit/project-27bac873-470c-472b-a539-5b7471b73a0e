@@ -1,6 +1,6 @@
 import { useRef, useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import { Pencil, Trash2, ImagePlus, Loader2 } from 'lucide-react';
+import { Pencil, Trash2, ImagePlus, Loader2, MoreVertical } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { Book as MockBook } from '@/lib/types';
 import { Book as DbBook } from '@/hooks/useBooks';
@@ -45,6 +45,7 @@ export const BookCard = ({ book, index = 0 }: BookCardProps) => {
   const queryClient = useQueryClient();
   const coverInputRef = useRef<HTMLInputElement>(null);
   const [uploadingCover, setUploadingCover] = useState(false);
+  const [menuOpen, setMenuOpen] = useState(false);
   
   // Handle both coverUrl (mock) and cover_url (database)
   const coverImage = ('coverUrl' in book && book.coverUrl) || 
@@ -131,9 +132,24 @@ export const BookCard = ({ book, index = 0 }: BookCardProps) => {
           {/* Admin Actions */}
           {isAdmin && (
             <div
-              className="absolute top-2 left-2 flex flex-col gap-1.5 z-10"
+              className="absolute top-2 left-2 flex flex-col items-start gap-1.5 z-10"
               onClick={stop}
             >
+              <button
+                type="button"
+                onClick={(e) => {
+                  stop(e);
+                  setMenuOpen((v) => !v);
+                }}
+                className="h-8 w-8 rounded-full bg-background/90 backdrop-blur text-foreground shadow-md hover:bg-primary hover:text-primary-foreground flex items-center justify-center transition-colors"
+                aria-label="خيارات"
+                title="خيارات"
+                aria-expanded={menuOpen}
+              >
+                <MoreVertical className="h-4 w-4" />
+              </button>
+              {menuOpen && (
+                <>
               <button
                 type="button"
                 onClick={handleEdit}
@@ -185,6 +201,8 @@ export const BookCard = ({ book, index = 0 }: BookCardProps) => {
                   </AlertDialogFooter>
                 </AlertDialogContent>
               </AlertDialog>
+                </>
+              )}
               <input
                 ref={coverInputRef}
                 type="file"
