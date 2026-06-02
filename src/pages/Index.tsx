@@ -3,6 +3,7 @@ import { HeroSection } from '@/components/home/HeroSection';
 import { CategoriesSection } from '@/components/home/CategoriesSection';
 import { FeaturedBooks } from '@/components/home/FeaturedBooks';
 import { RecentBooks } from '@/components/home/RecentBooks';
+import { RecentlyViewedBooks } from '@/components/home/RecentlyViewedBooks';
 
 const Index = () => {
   return (
@@ -11,6 +12,7 @@ const Index = () => {
       <CategoriesSection />
       <FeaturedBooks />
       <RecentBooks />
+      <RecentlyViewedBooks />
     </Layout>
   );
 };
