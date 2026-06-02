@@ -97,6 +97,7 @@ const translations: Translations = {
   // Featured & Recent Books
   featuredBooks: { ar: 'كتب مختارة', en: 'Featured Books', fr: 'Livres en vedette' },
   recentBooks: { ar: 'آخر الإضافات', en: 'Recent Additions', fr: 'Ajouts récents' },
+  recentlyViewed: { ar: 'شوهدت مؤخراً', en: 'Recently Viewed', fr: 'Vus récemment' },
   viewAll: { ar: 'عرض الكل', en: 'View All', fr: 'Voir tout' },
   
   // Categories

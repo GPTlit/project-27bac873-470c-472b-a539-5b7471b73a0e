@@ -4,13 +4,22 @@ import { Button } from '@/components/ui/button';
 import { BookCard } from '@/components/books/BookCard';
 import { useBooks } from '@/hooks/useBooks';
 import { useLanguage } from '@/contexts/LanguageContext';
+import { useFeaturedBookIds } from '@/hooks/useFeaturedBooks';
 
 export const FeaturedBooks = () => {
   const { data: books, isLoading } = useBooks();
+  const { data: featuredIds } = useFeaturedBookIds();
   const { t } = useLanguage();
-  
-  // Show first 5 books as featured
-  const featuredBooks = books?.slice(0, 5) || [];
+
+  // Admin-curated list (preserves order). Falls back to first 5 if none set.
+  const featuredBooks = (() => {
+    if (!books) return [];
+    if (featuredIds && featuredIds.length) {
+      const map = new Map(books.map((b) => [b.id, b]));
+      return featuredIds.map((id) => map.get(id)).filter(Boolean) as typeof books;
+    }
+    return books.slice(0, 5);
+  })();
 
   if (isLoading) {
     return (

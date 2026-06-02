@@ -9,6 +9,7 @@ import { useAuth } from '@/contexts/AuthContext';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
 import { useQueryClient } from '@tanstack/react-query';
+import { trackRecentlyViewed } from '@/hooks/useRecentlyViewed';
 import {
   AlertDialog,
   AlertDialogAction,
@@ -102,6 +103,7 @@ export const BookCard = ({ book, index = 0 }: BookCardProps) => {
       to={`/book/${book.id}`}
       className="group block animate-fade-in-up"
       style={{ animationDelay: `${index * 0.05}s` }}
+      onClick={() => trackRecentlyViewed(book.id)}
     >
       <div className="relative">
         {/* Book Cover */}

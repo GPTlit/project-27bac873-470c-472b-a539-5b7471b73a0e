@@ -25,6 +25,36 @@ interface BookJob {
 const safeName = (ext: string) =>
   `book_${Date.now()}_${Math.random().toString(36).slice(2, 10)}.${ext}`;
 
+// Retry helper with exponential backoff for transient errors (429 / network)
+const withRetry = async <T,>(
+  fn: () => Promise<T>,
+  opts: { retries?: number; baseDelay?: number; label?: string } = {},
+): Promise<T> => {
+  const { retries = 6, baseDelay = 2000, label = 'op' } = opts;
+  let attempt = 0;
+  // eslint-disable-next-line no-constant-condition
+  while (true) {
+    try {
+      return await fn();
+    } catch (e: any) {
+      attempt++;
+      const msg = (e?.message || '').toLowerCase();
+      const retryable =
+        msg.includes('429') ||
+        msg.includes('rate') ||
+        msg.includes('timeout') ||
+        msg.includes('network') ||
+        msg.includes('fetch') ||
+        msg.includes('temporarily') ||
+        msg.includes('non-2xx');
+      if (!retryable || attempt > retries) throw e;
+      const delay = Math.min(60000, baseDelay * 2 ** (attempt - 1)) + Math.random() * 500;
+      console.warn(`[${label}] retry ${attempt}/${retries} in ${Math.round(delay)}ms:`, e?.message);
+      await new Promise((r) => setTimeout(r, delay));
+    }
+  }
+};
+
 export const AIBulkUpload = ({ onDone }: { onDone?: () => void }) => {
   const { toast } = useToast();
   const [jobs, setJobs] = useState<BookJob[]>([]);
@@ -51,21 +81,25 @@ export const AIBulkUpload = ({ onDone }: { onDone?: () => void }) => {
       ]);
 
       updateJob(idx, { status: 'analyzing' });
-      const { data, error } = await supabase.functions.invoke('ai-book-metadata', {
-        body: { filename: job.file.name, textSample: sample },
-      });
-      if (error || !data?.metadata) {
-        throw new Error(error?.message || data?.error || 'فشل تحليل الكتاب');
-      }
-      const metadata = data.metadata;
+      const metadata = await withRetry(async () => {
+        const { data, error } = await supabase.functions.invoke('ai-book-metadata', {
+          body: { filename: job.file.name, textSample: sample },
+        });
+        if (error || !data?.metadata) {
+          throw new Error(error?.message || data?.error || 'non-2xx ai error');
+        }
+        return data.metadata;
+      }, { label: 'ai-metadata', retries: 8, baseDelay: 2500 });
 
       updateJob(idx, { status: 'uploading', metadata });
 
       const filename = safeName('pdf');
-      const { error: upErr } = await supabase.storage
-        .from('books')
-        .upload(filename, job.file, { contentType: 'application/pdf', cacheControl: '3600' });
-      if (upErr) throw new Error(`فشل رفع الملف: ${upErr.message}`);
+      await withRetry(async () => {
+        const { error: upErr } = await supabase.storage
+          .from('books')
+          .upload(filename, job.file, { contentType: 'application/pdf', cacheControl: '3600' });
+        if (upErr) throw new Error(upErr.message);
+      }, { label: 'upload-pdf', retries: 4 });
       const { data: urlData } = supabase.storage.from('books').getPublicUrl(filename);
 
       let coverUrl: string | null = null;
@@ -101,8 +135,8 @@ export const AIBulkUpload = ({ onDone }: { onDone?: () => void }) => {
   const startAll = async () => {
     if (!jobs.length) return;
     setRunning(true);
-    // Process up to 3 in parallel for speed
-    const concurrency = 3;
+    // Lower concurrency keeps us under AI gateway rate limits when uploading hundreds of books
+    const concurrency = 2;
     let cursor = 0;
     const workers = Array.from({ length: Math.min(concurrency, jobs.length) }, async () => {
       while (true) {
@@ -113,7 +147,12 @@ export const AIBulkUpload = ({ onDone }: { onDone?: () => void }) => {
     });
     await Promise.all(workers);
     setRunning(false);
-    toast({ title: 'انتهى', description: `تمت معالجة ${jobs.length} كتاب` });
+    const ok = jobs.filter((j) => j.status === 'done').length;
+    const fail = jobs.filter((j) => j.status === 'error').length;
+    toast({
+      title: 'انتهى',
+      description: `نجح ${ok} من ${jobs.length}${fail ? ` (فشل ${fail})` : ''}`,
+    });
     onDone?.();
   };
 

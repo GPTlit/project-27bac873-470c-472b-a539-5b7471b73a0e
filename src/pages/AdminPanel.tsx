@@ -21,7 +21,8 @@ import { allCategories } from '@/hooks/useCategories';
 import { StoreManagement } from '@/components/admin/StoreManagement';
 import { NotificationBroadcast } from '@/components/admin/NotificationBroadcast';
 import { AIBulkUpload } from '@/components/admin/AIBulkUpload';
-import { Bot, Send, Loader2, Settings, Palette, ToggleLeft, Sparkles, Upload, FileText, Image, Save, Trash2, Pencil, X, ShoppingBag, Bell } from 'lucide-react';
+import { useFeaturedBookIds, useSetFeaturedBookIds } from '@/hooks/useFeaturedBooks';
+import { Bot, Send, Loader2, Settings, Palette, ToggleLeft, Sparkles, Upload, FileText, Image, Save, Trash2, Pencil, X, ShoppingBag, Bell, Star, Plus, ArrowUp, ArrowDown } from 'lucide-react';
 
 // Truncate a title to the first 4 words followed by … when longer
 const truncateTitle = (title: string, maxWords = 4) => {
@@ -71,6 +72,15 @@ const AdminPanel = () => {
   const { data: features, refetch: refetchFeatures } = useFeatureToggles();
   const { data: theme, refetch: refetchTheme } = useActiveTheme();
   const [searchParams, setSearchParams] = useSearchParams();
+
+  // Featured books management
+  const { data: featuredIds } = useFeaturedBookIds();
+  const setFeaturedIds = useSetFeaturedBookIds();
+  const [featuredDraft, setFeaturedDraft] = useState<string[]>([]);
+  const [featuredSearch, setFeaturedSearch] = useState('');
+  useEffect(() => {
+    setFeaturedDraft(featuredIds || []);
+  }, [featuredIds]);
 
   // Auto-open edit dialog when navigated with ?edit=<bookId>
   useEffect(() => {
@@ -476,6 +486,10 @@ const AdminPanel = () => {
               <Upload className="h-4 w-4" />
               رفع الكتب
             </TabsTrigger>
+            <TabsTrigger value="featured" className="flex items-center gap-2 px-4 py-2">
+              <Star className="h-4 w-4" />
+              الكتب المختارة
+            </TabsTrigger>
             <TabsTrigger value="store" className="flex items-center gap-2 px-4 py-2">
               <ShoppingBag className="h-4 w-4" />
               المتجر
@@ -505,6 +519,161 @@ const AdminPanel = () => {
                 <StoreManagement />
               </CardContent>
             </Card>
+          </TabsContent>
+
+          {/* Featured Books Tab */}
+          <TabsContent value="featured">
+            <div className="grid lg:grid-cols-2 gap-6 min-w-0">
+              <Card className="min-w-0 overflow-hidden">
+                <CardHeader>
+                  <CardTitle className="flex items-center gap-2">
+                    <Star className="h-5 w-5 text-primary" />
+                    الكتب المختارة المعروضة ({featuredDraft.length})
+                  </CardTitle>
+                  <p className="text-sm text-muted-foreground">
+                    رتّب الكتب التي ستظهر في قسم "كتب مختارة" بالصفحة الرئيسية. لا يوجد حد أقصى للعدد.
+                  </p>
+                </CardHeader>
+                <CardContent className="space-y-3">
+                  <ScrollArea className="h-[420px] w-full">
+                    <div className="space-y-2 pe-2">
+                      {featuredDraft.length === 0 && (
+                        <p className="text-center text-muted-foreground py-8">
+                          لم تُضف كتب مختارة بعد. أضف من القائمة المجاورة.
+                        </p>
+                      )}
+                      {featuredDraft.map((id, idx) => {
+                        const book = books?.find((b) => b.id === id);
+                        return (
+                          <div
+                            key={id}
+                            className="flex items-center gap-2 p-2 bg-secondary/50 rounded-lg overflow-hidden"
+                          >
+                            <span className="w-6 text-center text-sm text-muted-foreground shrink-0">
+                              {idx + 1}
+                            </span>
+                            <div className="min-w-0 flex-1">
+                              <p className="text-sm font-medium truncate" title={book?.title || id}>
+                                {book ? truncateTitle(book.title, 5) : 'كتاب محذوف'}
+                              </p>
+                              {book && (
+                                <p className="text-xs text-muted-foreground truncate">{book.author}</p>
+                              )}
+                            </div>
+                            <div className="flex items-center gap-1 shrink-0">
+                              <Button
+                                variant="outline"
+                                size="icon"
+                                className="h-8 w-8"
+                                disabled={idx === 0}
+                                onClick={() => {
+                                  const next = [...featuredDraft];
+                                  [next[idx - 1], next[idx]] = [next[idx], next[idx - 1]];
+                                  setFeaturedDraft(next);
+                                }}
+                              >
+                                <ArrowUp className="h-4 w-4" />
+                              </Button>
+                              <Button
+                                variant="outline"
+                                size="icon"
+                                className="h-8 w-8"
+                                disabled={idx === featuredDraft.length - 1}
+                                onClick={() => {
+                                  const next = [...featuredDraft];
+                                  [next[idx + 1], next[idx]] = [next[idx], next[idx + 1]];
+                                  setFeaturedDraft(next);
+                                }}
+                              >
+                                <ArrowDown className="h-4 w-4" />
+                              </Button>
+                              <Button
+                                variant="outline"
+                                size="icon"
+                                className="h-8 w-8 border-destructive/50 text-destructive hover:bg-destructive hover:text-destructive-foreground"
+                                onClick={() =>
+                                  setFeaturedDraft(featuredDraft.filter((x) => x !== id))
+                                }
+                              >
+                                <X className="h-4 w-4" />
+                              </Button>
+                            </div>
+                          </div>
+                        );
+                      })}
+                    </div>
+                  </ScrollArea>
+                  <Button
+                    className="w-full gap-2"
+                    disabled={setFeaturedIds.isPending}
+                    onClick={async () => {
+                      try {
+                        await setFeaturedIds.mutateAsync(featuredDraft);
+                        toast({ title: 'تم الحفظ', description: 'تم تحديث الكتب المختارة' });
+                      } catch (e: any) {
+                        toast({ title: 'خطأ', description: e?.message, variant: 'destructive' });
+                      }
+                    }}
+                  >
+                    {setFeaturedIds.isPending ? (
+                      <Loader2 className="h-4 w-4 animate-spin" />
+                    ) : (
+                      <Save className="h-4 w-4" />
+                    )}
+                    حفظ القائمة
+                  </Button>
+                </CardContent>
+              </Card>
+
+              <Card className="min-w-0 overflow-hidden">
+                <CardHeader>
+                  <CardTitle>أضف من المكتبة</CardTitle>
+                  <Input
+                    placeholder="ابحث بالعنوان أو المؤلف..."
+                    value={featuredSearch}
+                    onChange={(e) => setFeaturedSearch(e.target.value)}
+                  />
+                </CardHeader>
+                <CardContent>
+                  <ScrollArea className="h-[460px] w-full">
+                    <div className="space-y-2 pe-2">
+                      {books
+                        ?.filter((b) => {
+                          if (featuredDraft.includes(b.id)) return false;
+                          if (!featuredSearch.trim()) return true;
+                          const q = featuredSearch.toLowerCase();
+                          return (
+                            b.title.toLowerCase().includes(q) ||
+                            b.author.toLowerCase().includes(q)
+                          );
+                        })
+                        .map((b) => (
+                          <div
+                            key={b.id}
+                            className="flex items-center gap-2 p-2 bg-secondary/30 rounded-lg overflow-hidden"
+                          >
+                            <div className="min-w-0 flex-1">
+                              <p className="text-sm font-medium truncate" title={b.title}>
+                                {truncateTitle(b.title, 5)}
+                              </p>
+                              <p className="text-xs text-muted-foreground truncate">{b.author}</p>
+                            </div>
+                            <Button
+                              size="icon"
+                              variant="outline"
+                              className="h-8 w-8 shrink-0 border-primary/40 text-primary hover:bg-primary hover:text-primary-foreground"
+                              onClick={() => setFeaturedDraft([...featuredDraft, b.id])}
+                              title="إضافة للكتب المختارة"
+                            >
+                              <Plus className="h-4 w-4" />
+                            </Button>
+                          </div>
+                        ))}
+                    </div>
+                  </ScrollArea>
+                </CardContent>
+              </Card>
+            </div>
           </TabsContent>
 
           {/* Book Upload Tab */}
