@@ -73,6 +73,15 @@ const AdminPanel = () => {
   const { data: theme, refetch: refetchTheme } = useActiveTheme();
   const [searchParams, setSearchParams] = useSearchParams();
 
+  // Featured books management
+  const { data: featuredIds } = useFeaturedBookIds();
+  const setFeaturedIds = useSetFeaturedBookIds();
+  const [featuredDraft, setFeaturedDraft] = useState<string[]>([]);
+  const [featuredSearch, setFeaturedSearch] = useState('');
+  useEffect(() => {
+    setFeaturedDraft(featuredIds || []);
+  }, [featuredIds]);
+
   // Auto-open edit dialog when navigated with ?edit=<bookId>
   useEffect(() => {
     const editId = searchParams.get('edit');
@@ -476,6 +485,10 @@ const AdminPanel = () => {
             <TabsTrigger value="upload" className="flex items-center gap-2 px-4 py-2">
               <Upload className="h-4 w-4" />
               رفع الكتب
+            </TabsTrigger>
+            <TabsTrigger value="featured" className="flex items-center gap-2 px-4 py-2">
+              <Star className="h-4 w-4" />
+              الكتب المختارة
             </TabsTrigger>
             <TabsTrigger value="store" className="flex items-center gap-2 px-4 py-2">
               <ShoppingBag className="h-4 w-4" />
