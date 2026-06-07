@@ -135,8 +135,8 @@ export const AIBulkUpload = ({ onDone }: { onDone?: () => void }) => {
   const startAll = async () => {
     if (!jobs.length) return;
     setRunning(true);
-    // Lower concurrency keeps us under AI gateway rate limits when uploading hundreds of books
-    const concurrency = 2;
+    // 3 concurrent workers — matches the version that previously processed reliably
+    const concurrency = 3;
     let cursor = 0;
     const workers = Array.from({ length: Math.min(concurrency, jobs.length) }, async () => {
       while (true) {
