@@ -98,6 +98,8 @@ const translations: Translations = {
   featuredBooks: { ar: 'كتب مختارة', en: 'Featured Books', fr: 'Livres en vedette' },
   recentBooks: { ar: 'آخر الإضافات', en: 'Recent Additions', fr: 'Ajouts récents' },
   recentlyViewed: { ar: 'شوهدت مؤخراً', en: 'Recently Viewed', fr: 'Vus récemment' },
+  trendingBooks: { ar: 'الأكثر رواجاً', en: 'Trending Books', fr: 'Livres tendance' },
+  topRatedBooks: { ar: 'الأعلى تقييماً', en: 'Highest Rated', fr: 'Mieux notés' },
   viewAll: { ar: 'عرض الكل', en: 'View All', fr: 'Voir tout' },
   
   // Categories
