@@ -1,18 +1,18 @@
 import { useEffect, useRef, useState } from 'react';
-import { Loader2, Music, Volume2, VolumeX, X, Upload } from 'lucide-react';
+import { Loader2, Music, Volume2, VolumeX, X, Upload, CloudRain, Waves, Wind, Flame, Coffee, Mountain, Sparkles, Piano, Brain } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Slider } from '@/components/ui/slider';
 
-const SOUNDS: { key: string; label: string; emoji: string; url: string }[] = [
-  { key: 'rain',   label: 'مطر',     emoji: '🌧️', url: '/audio/ambient/rain.mp3' },
-  { key: 'ocean',  label: 'بحر',     emoji: '🌊', url: '/audio/ambient/ocean.mp3' },
-  { key: 'wind',   label: 'رياح',    emoji: '🍃', url: '/audio/ambient/wind.mp3' },
-  { key: 'fire',   label: 'موقد',    emoji: '🔥', url: '/audio/ambient/fire.mp3' },
-  { key: 'cafe',   label: 'مقهى',    emoji: '☕', url: '/audio/ambient/cafe.mp3' },
-  { key: 'desert', label: 'صحراء',   emoji: '🏜️', url: '/audio/ambient/desert.mp3' },
-  { key: 'space',  label: 'فضاء',    emoji: '🌌', url: '/audio/ambient/space.mp3' },
-  { key: 'piano',  label: 'بيانو',   emoji: '🎹', url: '/audio/ambient/piano.mp3' },
-  { key: 'pad',    label: 'تأمل',    emoji: '🧘', url: '/audio/ambient/pad.mp3' },
+const SOUNDS: { key: string; label: string; Icon: typeof CloudRain; url: string }[] = [
+  { key: 'rain',   label: 'مطر',     Icon: CloudRain, url: '/audio/ambient/rain.mp3' },
+  { key: 'ocean',  label: 'بحر',     Icon: Waves,     url: '/audio/ambient/ocean.mp3' },
+  { key: 'wind',   label: 'رياح',    Icon: Wind,      url: '/audio/ambient/wind.mp3' },
+  { key: 'fire',   label: 'موقد',    Icon: Flame,     url: '/audio/ambient/fire.mp3' },
+  { key: 'cafe',   label: 'مقهى',    Icon: Coffee,    url: '/audio/ambient/cafe.mp3' },
+  { key: 'desert', label: 'صحراء',   Icon: Mountain,  url: '/audio/ambient/desert.mp3' },
+  { key: 'space',  label: 'فضاء',    Icon: Sparkles,  url: '/audio/ambient/space.mp3' },
+  { key: 'piano',  label: 'بيانو',   Icon: Piano,     url: '/audio/ambient/piano.mp3' },
+  { key: 'pad',    label: 'تأمل',    Icon: Brain,     url: '/audio/ambient/pad.mp3' },
 ];
 
 export const AmbientPlayer = () => {
@@ -113,7 +113,7 @@ export const AmbientPlayer = () => {
             </Button>
           </div>
           <div className="grid grid-cols-5 gap-1 mb-3">
-            {SOUNDS.map((s) => (
+            {SOUNDS.map(({ Icon, ...s }) => (
               <button
                 key={s.key}
                 onClick={() => (active === s.key ? stop() : play(s.key))}
@@ -121,8 +121,9 @@ export const AmbientPlayer = () => {
                   active === s.key ? 'bg-primary/20 text-primary' : 'hover:bg-secondary'
                 }`}
                 title={s.label}
+                aria-label={s.label}
               >
-                <span className="text-lg">{loading === s.key ? <Loader2 className="h-4 w-4 animate-spin" /> : s.emoji}</span>
+                <span className="text-lg">{loading === s.key ? <Loader2 className="h-4 w-4 animate-spin" /> : <Icon className="h-4 w-4" />}</span>
                 <span className="text-[10px]">{s.label}</span>
               </button>
             ))}

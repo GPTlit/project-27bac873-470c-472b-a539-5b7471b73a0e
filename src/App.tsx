@@ -28,6 +28,14 @@ import Store from "./pages/Store";
 import Profile from "./pages/Profile";
 import Copyright from "./pages/Copyright";
 import Privacy from "./pages/Privacy";
+import Feed from "./pages/stories/Feed";
+import Explore from "./pages/stories/Explore";
+import Write from "./pages/stories/Write";
+import WriteStory from "./pages/stories/WriteStory";
+import WritePart from "./pages/stories/WritePart";
+import StoryPage from "./pages/stories/StoryPage";
+import ReadPart from "./pages/stories/ReadPart";
+import AuthorProfile from "./pages/stories/AuthorProfile";
 
 const queryClient = new QueryClient();
 
@@ -53,8 +61,17 @@ const App = () => (
                 <Route path="/about" element={<About />} />
                 <Route path="/copyright" element={<Copyright />} />
                 <Route path="/privacy" element={<Privacy />} />
+                {/* Stories — public browsing */}
+                <Route path="/explore" element={<Explore />} />
+                <Route path="/story/:id" element={<StoryPage />} />
+                <Route path="/u/:username" element={<AuthorProfile />} />
                 {/* Protected routes - require authentication */}
                 <Route path="/book/:id/read" element={<ProtectedRoute><BookReader /></ProtectedRoute>} />
+                <Route path="/feed" element={<ProtectedRoute><Feed /></ProtectedRoute>} />
+                <Route path="/write" element={<ProtectedRoute><Write /></ProtectedRoute>} />
+                <Route path="/write/:id" element={<ProtectedRoute><WriteStory /></ProtectedRoute>} />
+                <Route path="/write/:id/parts/:partId" element={<ProtectedRoute><WritePart /></ProtectedRoute>} />
+                <Route path="/story/:id/read/:partId" element={<ProtectedRoute><ReadPart /></ProtectedRoute>} />
                 <Route path="/history" element={<ProtectedRoute><History /></ProtectedRoute>} />
                 <Route path="/downloads" element={<ProtectedRoute><Downloads /></ProtectedRoute>} />
                 <Route path="/upload" element={<ProtectedRoute><Upload /></ProtectedRoute>} />
