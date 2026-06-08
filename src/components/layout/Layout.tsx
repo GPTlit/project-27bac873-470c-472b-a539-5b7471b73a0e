@@ -2,6 +2,7 @@ import { ReactNode } from 'react';
 import { Header } from './Header';
 import { Footer } from './Footer';
 import { SignInBanner } from '@/components/SignInBanner';
+import { BottomNav } from './BottomNav';
 
 interface LayoutProps {
   children: ReactNode;
@@ -12,8 +13,9 @@ export const Layout = ({ children }: LayoutProps) => {
     <div className="min-h-screen flex flex-col">
       <SignInBanner />
       <Header />
-      <main className="flex-1">{children}</main>
+      <main className="flex-1 pb-20">{children}</main>
       <Footer />
+      <BottomNav />
     </div>
   );
 };
