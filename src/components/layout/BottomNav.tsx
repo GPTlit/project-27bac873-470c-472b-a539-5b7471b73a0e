@@ -1,5 +1,5 @@
 import { NavLink } from 'react-router-dom';
-import { Home, Rss, Compass, PenSquare, Bell } from 'lucide-react';
+import { Home, Rss, Compass, PenSquare, User } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
 const items = [
@@ -7,7 +7,7 @@ const items = [
   { to: '/feed', label: 'المتابَعون', icon: Rss },
   { to: '/explore', label: 'استكشف', icon: Compass },
   { to: '/write', label: 'اكتب', icon: PenSquare },
-  { to: '/profile', label: 'الإشعارات', icon: Bell },
+  { to: '/profile', label: 'حسابي', icon: User },
 ];
 
 export const BottomNav = () => {
