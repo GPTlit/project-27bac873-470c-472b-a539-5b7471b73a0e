@@ -16,7 +16,7 @@ const NotFound = () => {
       <div className="section-padding">
         <div className="container-library">
           <div className="flex flex-col items-center justify-center text-center py-16">
-            <div className="text-8xl mb-6">📖</div>
+            <BookOpen className="h-20 w-20 mx-auto mb-6 text-muted-foreground/40" />
             <h1 className="text-6xl font-bold text-gradient mb-4">404</h1>
             <p className="text-xl text-muted-foreground mb-8">
               عذراً، الصفحة التي تبحث عنها غير موجودة

@@ -1,5 +1,5 @@
 import { useSearchParams, Link, useNavigate } from 'react-router-dom';
-import { Search as SearchIcon, ArrowRight, Loader2 } from 'lucide-react';
+import { Search as SearchIcon, ArrowRight, Loader2, BookOpen } from 'lucide-react';
 import { Layout } from '@/components/layout/Layout';
 import { BookCard } from '@/components/books/BookCard';
 import { Button } from '@/components/ui/button';
@@ -85,7 +85,7 @@ const Search = () => {
           {/* No Results */}
           {!isLoading && query && (!results || results.length === 0) && (
             <div className="text-center py-16">
-              <div className="text-6xl mb-6">🔍</div>
+              <SearchIcon className="h-16 w-16 mx-auto mb-6 text-muted-foreground/40" />
               <h2 className="text-xl font-bold text-foreground mb-2">
                 {t('noResultsFound')}
               </h2>
@@ -104,7 +104,7 @@ const Search = () => {
           {/* Initial State - No Query */}
           {!query && (
             <div className="text-center py-16">
-              <div className="text-6xl mb-6">📚</div>
+              <BookOpen className="h-16 w-16 mx-auto mb-6 text-muted-foreground/40" />
               <h2 className="text-xl font-bold text-foreground mb-2">
                 {t('searchOurLibrary')}
               </h2>

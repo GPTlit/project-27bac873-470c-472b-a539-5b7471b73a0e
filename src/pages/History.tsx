@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
-import { History as HistoryIcon, Trash2 } from 'lucide-react';
+import { History as HistoryIcon, Trash2, BookOpen } from 'lucide-react';
 import { Layout } from '@/components/layout/Layout';
 import { Button } from '@/components/ui/button';
 import { BookCard } from '@/components/books/BookCard';
@@ -70,7 +70,7 @@ const History = () => {
             </div>
           ) : (
             <div className="text-center py-16">
-              <div className="text-6xl mb-6">📚</div>
+              <BookOpen className="h-16 w-16 mx-auto mb-6 text-muted-foreground/40" />
               <h2 className="text-xl font-bold text-foreground mb-2">
                 لا يوجد تاريخ قراءة
               </h2>
