@@ -1,5 +1,6 @@
 import { useParams, Link, useNavigate } from 'react-router-dom';
 import { ArrowRight, BookOpen, Download, Share2, WifiOff, Check, Loader2, FileText } from 'lucide-react';
+import { CategoryIcon } from '@/components/CategoryIcon';
 
 import { Layout } from '@/components/layout/Layout';
 import { Button } from '@/components/ui/button';
