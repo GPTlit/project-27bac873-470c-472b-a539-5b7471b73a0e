@@ -17,7 +17,7 @@ export default function Feed() {
       <div className="container-library py-6">
         <div className="flex items-center gap-2 mb-4">
           <Rss className="h-5 w-5 text-primary" />
-          <h1 className="text-2xl font-bold">المتابَعون</h1>
+          <h1 className="text-2xl font-bold">FYP</h1>
         </div>
         {!user ? (
           <EmptyState text="سجّل دخولك لمتابعة كتّابك المفضلين ورؤية قصصهم هنا." />

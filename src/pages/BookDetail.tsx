@@ -1,5 +1,6 @@
 import { useParams, Link, useNavigate } from 'react-router-dom';
 import { ArrowRight, BookOpen, Download, Share2, WifiOff, Check, Loader2, FileText } from 'lucide-react';
+import { CategoryIcon } from '@/components/CategoryIcon';
 
 import { Layout } from '@/components/layout/Layout';
 import { Button } from '@/components/ui/button';
@@ -242,7 +243,7 @@ const BookDetail = () => {
                   to={`/category/${category.name}`}
                   className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-secondary text-sm text-secondary-foreground hover:bg-secondary/80 transition-colors mb-4"
                 >
-                  <span>{category.icon}</span>
+                  <CategoryIcon name={category.name} className="h-3.5 w-3.5" />
                   {(() => { const key = `category_${category.name}`; const translated = t(key); return translated !== key ? translated : category.nameAr; })()}
                 </Link>
               )}

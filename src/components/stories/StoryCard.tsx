@@ -1,6 +1,5 @@
 import { Link } from 'react-router-dom';
-import { BookText, Lock } from 'lucide-react';
-import { Badge } from '@/components/ui/badge';
+import { BookText } from 'lucide-react';
 import type { Story } from '@/hooks/useStories';
 
 export const StoryCard = ({ story }: { story: Story }) => {
@@ -16,11 +15,6 @@ export const StoryCard = ({ story }: { story: Story }) => {
           <div className="w-full h-full flex items-center justify-center text-muted-foreground">
             <BookText className="h-10 w-10" />
           </div>
-        )}
-        {story.mature && (
-          <Badge variant="destructive" className="absolute top-2 right-2 gap-1">
-            <Lock className="h-3 w-3" /> +18
-          </Badge>
         )}
       </div>
       <div className="p-3">

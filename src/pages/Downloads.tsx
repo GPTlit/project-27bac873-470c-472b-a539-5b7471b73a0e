@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
-import { Download, Trash2, BookOpen, WifiOff, HardDrive } from 'lucide-react';
+import { Download, Trash2, BookOpen, WifiOff, HardDrive, Inbox, Lightbulb } from 'lucide-react';
 import { Layout } from '@/components/layout/Layout';
 import { Button } from '@/components/ui/button';
 import { useToast } from '@/hooks/use-toast';
@@ -148,7 +148,7 @@ const Downloads = () => {
             </div>
           ) : (
             <div className="text-center py-16">
-              <div className="text-6xl mb-6">📥</div>
+              <Inbox className="h-16 w-16 mx-auto mb-6 text-muted-foreground/40" />
               <h2 className="text-xl font-bold text-foreground mb-2">
                 لا توجد كتب محفوظة
               </h2>
@@ -163,7 +163,7 @@ const Downloads = () => {
 
           {/* Help Text */}
           <div className="mt-8 p-4 rounded-lg bg-muted/50 text-sm text-muted-foreground">
-            <p className="font-medium text-foreground mb-1">💡 نصيحة:</p>
+              <p className="font-medium text-foreground mb-1 inline-flex items-center gap-1"><Lightbulb className="h-4 w-4" /> نصيحة:</p>
             <p>
               الكتب المحفوظة تُخزّن على جهازك ويمكنك قراءتها في أي وقت بدون اتصال بالإنترنت.
               تأكد من وجود مساحة كافية على جهازك قبل التحميل.

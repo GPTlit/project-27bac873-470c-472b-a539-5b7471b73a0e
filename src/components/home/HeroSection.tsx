@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Search, BookOpen, Sparkles } from 'lucide-react';
+import { Search, BookOpen, Sparkles, FolderOpen } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { useLanguage } from '@/contexts/LanguageContext';
@@ -88,7 +88,7 @@ export const HeroSection = () => {
             <div className="h-6 sm:h-8 w-px bg-border hidden sm:block" />
             <div className="flex items-center gap-2 sm:gap-3">
               <div className="flex h-10 sm:h-12 w-10 sm:w-12 items-center justify-center rounded-xl bg-secondary">
-                <span className="text-lg sm:text-xl">📂</span>
+                <FolderOpen className="h-5 w-5 sm:h-6 sm:w-6 text-secondary-foreground" />
               </div>
               <div className="text-right">
                 <div className="text-xl sm:text-2xl font-bold text-foreground">{categoryCount}</div>

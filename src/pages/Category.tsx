@@ -6,6 +6,7 @@ import { Button } from '@/components/ui/button';
 import { allCategories } from '@/hooks/useCategories';
 import { useBooksByCategory } from '@/hooks/useBooks';
 import { useLanguage } from '@/contexts/LanguageContext';
+import { CategoryIcon as CategoryIconComp } from '@/components/CategoryIcon';
 
 const Category = () => {
   const { name } = useParams<{ name: string }>();
@@ -59,7 +60,9 @@ const Category = () => {
 
           {/* Header */}
           <div className="flex items-center gap-4 mb-12">
-            <div className="text-5xl">{category.icon}</div>
+            <div className="h-14 w-14 rounded-xl bg-primary/10 text-primary inline-flex items-center justify-center">
+              <CategoryIconComp name={category.name} className="h-7 w-7" />
+            </div>
             <div>
               <h1 className="text-3xl md:text-4xl font-bold text-foreground mb-2">
                 {getCategoryName()}

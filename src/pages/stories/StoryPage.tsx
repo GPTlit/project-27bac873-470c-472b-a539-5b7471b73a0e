@@ -1,11 +1,10 @@
-import { useState } from 'react';
 import { Layout } from '@/components/layout/Layout';
 import { useParams, Link } from 'react-router-dom';
 import { useStory, useStoryParts, useStoryAuthors } from '@/hooks/useStories';
 import { FollowButton } from '@/components/stories/FollowButton';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
-import { BookText, Globe, ShieldAlert, Copyright as CopyrightIcon, ListOrdered } from 'lucide-react';
+import { BookText, Globe, Copyright as CopyrightIcon, BookOpen } from 'lucide-react';
 
 export default function StoryPage() {
   const { id } = useParams();
@@ -13,27 +12,11 @@ export default function StoryPage() {
   const { data: parts = [] } = useStoryParts(id);
   const { data: authors = [] } = useStoryAuthors(story ? [story.author_id] : []);
   const author = authors[0];
-  const [matureAck, setMatureAck] = useState(false);
 
   if (isLoading || !story) return <Layout><div className="container-library py-12">جاري التحميل...</div></Layout>;
 
-  if (story.mature && !matureAck) {
-    return (
-      <Layout>
-        <div className="container-library py-16 max-w-md text-center space-y-4">
-          <ShieldAlert className="h-10 w-10 text-destructive mx-auto" />
-          <h1 className="text-xl font-bold">محتوى للبالغين</h1>
-          <p className="text-muted-foreground">هذه القصة مخصصة لمن تجاوز 18 سنة.</p>
-          <div className="flex gap-2 justify-center">
-            <Button asChild variant="outline"><Link to="/explore">عودة</Link></Button>
-            <Button onClick={() => setMatureAck(true)}>أنا بالغ، متابعة</Button>
-          </div>
-        </div>
-      </Layout>
-    );
-  }
-
   const publishedParts = parts.filter(p => p.published);
+  const firstPart = publishedParts[0];
 
   return (
     <Layout>
@@ -65,20 +48,13 @@ export default function StoryPage() {
           </div>
         </div>
 
-        <div className="mt-8">
-          <h2 className="text-lg font-semibold mb-3 flex items-center gap-2"><ListOrdered className="h-5 w-5" /> الأجزاء</h2>
-          {publishedParts.length === 0 ? (
-            <p className="text-muted-foreground text-sm">لا توجد أجزاء منشورة بعد.</p>
+        <div className="mt-8 flex justify-center">
+          {firstPart ? (
+            <Button size="lg" asChild>
+              <Link to={`/story/${story.id}/read/${firstPart.id}`}><BookOpen className="h-5 w-5" /> افتح القصة</Link>
+            </Button>
           ) : (
-            <ul className="space-y-2">
-              {publishedParts.map((p, i) => (
-                <li key={p.id}>
-                  <Link to={`/story/${story.id}/read/${p.id}`} className="flex items-center justify-between p-3 rounded-lg border border-border bg-card hover:shadow-sm">
-                    <span><span className="text-xs text-muted-foreground mr-2">#{i + 1}</span>{p.title}</span>
-                  </Link>
-                </li>
-              ))}
-            </ul>
+            <p className="text-muted-foreground text-sm">لم تُنشر القصة بعد.</p>
           )}
         </div>
       </div>

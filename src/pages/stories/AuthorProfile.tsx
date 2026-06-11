@@ -36,7 +36,7 @@ export default function AuthorProfile() {
           <div className="flex-1">
             <h1 className="text-2xl font-bold">{profile.display_name || profile.username}</h1>
             <p className="text-sm text-muted-foreground">@{profile.username}</p>
-            <p className="text-sm mt-1">{followers?.count ?? 0} متابِع · {stories.length} قصة</p>
+            <p className="text-sm mt-1">{followers?.count ?? 0} في FYP · {stories.length} قصة</p>
           </div>
           {authorId && <FollowButton authorId={authorId} />}
         </div>

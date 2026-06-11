@@ -25,7 +25,7 @@ export const FollowButton = ({ authorId }: { authorId: string }) => {
       disabled={m.isPending}
     >
       {m.isPending ? <Loader2 className="h-4 w-4 animate-spin" /> : isFollowing ? <UserCheck className="h-4 w-4" /> : <UserPlus className="h-4 w-4" />}
-      {isFollowing ? 'تتابع' : 'تابع'}
+      {isFollowing ? 'في FYP' : 'أضف لـ FYP'}
     </Button>
   );
 };
