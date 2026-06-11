@@ -6,6 +6,7 @@ import { Button } from '@/components/ui/button';
 import { allCategories } from '@/hooks/useCategories';
 import { useBooksByCategory } from '@/hooks/useBooks';
 import { useLanguage } from '@/contexts/LanguageContext';
+import { CategoryIcon as CategoryIconComp } from '@/components/CategoryIcon';
 
 const Category = () => {
   const { name } = useParams<{ name: string }>();
