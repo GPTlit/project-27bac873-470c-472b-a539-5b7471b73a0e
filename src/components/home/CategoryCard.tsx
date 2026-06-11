@@ -2,6 +2,7 @@ import { Link } from 'react-router-dom';
 import { Category } from '@/lib/types';
 import { cn } from '@/lib/utils';
 import { useLanguage } from '@/contexts/LanguageContext';
+import { CategoryIcon } from '@/components/CategoryIcon';
 
 interface CategoryCardProps {
   category: Category;
@@ -31,7 +32,9 @@ export const CategoryCard = ({ category, index }: CategoryCardProps) => {
         "hover:shadow-md hover:border-primary/20 hover:-translate-y-0.5"
       )}>
         {/* Icon */}
-        <div className="text-xl sm:text-2xl mb-1">{category.icon}</div>
+        <div className="mb-1 inline-flex items-center justify-center w-8 h-8 sm:w-9 sm:h-9 rounded-lg bg-primary/10 text-primary">
+          <CategoryIcon name={category.name} className="h-4 w-4 sm:h-5 sm:w-5" />
+        </div>
 
         {/* Content */}
         <h3 className="text-[10px] sm:text-xs font-bold text-foreground mb-0 group-hover:text-primary transition-colors line-clamp-1">
