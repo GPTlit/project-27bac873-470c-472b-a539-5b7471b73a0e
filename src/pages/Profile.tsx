@@ -1,6 +1,6 @@
 import { useState, useRef } from 'react';
 import { Link } from 'react-router-dom';
-import { User, Heart, Lock, Mail, LogOut, BookOpen, StickyNote, Plus, Pencil, Trash2, MoreVertical, Camera, Save, X, Loader2 } from 'lucide-react';
+import { User, Heart, Lock, Mail, LogOut, BookOpen, StickyNote, Plus, Pencil, Trash2, MoreVertical, Camera, Save, X, Loader2, BookText } from 'lucide-react';
 import { Layout } from '@/components/layout/Layout';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -18,6 +18,8 @@ import { useToast } from '@/hooks/use-toast';
 import { useQuery } from '@tanstack/react-query';
 import { useNotes, useAddNote, useUpdateNote, useDeleteNote, Note } from '@/hooks/useNotes';
 import { useUserProfile, useUpdateProfile, useUploadAvatar } from '@/hooks/useUserProfile';
+import { useMyStories } from '@/hooks/useStories';
+import { Badge } from '@/components/ui/badge';
 
 const Profile = () => {
   const { user, signOut } = useAuth();
@@ -48,6 +50,7 @@ const Profile = () => {
   const updateProfile = useUpdateProfile();
   const uploadAvatar = useUploadAvatar();
   const { data: notes = [] } = useNotes();
+  const { data: myStories = [] } = useMyStories();
   const addNote = useAddNote();
   const updateNote = useUpdateNote();
   const deleteNote = useDeleteNote();
@@ -307,7 +310,11 @@ const Profile = () => {
           </Dialog>
 
           <Tabs defaultValue="favorites" className="space-y-6">
-            <TabsList className="grid w-full grid-cols-3">
+            <TabsList className="grid w-full grid-cols-4">
+              <TabsTrigger value="stories" className="gap-2">
+                <BookText className="h-4 w-4" />
+                قصصي
+              </TabsTrigger>
               <TabsTrigger value="favorites" className="gap-2">
                 <Heart className="h-4 w-4" />
                 {t('favorites')}
@@ -321,6 +328,45 @@ const Profile = () => {
                 {t('security')}
               </TabsTrigger>
             </TabsList>
+
+            <TabsContent value="stories" className="space-y-4">
+              <Card>
+                <CardHeader className="flex flex-row items-center justify-between">
+                  <CardTitle className="flex items-center gap-2">
+                    <BookText className="h-5 w-5 text-primary" />
+                    قصصي
+                  </CardTitle>
+                  <Button asChild size="sm"><Link to="/write"><Plus className="h-4 w-4" /> جديدة</Link></Button>
+                </CardHeader>
+                <CardContent>
+                  {myStories.length === 0 ? (
+                    <div className="text-center py-12 text-muted-foreground">
+                      <BookText className="h-12 w-12 mx-auto mb-3 opacity-30" />
+                      <p>لم تكتب أي قصة بعد.</p>
+                    </div>
+                  ) : (
+                    <ul className="grid gap-3 sm:grid-cols-2">
+                      {myStories.map(s => (
+                        <li key={s.id}>
+                          <Link to={`/write/${s.id}`} className="flex gap-3 p-3 rounded-xl border border-border bg-card hover:shadow-md transition-shadow">
+                            <div className="w-14 h-20 rounded-md bg-muted overflow-hidden shrink-0 flex items-center justify-center">
+                              {s.cover_url ? <img src={s.cover_url} alt="" className="w-full h-full object-cover" /> : <BookText className="h-5 w-5 text-muted-foreground" />}
+                            </div>
+                            <div className="flex-1 min-w-0">
+                              <h3 className="font-semibold truncate">{s.title}</h3>
+                              <p className="text-xs text-muted-foreground line-clamp-2 mt-1">{s.description || 'بدون وصف'}</p>
+                              <Badge variant={s.status === 'published' ? 'default' : 'secondary'} className="mt-2">
+                                {s.status === 'published' ? 'منشورة' : 'مسودة'}
+                              </Badge>
+                            </div>
+                          </Link>
+                        </li>
+                      ))}
+                    </ul>
+                  )}
+                </CardContent>
+              </Card>
+            </TabsContent>
 
             {/* Favorites Tab */}
             <TabsContent value="favorites" className="space-y-4">
