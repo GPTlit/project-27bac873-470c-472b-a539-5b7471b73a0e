@@ -25,7 +25,7 @@ export default function ReadPart() {
   const pages = useMemo(() => {
     const content = part?.content ?? '';
     if (!content.trim()) return [''];
-    const target = 1200;
+    const target = 900;
     const out: string[] = [];
     let i = 0;
     while (i < content.length) {
@@ -61,7 +61,7 @@ export default function ReadPart() {
         )}
 
         <div
-          className="bg-card border border-border rounded-2xl shadow-sm p-6 sm:p-10 min-h-[60vh] whitespace-pre-wrap text-base leading-loose"
+          className="bg-card border border-border rounded-2xl shadow-sm p-5 sm:p-7 min-h-[45vh] whitespace-pre-wrap text-sm leading-relaxed max-w-2xl mx-auto"
           style={{ fontFamily: 'serif' }}
         >
           {pages[safeIdx]}
