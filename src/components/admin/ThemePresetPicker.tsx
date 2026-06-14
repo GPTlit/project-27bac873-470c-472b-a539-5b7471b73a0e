@@ -31,12 +31,21 @@ export const ThemePresetPicker = () => {
   });
 
   const setPreset = async (id: string | null) => {
-    const { error } = await supabase
-      .from('app_config')
-      .upsert(
-        { key: 'active_theme_preset', value: id as any, description: 'Admin-selected UI preset' },
-        { onConflict: 'key' },
-      );
+    let error;
+    if (id === null) {
+      // Reset to default: remove the row entirely (value is NOT NULL jsonb)
+      ({ error } = await supabase
+        .from('app_config')
+        .delete()
+        .eq('key', 'active_theme_preset'));
+    } else {
+      ({ error } = await supabase
+        .from('app_config')
+        .upsert(
+          { key: 'active_theme_preset', value: id as any, description: 'Admin-selected UI preset' },
+          { onConflict: 'key' },
+        ));
+    }
     if (error) {
       toast({ title: 'خطأ', description: error.message, variant: 'destructive' });
       return;
