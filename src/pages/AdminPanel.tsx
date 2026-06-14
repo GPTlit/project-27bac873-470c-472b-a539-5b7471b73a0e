@@ -21,6 +21,7 @@ import { allCategories } from '@/hooks/useCategories';
 import { StoreManagement } from '@/components/admin/StoreManagement';
 import { NotificationBroadcast } from '@/components/admin/NotificationBroadcast';
 import { AIBulkUpload } from '@/components/admin/AIBulkUpload';
+import { ThemePresetPicker } from '@/components/admin/ThemePresetPicker';
 import { useFeaturedBookIds, useSetFeaturedBookIds } from '@/hooks/useFeaturedBooks';
 import { Bot, Send, Loader2, Settings, Palette, ToggleLeft, Sparkles, Upload, FileText, Image, Save, Trash2, Pencil, X, ShoppingBag, Bell, Star, Plus, ArrowUp, ArrowDown } from 'lucide-react';
 
@@ -1037,6 +1038,8 @@ const AdminPanel = () => {
                 <CardTitle>إعدادات المظهر</CardTitle>
               </CardHeader>
               <CardContent>
+                <ThemePresetPicker />
+                <div className="h-px bg-border my-6" />
                 {theme && (
                   <div className="space-y-6">
                     <div>

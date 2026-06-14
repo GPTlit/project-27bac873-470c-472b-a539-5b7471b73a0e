@@ -1,5 +1,6 @@
 import { createContext, useContext, useEffect, useState } from 'react';
-import { useActiveTheme } from '@/hooks/useAppConfig';
+import { useQuery } from '@tanstack/react-query';
+import { supabase } from '@/integrations/supabase/client';
 
 type Theme = 'dark' | 'light' | 'system';
 
@@ -21,6 +22,26 @@ const initialState: ThemeProviderState = {
 
 const ThemeProviderContext = createContext<ThemeProviderState>(initialState);
 
+const VALID_PRESETS = ['royal', 'ramadan', 'sakura', 'ocean', 'sunset'] as const;
+type Preset = (typeof VALID_PRESETS)[number];
+
+const useActiveThemePreset = () =>
+  useQuery({
+    queryKey: ['active-theme-preset'],
+    queryFn: async () => {
+      const { data } = await supabase
+        .from('app_config')
+        .select('value')
+        .eq('key', 'active_theme_preset')
+        .maybeSingle();
+      const v = (data?.value as any);
+      const preset = typeof v === 'string' ? v : v?.preset;
+      return VALID_PRESETS.includes(preset) ? (preset as Preset) : null;
+    },
+    staleTime: 1000 * 60,
+    refetchInterval: 1000 * 30,
+  });
+
 export function ThemeProvider({
   children,
   defaultTheme = 'system',
@@ -30,7 +51,7 @@ export function ThemeProvider({
   const [theme, setTheme] = useState<Theme>(
     () => (localStorage.getItem(storageKey) as Theme) || defaultTheme
   );
-  const { data: dbTheme } = useActiveTheme();
+  const { data: activePreset } = useActiveThemePreset();
 
   useEffect(() => {
     const root = window.document.documentElement;
@@ -57,8 +78,16 @@ export function ThemeProvider({
 
     root.classList.add(resolvedTheme);
   }, [theme]);
-  // DB theme colors disabled - they override dark/light CSS variables via inline styles.
-  // Theme is managed entirely via index.css :root and .dark selectors.
+
+  // Apply admin-selected preset (or remove for default)
+  useEffect(() => {
+    const root = window.document.documentElement;
+    if (activePreset) {
+      root.setAttribute('data-theme-preset', activePreset);
+    } else {
+      root.removeAttribute('data-theme-preset');
+    }
+  }, [activePreset]);
 
   const value = {
     theme,
