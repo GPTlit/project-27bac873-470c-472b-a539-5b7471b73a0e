@@ -218,6 +218,104 @@
     --input: 20 30% 18%;
     --ring: 18 90% 58%;
   }
+
+  /* ===== Light-mode variants for each preset ===== */
+  .light[data-theme-preset="royal"] {
+    --background: 45 60% 97%;
+    --foreground: 230 40% 14%;
+    --card: 45 60% 99%;
+    --card-foreground: 230 40% 14%;
+    --popover: 45 60% 99%;
+    --popover-foreground: 230 40% 14%;
+    --primary: 42 90% 45%;
+    --primary-foreground: 0 0% 100%;
+    --secondary: 45 45% 92%;
+    --secondary-foreground: 230 40% 16%;
+    --muted: 45 35% 94%;
+    --muted-foreground: 230 20% 40%;
+    --accent: 42 90% 50%;
+    --accent-foreground: 230 40% 14%;
+    --border: 45 35% 86%;
+    --input: 45 35% 92%;
+    --ring: 42 90% 45%;
+  }
+  .light[data-theme-preset="ramadan"] {
+    --background: 150 35% 96%;
+    --foreground: 155 40% 14%;
+    --card: 150 40% 99%;
+    --card-foreground: 155 40% 14%;
+    --popover: 150 40% 99%;
+    --popover-foreground: 155 40% 14%;
+    --primary: 152 55% 35%;
+    --primary-foreground: 0 0% 100%;
+    --secondary: 150 30% 90%;
+    --secondary-foreground: 155 40% 16%;
+    --muted: 150 25% 93%;
+    --muted-foreground: 155 20% 40%;
+    --accent: 42 80% 48%;
+    --accent-foreground: 0 0% 100%;
+    --border: 150 25% 85%;
+    --input: 150 25% 90%;
+    --ring: 152 55% 35%;
+  }
+  /* Sakura is already a light palette — provide a darker night version */
+  .dark[data-theme-preset="sakura"] {
+    --background: 330 30% 10%;
+    --foreground: 340 50% 94%;
+    --card: 330 28% 14%;
+    --card-foreground: 340 50% 94%;
+    --popover: 330 28% 14%;
+    --popover-foreground: 340 50% 94%;
+    --primary: 335 75% 65%;
+    --primary-foreground: 330 30% 10%;
+    --secondary: 330 22% 18%;
+    --secondary-foreground: 340 40% 90%;
+    --muted: 330 20% 16%;
+    --muted-foreground: 340 20% 70%;
+    --accent: 280 60% 70%;
+    --accent-foreground: 0 0% 100%;
+    --border: 330 22% 22%;
+    --input: 330 22% 18%;
+    --ring: 335 75% 65%;
+  }
+  .light[data-theme-preset="ocean"] {
+    --background: 195 60% 97%;
+    --foreground: 205 50% 14%;
+    --card: 195 60% 99%;
+    --card-foreground: 205 50% 14%;
+    --popover: 195 60% 99%;
+    --popover-foreground: 205 50% 14%;
+    --primary: 195 80% 40%;
+    --primary-foreground: 0 0% 100%;
+    --secondary: 195 45% 92%;
+    --secondary-foreground: 205 50% 16%;
+    --muted: 195 35% 94%;
+    --muted-foreground: 205 20% 40%;
+    --accent: 175 70% 38%;
+    --accent-foreground: 0 0% 100%;
+    --border: 195 35% 86%;
+    --input: 195 35% 92%;
+    --ring: 195 80% 40%;
+  }
+  .light[data-theme-preset="sunset"] {
+    --background: 35 70% 97%;
+    --foreground: 20 45% 14%;
+    --card: 35 70% 99%;
+    --card-foreground: 20 45% 14%;
+    --popover: 35 70% 99%;
+    --popover-foreground: 20 45% 14%;
+    --primary: 18 85% 48%;
+    --primary-foreground: 0 0% 100%;
+    --secondary: 35 55% 92%;
+    --secondary-foreground: 20 45% 16%;
+    --muted: 35 45% 94%;
+    --muted-foreground: 20 25% 40%;
+    --accent: 330 75% 52%;
+    --accent-foreground: 0 0% 100%;
+    --border: 35 45% 86%;
+    --input: 35 45% 92%;
+    --ring: 18 85% 48%;
+  }
 }
 
 @layer base {
