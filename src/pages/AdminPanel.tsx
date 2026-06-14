@@ -1037,6 +1037,8 @@ const AdminPanel = () => {
                 <CardTitle>إعدادات المظهر</CardTitle>
               </CardHeader>
               <CardContent>
+                <ThemePresetPicker />
+                <div className="h-px bg-border my-6" />
                 {theme && (
                   <div className="space-y-6">
                     <div>
