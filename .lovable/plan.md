@@ -1,127 +1,97 @@
+## Goals
 
-# Plan — Icon UI overhaul + Wattpad-style Stories platform
-
-This is a large change. I'll ship it in one go, but in a clear order so each layer builds on the last. If anything breaks mid-way it'll be obvious which slice caused it.
-
----
-
-## Part 1 — Emoji → real icon buttons (app-wide)
-
-Sweep the codebase for emoji-as-UI and replace with `lucide-react` icons inside the existing `Button` component, keeping all current functionality.
-
-Known emoji usages to replace:
-- `AmbientPlayer.tsx` — 🌧️ 🌊 🍃 🔥 ☕ 🏜️ 🌌 🎹 🧘 → `CloudRain`, `Waves`, `Wind`, `Flame`, `Coffee`, `Mountain`, `Sparkles`, `Piano`, `Brain`
-- Category icons (currently emoji strings in `mockData` / DB `categories.icon`) → map emoji → lucide icon via a lookup table, render via a `<CategoryIcon name=…>` component
-- Any other emoji-as-button found via a `rg` sweep (file upload zones, success states, etc.)
-
-Button style baseline (used everywhere):
-- `rounded-xl`, consistent padding, `shadow-sm hover:shadow-md`
-- Icon + label stacked or inline depending on context
-- Min hit area 40×40 px, `aria-label` on icon-only buttons
-- Uses existing semantic tokens (`primary`, `accent`, `muted-foreground`) — no hard-coded colors
-
-No functionality changes — only swap the visual.
+1. Fix the two broken AI flows (book metadata upload + Author chat).
+2. Add a per-book reader dark mode (inverted-color filter on PDF pages).
+3. Build the reading-verification gamification system: 8-digit Reader IDs, quizzes, XP, 20 evolving badges.
 
 ---
 
-## Part 2 — Bottom navigation bar
+## 1. Fix AI flows
 
-A new persistent bottom nav on mobile (and a slimmer version on desktop) with 5 entries, matching your spec:
+- Both `ai-book-metadata` and `author-chat` edge functions: switch model to `google/gemini-3-flash-preview` (current `google/gemini-2.5-flash-lite` and `2.5-flash` are returning errors).
+- `author-chat`: confirm it can actually see the library — the function already fetches `books` via service role. Verify it returns rows (read query) and, if RLS blocks the anon-key client, switch to `SUPABASE_SERVICE_ROLE_KEY` so the assistant can list and recommend any book.
+- Surface 429 / 402 errors clearly in the UI toasts of `AIBulkUpload` and `AuthorChat`.
 
-```text
-[ Home ]  [ Feed ]  [ Explore ]  [ Write ]  [ Bell ]
-```
+## 2. Reader dark mode (PDF page filter)
 
-- **Home** → existing `/` (library landing)
-- **Feed** → `/feed` — stories from authors you follow + trending
-- **Explore** → `/explore` — browse all published stories by tag/category
-- **Write** → `/write` — your stories dashboard + "New story" button
-- **Bell** → `/notifications` — existing notifications page, just moved into the bar
+- In `BookReader.tsx`, add a local "light/dark" toggle button in the reader toolbar.
+- "Dark" applies `filter: invert(1) hue-rotate(180deg)` to the PDF canvas/page container only (not the surrounding chrome), so white pages flip to black, text flips to white. Light mode = no filter.
+- Persist choice per user in `localStorage` (`reader-color-mode`).
 
-Built as `<BottomNav />` rendered inside `Layout.tsx`, lucide icons, active-state highlight via design tokens.
+## 3. Reader ID, XP, badges, quizzes
 
----
+### Database (new migration)
 
-## Part 3 — Database (one migration)
+- `user_profiles`: add `reader_id INT8 UNIQUE` (8-digit), `xp INT DEFAULT 0`, `badge_rank INT DEFAULT 1` (1–20).
+- Backfill: admin user gets `reader_id = 1`; everyone else gets a random unique 8-digit number (10000000–99999999). A trigger on new `user_profiles` insert assigns a random 8-digit ID, retrying on collision; admin override stays at 1.
+- `book_quizzes`: `book_id` (FK, unique), `questions JSONB` (array of `{q, choices[4], correct_index, explanation?}`), `generated_at`, `generated_by`. Admin can edit.
+- `quiz_attempts`: `user_id`, `book_id`, `score INT`, `answers JSONB`, `passed BOOL`, `verified BOOL` (true only when 10/10), `created_at`. Unique on `(user_id, book_id)` for the *verified* record — store best attempt.
+- `book_xp`: helper view or computed column on `books` for size: `xp_value` = 50/100/200 based on page count (short <100, medium <300, long ≥300). Store directly on `books.xp_value` populated by trigger from `page_count` if present, else default 100.
+- RLS:
+  - `book_quizzes`: anyone authenticated can SELECT; only admin can INSERT/UPDATE/DELETE.
+  - `quiz_attempts`: user can SELECT/INSERT their own; admin can SELECT all.
+- All tables: standard GRANTs + `updated_at` triggers.
+- RPC `award_quiz_result(_book_id, _score)`: SECURITY DEFINER. Inserts attempt; if score = 10, marks verified, adds book's XP to user_profiles.xp, recomputes `badge_rank` (XP thresholds below).
 
-New tables — all in `public` with GRANTs + RLS + `has_role`-safe policies.
+### XP → Badge ranks (20 tiers)
 
-| Table | Purpose | Key columns |
-|---|---|---|
-| `stories` | A user-authored story | `id`, `author_id`, `title`, `description`, `cover_url`, `language`, `mature` (bool), `copyright`, `status` ('draft'\|'published'), `tags` (text[]), `category`, `views`, `created_at`, `updated_at`, `published_at` |
-| `story_parts` | Chapters within a story | `id`, `story_id`, `order_index`, `title`, `content` (text, unlimited), `media` (jsonb: array of `{type:'image'\|'youtube', url}`), `published`, timestamps |
-| `story_follows` | Who follows whom | `id`, `follower_id`, `author_id`, `created_at`, unique(follower, author) |
-| `story_comments` | Comments on parts | `id`, `part_id`, `user_id`, `parent_id` (nullable, threaded), `content`, timestamps |
-| `story_likes` | Likes on stories | `id`, `story_id`, `user_id`, unique |
-| `user_reading_prefs` | Mature opt-in etc. | `user_id` PK, `show_mature` bool default false |
+Thresholds (cumulative XP):
+1 Paper 0, 2 Ink 100, 3 Bookmark 250, 4 Reader 500, 5 Scholar 1000, 6 Librarian 1750, 7 Archivist 2750, 8 Historian 4000, 9 Sage 5500, 10 Master Reader 7500, 11 Silver Sage 10000, 12 Golden Sage 13000, 13 Crystal Scholar 16500, 14 Mythic Reader 20500, 15 Celestial Archivist 25000, 16 Starborn Scholar 30000, 17 Cosmic Librarian 36000, 18 Eternal Sage 43000, 19 Ascendant Reader 51000, 20 Library Legend 60000.
 
-Existing `user_profiles` table is extended with `is_writer` (bool) and we'll show counts (followers, stories) via aggregates — no schema change needed beyond that.
+### Badge visuals
 
-RLS summary (plain English):
-- Anyone (even logged-out) can read published stories, their published parts, comments, likes, and authors' public profiles.
-- Only the author can read/edit drafts and unpublished parts.
-- Only authenticated users can like, comment, follow, or create stories.
-- Mature stories are filtered out client-side unless `user_reading_prefs.show_mature = true`.
+- `src/lib/badges.ts`: array of 20 badges with `name`, `color` (HSL theme color), `glow` (box-shadow), `decoration` (emoji/icon ring), `gradient` for top tiers.
+- `src/components/profile/BadgeDisplay.tsx`: renders a badge ring/medallion. Higher ranks add sparkle (CSS pseudo-elements), gradient borders, animated glow.
+- Profile theme: when viewing a profile, apply badge color as accent (CSS variable scoped on profile container, not global app).
 
-Storage buckets: reuse `covers` for story covers, reuse `chat-media` style for inline images, new public bucket `story-media`.
+### Quiz generation edge function
 
-Notifications: a Postgres trigger on `stories` `INSERT … status='published'` (and `UPDATE` to published) inserts a row into the existing `notifications` table for every follower of `author_id`, type `'new_story'`, metadata `{story_id, story_title, author_id, author_name}`.
+- New function `generate-book-quiz`: input `{ book_id }`. 
+  - Reads `books` row (title, author, description, file_url, page_count).
+  - Downloads PDF, extracts text sample (first ~8000 chars + middle ~4000 + last ~4000) using existing `pdfExtract` logic ported to Deno (or pass extracted text from client to keep function light — preferred: client extracts and POSTs `text_sample`).
+  - Calls Lovable AI (`google/gemini-3-flash-preview`) with tool-call schema returning exactly 10 multiple-choice questions (4 choices each, `correct_index`).
+  - Upserts into `book_quizzes`.
+- Admin button in admin panel + on each book detail page (admin only): "Generate quiz".
+- Admin can edit questions inline in admin panel: new `QuizEditor.tsx`.
 
----
+### Quiz UI
 
-## Part 4 — Frontend pages & components
+- New page `/book/:id/quiz` (protected).
+- Shows 10 questions one by one with progress bar; on submit, calls `award_quiz_result` RPC, then shows result screen with score, XP gained, badge progression animation.
+- "Take quiz" button shown on BookDetail after the user has opened the book at least once (use existing `reading_sessions` table).
 
-New routes:
-- `/feed` — paginated list of stories from followed authors, newest first; if no follows yet, show trending stories CTA
-- `/explore` — search + tag/category filters across all published stories
-- `/write` — your stories: list of drafts + published, "Create new story" button
-- `/write/:storyId` — story metadata editor (title, cover, description, language, mature, copyright, tags, categories)
-- `/write/:storyId/parts/:partId` — part editor: title, rich text body, "Add image" / "Add YouTube" media blocks, "Publish part" / "Save draft", "Add next part" button
-- `/story/:storyId` — public story page: cover, description, tags, author card with follow button, parts list, comments
-- `/story/:storyId/read/:partId` — reading view
-- `/u/:username` — public author profile: avatar, bio, followers count, stories grid, follow button
+### Profile updates
 
-New components: `StoryCard`, `StoryEditor`, `PartEditor` (textarea + media blocks), `MediaBlock` (image or YouTube embed), `FollowButton`, `StoryCommentThread`, `MatureGate` (warning gate based on prefs), `WriterDashboard`.
-
-Hooks: `useStories`, `useStory`, `useStoryParts`, `useFollow`, `useStoryComments`, `useStoryLikes`, `useUserReadingPrefs`.
+- `Profile.tsx` and `AuthorProfile.tsx`: show big badge + rank name, Reader ID (`#00000001` formatted), XP bar to next rank, list of verified books.
+- Verified books = `quiz_attempts.verified = true`.
 
 ---
 
-## Part 5 — Access barrier (matches your existing rule)
+## Files to create/edit
 
-Browsing is public; any write/read-protected action (open a part to read, like, follow, comment, write) triggers the existing "please sign in" toast/redirect. We already enforce this for books — we extend the same pattern to stories.
+**New**
+- `supabase/migrations/<ts>_quiz_badge_system.sql`
+- `supabase/functions/generate-book-quiz/index.ts`
+- `src/lib/badges.ts`
+- `src/components/profile/BadgeDisplay.tsx`
+- `src/components/admin/QuizEditor.tsx`
+- `src/pages/BookQuiz.tsx`
+- `src/hooks/useReaderProfile.ts` (reader_id, xp, badge_rank)
+- `src/hooks/useBookQuiz.ts`
 
----
-
-## Part 6 — i18n
-
-All new strings added to `LanguageContext.tsx` in Arabic / English / French (Feed, Explore, Write a story, Add part, Publish, Followers, Following, Mature content, etc.).
-
----
-
-## Technical notes
-
-- Stack: existing React + Vite + Tailwind + shadcn + Supabase. No new deps except possibly `react-youtube-embed` (small, optional — we can just render an `<iframe>` manually).
-- Long text in parts: stored as plain text in a `text` column; rendered with whitespace-preserving wrapper. No rich-text editor in v1 (keeps scope realistic). Media is added as separate blocks, not inline HTML.
-- Realtime notifications already work via the existing `notifications` table + `NotificationBell` — new-story notifications just plug into that.
-- Mature gating: client-side `WHERE mature = false OR :showMature` in queries plus a confirm dialog when opening a mature story directly by URL.
-
----
-
-## Order of execution
-
-1. Run the SQL migration (tables, GRANTs, RLS, trigger).
-2. Scaffold hooks + types.
-3. Build bottom nav + routes shells.
-4. Build profile / explore / feed pages.
-5. Build write dashboard + story editor + part editor.
-6. Build public story + reader + comments + follow.
-7. Sweep emojis → lucide icons across the whole app, including category icons.
-8. i18n keys, polish, dark/light parity check.
+**Edit**
+- `supabase/functions/ai-book-metadata/index.ts` — model fix
+- `supabase/functions/author-chat/index.ts` — model fix + ensure library visibility via service role
+- `src/components/admin/AIBulkUpload.tsx` — better error toasts
+- `src/pages/BookReader.tsx` — light/dark filter toggle
+- `src/pages/BookDetail.tsx` — "Take quiz" CTA
+- `src/pages/Profile.tsx`, `src/pages/stories/AuthorProfile.tsx` — badge + reader ID + XP
+- `src/pages/AdminPanel.tsx` — Quiz tab + generate/edit
+- `src/App.tsx` — `/book/:id/quiz` route
 
 ---
 
-## What I'd like to confirm before starting
+## Out of scope (call out)
 
-- The migration adds 6 new tables + 1 trigger. Approving it kicks off the rest. Ready to proceed?
-- For the part editor, plain textarea (with media blocks above/below) is fine for v1, or do you want a true rich-text editor (bold/italic/headings)? Plain is faster and less buggy.
+- I will not auto-extract PDF text inside the edge function for the first version — the client (BookReader) sends the cleaned text sample when admin clicks "Generate quiz". This avoids a 60s function timeout on big PDFs.
+- Profile color theming from the badge is scoped to the profile page only; it does not override the global admin theme presets.
