@@ -226,6 +226,41 @@ export type Database = {
           },
         ]
       }
+      book_quizzes: {
+        Row: {
+          book_id: string
+          created_at: string
+          generated_by: string | null
+          id: string
+          questions: Json
+          updated_at: string
+        }
+        Insert: {
+          book_id: string
+          created_at?: string
+          generated_by?: string | null
+          id?: string
+          questions?: Json
+          updated_at?: string
+        }
+        Update: {
+          book_id?: string
+          created_at?: string
+          generated_by?: string | null
+          id?: string
+          questions?: Json
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "book_quizzes_book_id_fkey"
+            columns: ["book_id"]
+            isOneToOne: true
+            referencedRelation: "books"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       book_ratings: {
         Row: {
           book_id: string
@@ -768,6 +803,47 @@ export type Database = {
         }
         Relationships: []
       }
+      quiz_attempts: {
+        Row: {
+          answers: Json
+          book_id: string
+          created_at: string
+          id: string
+          score: number
+          total: number
+          user_id: string
+          verified: boolean
+        }
+        Insert: {
+          answers?: Json
+          book_id: string
+          created_at?: string
+          id?: string
+          score: number
+          total?: number
+          user_id: string
+          verified?: boolean
+        }
+        Update: {
+          answers?: Json
+          book_id?: string
+          created_at?: string
+          id?: string
+          score?: number
+          total?: number
+          user_id?: string
+          verified?: boolean
+        }
+        Relationships: [
+          {
+            foreignKeyName: "quiz_attempts_book_id_fkey"
+            columns: ["book_id"]
+            isOneToOne: false
+            referencedRelation: "books"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       reading_journeys: {
         Row: {
           book_id: string
@@ -1191,36 +1267,45 @@ export type Database = {
       user_profiles: {
         Row: {
           avatar_url: string | null
+          badge_rank: number
           bio: string | null
           created_at: string
           display_name: string | null
           id: string
           phone: string | null
+          reader_id: number | null
           updated_at: string
           user_id: string
           username: string
+          xp: number
         }
         Insert: {
           avatar_url?: string | null
+          badge_rank?: number
           bio?: string | null
           created_at?: string
           display_name?: string | null
           id?: string
           phone?: string | null
+          reader_id?: number | null
           updated_at?: string
           user_id: string
           username: string
+          xp?: number
         }
         Update: {
           avatar_url?: string | null
+          badge_rank?: number
           bio?: string | null
           created_at?: string
           display_name?: string | null
           id?: string
           phone?: string | null
+          reader_id?: number | null
           updated_at?: string
           user_id?: string
           username?: string
+          xp?: number
         }
         Relationships: []
       }
@@ -1315,6 +1400,11 @@ export type Database = {
       }
     }
     Functions: {
+      award_quiz_result: {
+        Args: { _answers: Json; _book_id: string; _score: number }
+        Returns: Json
+      }
+      compute_badge_rank: { Args: { _xp: number }; Returns: number }
       create_group_with_members: {
         Args: { _description?: string; _member_ids?: string[]; _name: string }
         Returns: string
