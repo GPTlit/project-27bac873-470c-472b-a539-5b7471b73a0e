@@ -10,8 +10,10 @@ import { categories } from '@/lib/mockData';
 import { useToast } from '@/hooks/use-toast';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
+import { useLanguage } from '@/contexts/LanguageContext';
 
 const Upload = () => {
+  const { t } = useLanguage();
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isSuccess, setIsSuccess] = useState(false);
   const [formData, setFormData] = useState({
@@ -178,11 +180,16 @@ const Upload = () => {
                     <SelectValue placeholder="اختر التصنيف" />
                   </SelectTrigger>
                   <SelectContent>
-                    {categories.map((cat) => (
-                      <SelectItem key={cat.id} value={cat.name}>
-                        {cat.icon} {cat.nameAr}
-                      </SelectItem>
-                    ))}
+                    {categories.map((cat) => {
+                      const key = `category_${cat.name}`;
+                      const translated = t(key);
+                      const label = translated !== key ? translated : cat.nameAr;
+                      return (
+                        <SelectItem key={cat.id} value={cat.name}>
+                          {cat.icon} {label}
+                        </SelectItem>
+                      );
+                    })}
                   </SelectContent>
                 </Select>
               </div>
