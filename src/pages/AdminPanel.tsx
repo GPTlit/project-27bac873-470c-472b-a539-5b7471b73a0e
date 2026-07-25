@@ -23,7 +23,7 @@ import { NotificationBroadcast } from '@/components/admin/NotificationBroadcast'
 import { AIBulkUpload } from '@/components/admin/AIBulkUpload';
 import { ThemePresetPicker } from '@/components/admin/ThemePresetPicker';
 import { useFeaturedBookIds, useSetFeaturedBookIds } from '@/hooks/useFeaturedBooks';
-import { Bot, Send, Loader2, Settings, Palette, ToggleLeft, Sparkles, Upload, FileText, Image, Save, Trash2, Pencil, X, ShoppingBag, Bell, Star, Plus, ArrowUp, ArrowDown } from 'lucide-react';
+import { Bot, Send, Loader2, Settings, Palette, ToggleLeft, Sparkles, Upload, FileText, Image, Image as ImageIcon, Save, Trash2, Pencil, X, ShoppingBag, Bell, Star, Plus, ArrowUp, ArrowDown } from 'lucide-react';
 
 // Truncate a title to the first 4 words followed by … when longer
 const truncateTitle = (title: string, maxWords = 4) => {
