@@ -511,6 +511,10 @@ const AdminPanel = () => {
               <Bell className="h-4 w-4" />
               الإشعارات
             </TabsTrigger>
+            <TabsTrigger value="banners" className="flex items-center gap-2 px-4 py-2">
+              <ImageIcon className="h-4 w-4" />
+              اللافتات
+            </TabsTrigger>
           </TabsList>
 
           {/* Store Management Tab */}
