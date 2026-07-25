@@ -14,7 +14,24 @@ import { allCategories } from '@/hooks/useCategories';
 const Index = () => {
   const { data: books = [] } = useBooks();
   const { data: featuredIds } = useFeaturedBookIds();
-  const { trending = [], topRated = [] } = (useBookStats?.() as any) || {};
+  const { data: statsMap } = useBookStats();
+
+  const trending = useMemo(() => {
+    if (!books.length || !statsMap) return [];
+    return [...books]
+      .sort(
+        (a, b) => (statsMap.get(b.id)?.recentLikes || 0) - (statsMap.get(a.id)?.recentLikes || 0)
+      )
+      .slice(0, 15);
+  }, [books, statsMap]);
+
+  const topRated = useMemo(() => {
+    if (!books.length || !statsMap) return [];
+    return [...books]
+      .filter((b) => (statsMap.get(b.id)?.ratingCount || 0) > 0)
+      .sort((a, b) => (statsMap.get(b.id)?.avgRating || 0) - (statsMap.get(a.id)?.avgRating || 0))
+      .slice(0, 15);
+  }, [books, statsMap]);
 
   const featured = useMemo(() => {
     if (!books.length) return [];
@@ -56,13 +73,13 @@ const Index = () => {
       <BookCarousel
         title="الأكثر رواجاً"
         icon={<Flame className="h-5 w-5" />}
-        books={(trending as any) || featured}
+        books={trending.length ? trending : featured}
         pattern="wide-first"
       />
       <BookCarousel
         title="الأعلى تقييماً"
         icon={<Star className="h-5 w-5" />}
-        books={(topRated as any) || featured.slice().reverse()}
+        books={topRated.length ? topRated : featured.slice().reverse()}
         pattern="tall-first"
       />
       <BookCarousel
