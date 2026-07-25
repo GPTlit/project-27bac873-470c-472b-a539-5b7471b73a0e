@@ -1,5 +1,5 @@
 import { useMemo } from 'react';
-import { Sparkles, TrendingUp, Star, Clock, BookOpen, Flame } from 'lucide-react';
+import { Sparkles, Star, Clock, BookOpen, Flame } from 'lucide-react';
 import { Layout } from '@/components/layout/Layout';
 import { HeroCarousel } from '@/components/home/HeroCarousel';
 import { HeroSection } from '@/components/home/HeroSection';
