@@ -603,6 +603,62 @@ export type Database = {
         }
         Relationships: []
       }
+      hero_banners: {
+        Row: {
+          book_id: string | null
+          created_at: string
+          cta_label: string | null
+          cta_url: string | null
+          enabled: boolean
+          ends_at: string | null
+          id: string
+          image_url: string | null
+          sort_order: number
+          starts_at: string | null
+          subtitle: string | null
+          title: string
+          updated_at: string
+        }
+        Insert: {
+          book_id?: string | null
+          created_at?: string
+          cta_label?: string | null
+          cta_url?: string | null
+          enabled?: boolean
+          ends_at?: string | null
+          id?: string
+          image_url?: string | null
+          sort_order?: number
+          starts_at?: string | null
+          subtitle?: string | null
+          title: string
+          updated_at?: string
+        }
+        Update: {
+          book_id?: string | null
+          created_at?: string
+          cta_label?: string | null
+          cta_url?: string | null
+          enabled?: boolean
+          ends_at?: string | null
+          id?: string
+          image_url?: string | null
+          sort_order?: number
+          starts_at?: string | null
+          subtitle?: string | null
+          title?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "hero_banners_book_id_fkey"
+            columns: ["book_id"]
+            isOneToOne: false
+            referencedRelation: "books"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       navigation_config: {
         Row: {
           id: string
