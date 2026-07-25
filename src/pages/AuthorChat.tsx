@@ -7,6 +7,7 @@ import { Layout } from '@/components/layout/Layout';
 import { cn } from '@/lib/utils';
 import { useToast } from '@/hooks/use-toast';
 import { supabase } from '@/integrations/supabase/client';
+import { AiMessageContent } from '@/components/chat/AiMessageContent';
 
 interface Message {
   role: 'user' | 'assistant';
@@ -342,7 +343,11 @@ const AuthorChat = () => {
                             : 'bg-muted rounded-tl-none'
                         )}
                       >
-                        <p className="text-sm whitespace-pre-wrap leading-relaxed">{msg.content}</p>
+                        {msg.role === 'assistant' ? (
+                          <AiMessageContent content={msg.content} />
+                        ) : (
+                          <p className="text-sm whitespace-pre-wrap leading-relaxed">{msg.content}</p>
+                        )}
                       </div>
                       {msg.role === 'assistant' && (
                         <Button
