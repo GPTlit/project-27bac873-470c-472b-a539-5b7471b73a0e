@@ -1094,6 +1094,15 @@ const AdminPanel = () => {
               </CardContent>
             </Card>
           </TabsContent>
+
+          {/* Hero Banners Tab */}
+          <TabsContent value="banners">
+            <Card>
+              <CardContent className="p-6">
+                <HeroBannersManager />
+              </CardContent>
+            </Card>
+          </TabsContent>
         </Tabs>
 
         {/* Edit Book Dialog */}
