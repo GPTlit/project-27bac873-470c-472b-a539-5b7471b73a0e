@@ -606,6 +606,7 @@ export type Database = {
       hero_banners: {
         Row: {
           book_id: string | null
+          book_ids: string[]
           created_at: string
           cta_label: string | null
           cta_url: string | null
@@ -616,11 +617,13 @@ export type Database = {
           sort_order: number
           starts_at: string | null
           subtitle: string | null
+          thumb_size: string
           title: string
           updated_at: string
         }
         Insert: {
           book_id?: string | null
+          book_ids?: string[]
           created_at?: string
           cta_label?: string | null
           cta_url?: string | null
@@ -631,11 +634,13 @@ export type Database = {
           sort_order?: number
           starts_at?: string | null
           subtitle?: string | null
+          thumb_size?: string
           title: string
           updated_at?: string
         }
         Update: {
           book_id?: string | null
+          book_ids?: string[]
           created_at?: string
           cta_label?: string | null
           cta_url?: string | null
@@ -646,6 +651,7 @@ export type Database = {
           sort_order?: number
           starts_at?: string | null
           subtitle?: string | null
+          thumb_size?: string
           title?: string
           updated_at?: string
         }
