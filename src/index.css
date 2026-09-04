@@ -495,3 +495,13 @@ a[href*="lovable.app"]:not([href*="salem4library"]) {
   0% { transform: translateX(0); }
   100% { transform: translateX(50%); }
 }
+
+@layer utilities {
+  .hide-scrollbar {
+    scrollbar-width: none;
+    -ms-overflow-style: none;
+  }
+  .hide-scrollbar::-webkit-scrollbar {
+    display: none;
+  }
+}

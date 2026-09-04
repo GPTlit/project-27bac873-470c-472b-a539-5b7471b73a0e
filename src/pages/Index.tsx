@@ -10,11 +10,13 @@ import { useBooks } from '@/hooks/useBooks';
 import { useFeaturedBookIds } from '@/hooks/useFeaturedBooks';
 import { useBookStats } from '@/hooks/useBookStats';
 import { allCategories } from '@/hooks/useCategories';
+import { useHomeLayoutMode } from '@/hooks/useHomeLayoutMode';
 
 const Index = () => {
   const { data: books = [] } = useBooks();
   const { data: featuredIds } = useFeaturedBookIds();
   const { data: statsMap } = useBookStats();
+  const { data: layoutMode = 'classic' } = useHomeLayoutMode();
 
   const trending = useMemo(() => {
     if (!books.length || !statsMap) return [];
@@ -60,8 +62,17 @@ const Index = () => {
 
   return (
     <Layout>
-      <HeroSection />
-      <HeroCarousel />
+      {layoutMode === 'ads_first' ? (
+        <>
+          <HeroCarousel />
+          <HeroSection />
+        </>
+      ) : (
+        <>
+          <HeroSection />
+          <HeroCarousel />
+        </>
+      )}
       <RecentlyViewedBooks />
       <BookCarousel
         title="الكتب المختارة"

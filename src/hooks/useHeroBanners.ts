@@ -13,6 +13,8 @@ export interface HeroBanner {
   ends_at: string | null;
   sort_order: number;
   enabled: boolean;
+  book_ids?: string[] | null;
+  thumb_size?: 'small' | 'medium' | 'large' | null;
 }
 
 export const useHeroBanners = () => {
