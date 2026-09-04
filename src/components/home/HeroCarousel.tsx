@@ -14,7 +14,15 @@ interface Slide {
   image?: string | null;
   href: string;
   cta?: string | null;
+  bookIds?: string[];
+  thumbSize?: 'small' | 'medium' | 'large';
 }
+
+const THUMB_CLASS: Record<'small' | 'medium' | 'large', string> = {
+  small: 'w-14 sm:w-16',
+  medium: 'w-20 sm:w-24',
+  large: 'w-28 sm:w-36',
+};
 
 const isActive = (b: HeroBanner) => {
   const now = Date.now();
@@ -40,6 +48,8 @@ export const HeroCarousel = () => {
         image: b.image_url,
         href: b.book_id ? `/book/${b.book_id}` : b.cta_url || '#',
         cta: b.cta_label,
+        bookIds: (b.book_ids ?? []) as string[],
+        thumbSize: (b.thumb_size ?? 'medium') as 'small' | 'medium' | 'large',
       }));
     }
     // Fallback: promote featured books, or newest books
@@ -65,6 +75,8 @@ export const HeroCarousel = () => {
     const t = setInterval(() => setIndex((i) => (i + 1) % slides.length), 5000);
     return () => clearInterval(t);
   }, [slides.length]);
+
+  const bookMap = useMemo(() => new Map((books ?? []).map((b) => [b.id, b])), [books]);
 
   if (slides.length === 0) return null;
 
@@ -103,6 +115,38 @@ export const HeroCarousel = () => {
                     <p className="text-sm sm:text-base md:text-lg text-muted-foreground mb-4 line-clamp-2">
                       {s.subtitle}
                     </p>
+                  )}
+                  {!!s.bookIds?.length && (
+                    <div className="flex gap-2 sm:gap-3 mb-4 overflow-x-auto scrollbar-hide">
+                      {s.bookIds
+                        .map((id) => bookMap.get(id))
+                        .filter(Boolean)
+                        .map((b) => (
+                          <Link
+                            key={b!.id}
+                            to={`/book/${b!.id}`}
+                            className={cn(
+                              'shrink-0 group',
+                              THUMB_CLASS[s.thumbSize || 'medium']
+                            )}
+                          >
+                            <div className="aspect-[2/3] w-full rounded-lg overflow-hidden bg-secondary border border-border/50 shadow-lg transition-transform group-hover:-translate-y-1">
+                              {b!.cover_url ? (
+                                <img
+                                  src={b!.cover_url}
+                                  alt={b!.title}
+                                  loading="lazy"
+                                  className="w-full h-full object-cover"
+                                />
+                              ) : (
+                                <div className="w-full h-full flex items-center justify-center p-1 text-[10px] text-muted-foreground text-center">
+                                  {b!.title}
+                                </div>
+                              )}
+                            </div>
+                          </Link>
+                        ))}
+                    </div>
                   )}
                   {s.href && s.href !== '#' && (
                     <Link to={s.href}>
