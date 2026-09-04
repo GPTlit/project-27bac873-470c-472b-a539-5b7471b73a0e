@@ -60,6 +60,7 @@ const Index = () => {
 
   return (
     <Layout>
+      <HeroSection />
       <HeroCarousel />
       <RecentlyViewedBooks />
       <BookCarousel
@@ -98,7 +99,6 @@ const Index = () => {
           pattern={(['mixed', 'wide-first', 'tall-first', 'mixed'] as const)[i % 4]}
         />
       ))}
-      <HeroSection />
     </Layout>
   );
 };
