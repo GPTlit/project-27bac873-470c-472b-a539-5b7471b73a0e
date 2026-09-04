@@ -117,7 +117,7 @@ export const HeroCarousel = () => {
                     </p>
                   )}
                   {!!s.bookIds?.length && (
-                    <div className="flex gap-2 sm:gap-3 mb-4 overflow-x-auto scrollbar-hide">
+                    <div className="flex gap-2 sm:gap-3 mb-4 overflow-x-auto hide-scrollbar">
                       {s.bookIds
                         .map((id) => bookMap.get(id))
                         .filter(Boolean)

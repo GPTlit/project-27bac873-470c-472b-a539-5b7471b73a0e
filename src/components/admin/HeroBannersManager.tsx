@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { Loader2, Plus, Trash2, Upload as UploadIcon } from 'lucide-react';
+import { Check, Loader2, Plus, Trash2, Upload as UploadIcon, X } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -21,13 +21,22 @@ const emptyForm = {
   ends_at: '',
   sort_order: 0,
   enabled: true,
+  book_ids: [] as string[],
+  thumb_size: 'medium' as 'small' | 'medium' | 'large',
 };
+
+const SIZES: { id: 'small' | 'medium' | 'large'; label: string; cls: string }[] = [
+  { id: 'small', label: 'صغير', cls: 'w-10' },
+  { id: 'medium', label: 'متوسط', cls: 'w-14' },
+  { id: 'large', label: 'كبير', cls: 'w-20' },
+];
 
 export const HeroBannersManager = () => {
   const { toast } = useToast();
   const qc = useQueryClient();
   const [form, setForm] = useState({ ...emptyForm });
   const [uploading, setUploading] = useState(false);
+  const [bookSearch, setBookSearch] = useState('');
 
   const { data: banners, isLoading } = useQuery({
     queryKey: ['hero_banners', 'admin'],
@@ -40,6 +49,24 @@ export const HeroBannersManager = () => {
       return data as HeroBanner[];
     },
   });
+
+  const { data: allBooks } = useQuery({
+    queryKey: ['hero_banners', 'books-picker'],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from('books')
+        .select('id, title, author, cover_url')
+        .order('created_at', { ascending: false });
+      if (error) throw error;
+      return data as { id: string; title: string; author: string; cover_url: string | null }[];
+    },
+  });
+
+  const toggleBook = (id: string) =>
+    setForm((f) => ({
+      ...f,
+      book_ids: f.book_ids.includes(id) ? f.book_ids.filter((x) => x !== id) : [...f.book_ids, id],
+    }));
 
   const create = useMutation({
     mutationFn: async (payload: typeof form) => {
@@ -54,6 +81,8 @@ export const HeroBannersManager = () => {
         ends_at: payload.ends_at || null,
         sort_order: Number(payload.sort_order) || 0,
         enabled: payload.enabled,
+        book_ids: payload.book_ids,
+        thumb_size: payload.thumb_size,
       };
       const { error } = await supabase.from('hero_banners').insert(row);
       if (error) throw error;
@@ -149,6 +178,78 @@ export const HeroBannersManager = () => {
             <Label>معرّف كتاب مرتبط (اختياري)</Label>
             <Input value={form.book_id} onChange={(e) => setForm({ ...form, book_id: e.target.value })} placeholder="UUID" />
           </div>
+          <div className="md:col-span-2">
+            <Label>الكتب المرافقة للإعلان</Label>
+            <Input
+              placeholder="ابحث عن كتاب لإضافته..."
+              value={bookSearch}
+              onChange={(e) => setBookSearch(e.target.value)}
+              className="mb-2"
+            />
+            {!!form.book_ids.length && (
+              <div className="flex gap-2 flex-wrap mb-2">
+                {form.book_ids.map((id) => {
+                  const b = allBooks?.find((x) => x.id === id);
+                  return (
+                    <button
+                      key={id}
+                      type="button"
+                      onClick={() => toggleBook(id)}
+                      className="inline-flex items-center gap-1 px-2 py-1 rounded-full bg-secondary text-xs"
+                    >
+                      <X className="h-3 w-3" />
+                      <span className="max-w-[140px] truncate">{b?.title || id}</span>
+                    </button>
+                  );
+                })}
+              </div>
+            )}
+            <div className="max-h-44 overflow-y-auto rounded-md border divide-y">
+              {(allBooks ?? [])
+                .filter((b) =>
+                  bookSearch.trim()
+                    ? (b.title + ' ' + (b.author || '')).toLowerCase().includes(bookSearch.toLowerCase())
+                    : true,
+                )
+                .slice(0, 40)
+                .map((b) => (
+                  <button
+                    key={b.id}
+                    type="button"
+                    onClick={() => toggleBook(b.id)}
+                    className={`w-full flex items-center gap-2 p-2 text-right hover:bg-accent ${
+                      form.book_ids.includes(b.id) ? 'bg-accent/60' : ''
+                    }`}
+                  >
+                    {b.cover_url ? (
+                      <img src={b.cover_url} alt="" className="h-10 w-7 rounded object-cover" />
+                    ) : (
+                      <div className="h-10 w-7 rounded bg-secondary" />
+                    )}
+                    <span className="flex-1 min-w-0 truncate text-sm">{b.title}</span>
+                    {form.book_ids.includes(b.id) && <Check className="h-4 w-4 text-primary" />}
+                  </button>
+                ))}
+            </div>
+          </div>
+          <div className="md:col-span-2">
+            <Label>حجم صور الأغلفة في الإعلان</Label>
+            <div className="flex gap-2 mt-1">
+              {SIZES.map((s) => (
+                <button
+                  key={s.id}
+                  type="button"
+                  onClick={() => setForm({ ...form, thumb_size: s.id })}
+                  className={`flex-1 rounded-lg border p-3 flex flex-col items-center gap-2 hover:bg-accent ${
+                    form.thumb_size === s.id ? 'ring-2 ring-primary' : ''
+                  }`}
+                >
+                  <div className={`${s.cls} aspect-[2/3] rounded bg-secondary border`} />
+                  <span className="text-xs">{s.label}</span>
+                </button>
+              ))}
+            </div>
+          </div>
           <div>
             <Label>الترتيب</Label>
             <Input
@@ -206,6 +307,13 @@ export const HeroBannersManager = () => {
                 <div className="flex-1 min-w-0">
                   <div className="font-medium truncate">{b.title}</div>
                   <div className="text-xs text-muted-foreground truncate">{b.subtitle || '—'}</div>
+                  <div className="text-xs text-muted-foreground">
+                    {(b.book_ids?.length ?? 0) > 0
+                      ? `${b.book_ids!.length} كتاب مرافق · حجم ${
+                          b.thumb_size === 'small' ? 'صغير' : b.thumb_size === 'large' ? 'كبير' : 'متوسط'
+                        }`
+                      : 'بدون كتب مرافقة'}
+                  </div>
                 </div>
                 <Switch
                   checked={b.enabled}
