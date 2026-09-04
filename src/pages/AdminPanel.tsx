@@ -21,6 +21,7 @@ import { allCategories } from '@/hooks/useCategories';
 import { StoreManagement } from '@/components/admin/StoreManagement';
 import { NotificationBroadcast } from '@/components/admin/NotificationBroadcast';
 import { HeroBannersManager } from '@/components/admin/HeroBannersManager';
+import { HomeLayoutModePicker } from '@/components/admin/HomeLayoutModePicker';
 import { AIBulkUpload } from '@/components/admin/AIBulkUpload';
 import { ThemePresetPicker } from '@/components/admin/ThemePresetPicker';
 import { useFeaturedBookIds, useSetFeaturedBookIds } from '@/hooks/useFeaturedBooks';
@@ -1098,7 +1099,9 @@ const AdminPanel = () => {
           {/* Hero Banners Tab */}
           <TabsContent value="banners">
             <Card>
-              <CardContent className="p-6">
+              <CardContent className="p-6 space-y-6">
+                <HomeLayoutModePicker />
+                <div className="h-px bg-border" />
                 <HeroBannersManager />
               </CardContent>
             </Card>
