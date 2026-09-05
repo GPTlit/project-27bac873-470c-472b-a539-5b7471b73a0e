@@ -180,7 +180,32 @@ export const HeroBannersManager = () => {
             <Input value={form.subtitle} onChange={(e) => setForm({ ...form, subtitle: e.target.value })} />
           </div>
           <div className="md:col-span-2">
+            <Label>شكل إطار الصورة (النمط الثاني)</Label>
+            <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 mt-1 mb-3">
+              {FRAMES.map((f) => (
+                <button
+                  key={f.id}
+                  type="button"
+                  onClick={() => setFrame(f.id)}
+                  className={`rounded-lg border p-2 flex flex-col items-center gap-2 hover:bg-accent ${
+                    frame === f.id ? 'ring-2 ring-primary' : ''
+                  }`}
+                >
+                  <div
+                    className="w-full rounded bg-secondary border"
+                    style={{ aspectRatio: f.ratio }}
+                  />
+                  <span className="text-[11px] text-center leading-tight">{f.label}</span>
+                  <span className="text-[10px] text-muted-foreground">
+                    {f.w}×{f.h}
+                  </span>
+                </button>
+              ))}
+            </div>
             <Label>صورة اللافتة</Label>
+            <p className="text-xs text-muted-foreground mb-1">
+              المقاس المقترح لهذا الإطار: {activeFrame.w}×{activeFrame.h} بكسل
+            </p>
             <div className="flex gap-2 items-center">
               <Input
                 placeholder="رابط الصورة أو ارفع ملفاً"
@@ -198,8 +223,21 @@ export const HeroBannersManager = () => {
               </label>
             </div>
             {form.image_url && (
-              <img src={form.image_url} alt="preview" className="mt-2 max-h-32 rounded" />
+              <div className="mt-2 max-w-sm">
+                <div
+                  className="w-full overflow-hidden rounded-lg border bg-secondary"
+                  style={{ aspectRatio: activeFrame.ratio }}
+                >
+                  <img src={form.image_url} alt="preview" className="w-full h-full object-cover" />
+                </div>
+                {imageDims && (
+                  <p className="text-xs text-muted-foreground mt-1">
+                    أبعاد الصورة الحالية: {imageDims.w}×{imageDims.h}
+                  </p>
+                )}
+              </div>
             )}
+
           </div>
           <div>
             <Label>نص الزر</Label>
