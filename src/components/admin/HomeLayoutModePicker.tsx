@@ -1,23 +1,24 @@
-import { Check, LayoutTemplate, Megaphone } from 'lucide-react';
+import { Check, LayoutGrid, GalleryHorizontalEnd } from 'lucide-react';
 import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { useToast } from '@/hooks/use-toast';
 import { useHomeLayoutMode, useSetHomeLayoutMode, type HomeLayoutMode } from '@/hooks/useHomeLayoutMode';
 
-const MODES: { id: HomeLayoutMode; name: string; desc: string; icon: typeof LayoutTemplate }[] = [
+const MODES: { id: HomeLayoutMode; name: string; desc: string; icon: typeof LayoutGrid }[] = [
   {
     id: 'classic',
-    name: 'الافتتاحية الكلاسيكية',
-    desc: 'اسم المكتبة وشريط البحث وعدد الكتب أولاً، ثم شاشات الإعلانات.',
-    icon: LayoutTemplate,
+    name: 'النمط الأول — الشبكة المربّعة',
+    desc: 'الشكل الأصلي للمكتبة: الافتتاحية وشريط البحث، ثم أغلفة الكتب في شبكة متساوية ومربّعة.',
+    icon: LayoutGrid,
   },
   {
     id: 'ads_first',
-    name: 'الإعلانات أولاً',
-    desc: 'شاشات الإعلانات في الأعلى، ثم الافتتاحية وشريط البحث.',
-    icon: Megaphone,
+    name: 'النمط الثاني — العرض السينمائي',
+    desc: 'شاشات الإعلانات في الأعلى، ثم صفوف أفقية بأحجام أغلفة متنوّعة.',
+    icon: GalleryHorizontalEnd,
   },
 ];
+
 
 export const HomeLayoutModePicker = () => {
   const { data: mode } = useHomeLayoutMode();
