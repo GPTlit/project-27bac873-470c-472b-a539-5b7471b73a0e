@@ -31,12 +31,27 @@ const SIZES: { id: 'small' | 'medium' | 'large'; label: string; cls: string }[] 
   { id: 'large', label: 'كبير', cls: 'w-20' },
 ];
 
+// Framing formats for the showcase mode (النمط الثاني): each shape has a
+// recommended upload size so the image fits its frame without cropping.
+const FRAMES = [
+  { id: 'wide', label: 'عريض (شاشة كاملة)', ratio: '16 / 9', w: 1920, h: 1080 },
+  { id: 'panorama', label: 'بانورامي (شريط إعلان)', ratio: '21 / 9', w: 1920, h: 820 },
+  { id: 'square', label: 'مربّع', ratio: '1 / 1', w: 1200, h: 1200 },
+  { id: 'portrait', label: 'طولي (غلاف)', ratio: '2 / 3', w: 1000, h: 1500 },
+] as const;
+
+type FrameId = (typeof FRAMES)[number]['id'];
+
 export const HeroBannersManager = () => {
   const { toast } = useToast();
   const qc = useQueryClient();
   const [form, setForm] = useState({ ...emptyForm });
   const [uploading, setUploading] = useState(false);
   const [bookSearch, setBookSearch] = useState('');
+  const [frame, setFrame] = useState<FrameId>('wide');
+  const [imageDims, setImageDims] = useState<{ w: number; h: number } | null>(null);
+  const activeFrame = FRAMES.find((f) => f.id === frame)!;
+
 
   const { data: banners, isLoading } = useQuery({
     queryKey: ['hero_banners', 'admin'],
