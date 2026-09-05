@@ -132,19 +132,39 @@ export const HeroBannersManager = () => {
   const handleUpload = async (file: File) => {
     setUploading(true);
     try {
+      const dims = await new Promise<{ w: number; h: number } | null>((resolve) => {
+        const img = new Image();
+        const url = URL.createObjectURL(file);
+        img.onload = () => {
+          resolve({ w: img.naturalWidth, h: img.naturalHeight });
+          URL.revokeObjectURL(url);
+        };
+        img.onerror = () => resolve(null);
+        img.src = url;
+      });
       const ext = file.name.split('.').pop() || 'jpg';
       const name = `banner_${Date.now()}_${Math.random().toString(36).slice(2, 8)}.${ext}`;
       const { error } = await supabase.storage.from('covers').upload(`banners/${name}`, file);
       if (error) throw error;
       const { data } = supabase.storage.from('covers').getPublicUrl(`banners/${name}`);
       setForm((f) => ({ ...f, image_url: data.publicUrl }));
-      toast({ title: 'تم رفع الصورة' });
+      setImageDims(dims);
+      const target = activeFrame.w / activeFrame.h;
+      if (dims && Math.abs(dims.w / dims.h - target) > 0.12) {
+        toast({
+          title: 'تم رفع الصورة',
+          description: `أبعاد الصورة ${dims.w}×${dims.h} لا تطابق إطار «${activeFrame.label}» (المقاس المقترح ${activeFrame.w}×${activeFrame.h}) — قد تُقتطع أطرافها.`,
+        });
+      } else {
+        toast({ title: 'تم رفع الصورة' });
+      }
     } catch (e: any) {
       toast({ title: 'خطأ', description: e.message, variant: 'destructive' });
     } finally {
       setUploading(false);
     }
   };
+
 
   return (
     <div className="space-y-6" dir="rtl">
