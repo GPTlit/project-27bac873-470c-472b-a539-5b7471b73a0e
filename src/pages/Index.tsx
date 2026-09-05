@@ -6,11 +6,16 @@ import { HeroSection } from '@/components/home/HeroSection';
 import { CategoriesSection } from '@/components/home/CategoriesSection';
 import { RecentlyViewedBooks } from '@/components/home/RecentlyViewedBooks';
 import { BookCarousel } from '@/components/home/BookCarousel';
+import { FeaturedBooks } from '@/components/home/FeaturedBooks';
+import { RecentBooks } from '@/components/home/RecentBooks';
+import { TrendingBooks } from '@/components/home/TrendingBooks';
+import { TopRatedBooks } from '@/components/home/TopRatedBooks';
 import { useBooks } from '@/hooks/useBooks';
 import { useFeaturedBookIds } from '@/hooks/useFeaturedBooks';
 import { useBookStats } from '@/hooks/useBookStats';
 import { allCategories } from '@/hooks/useCategories';
 import { useHomeLayoutMode } from '@/hooks/useHomeLayoutMode';
+
 
 const Index = () => {
   const { data: books = [] } = useBooks();
