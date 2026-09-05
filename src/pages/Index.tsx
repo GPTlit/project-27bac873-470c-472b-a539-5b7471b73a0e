@@ -65,19 +65,27 @@ const Index = () => {
     return rows;
   }, [books]);
 
+  // Mode 1 (classic): the original home — even, squared cover grids.
+  if (layoutMode === 'classic') {
+    return (
+      <Layout>
+        <HeroSection />
+        <HeroCarousel />
+        <RecentlyViewedBooks />
+        <FeaturedBooks />
+        <CategoriesSection />
+        <RecentBooks />
+        <TrendingBooks />
+        <TopRatedBooks />
+      </Layout>
+    );
+  }
+
+  // Mode 2 (showcase): cinematic carousels with mixed cover framing.
   return (
     <Layout>
-      {layoutMode === 'ads_first' ? (
-        <>
-          <HeroCarousel />
-          <HeroSection />
-        </>
-      ) : (
-        <>
-          <HeroSection />
-          <HeroCarousel />
-        </>
-      )}
+      <HeroCarousel />
+      <HeroSection />
       <RecentlyViewedBooks />
       <BookCarousel
         title="الكتب المختارة"
@@ -117,6 +125,7 @@ const Index = () => {
       ))}
     </Layout>
   );
+
 };
 
 export default Index;
