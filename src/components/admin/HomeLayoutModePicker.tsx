@@ -62,24 +62,30 @@ export const HomeLayoutModePicker = () => {
               </div>
               {/* Mini visual preview */}
               <div className="rounded-lg border border-border/60 bg-muted/40 p-2 space-y-1.5">
-                {(m.id === 'classic'
-                  ? ['title', 'search', 'stats', 'ad']
-                  : ['ad', 'title', 'search', 'stats']
-                ).map((block, i) => (
-                  <div
-                    key={i}
-                    className={
-                      block === 'ad'
-                        ? 'h-8 rounded bg-primary/25'
-                        : block === 'title'
-                        ? 'h-3 w-1/2 mx-auto rounded bg-foreground/30'
-                        : block === 'search'
-                        ? 'h-4 rounded-full bg-card border border-border'
-                        : 'h-3 w-2/3 mx-auto rounded bg-foreground/15'
-                    }
-                  />
-                ))}
+                {m.id === 'classic' ? (
+                  <>
+                    <div className="h-3 w-1/2 mx-auto rounded bg-foreground/30" />
+                    <div className="h-4 rounded-full bg-card border border-border" />
+                    <div className="grid grid-cols-4 gap-1.5">
+                      {Array.from({ length: 8 }).map((_, i) => (
+                        <div key={i} className="aspect-square rounded bg-foreground/15" />
+                      ))}
+                    </div>
+                  </>
+                ) : (
+                  <>
+                    <div className="h-8 rounded bg-primary/25" />
+                    <div className="h-3 w-1/2 mx-auto rounded bg-foreground/30" />
+                    <div className="flex gap-1.5 items-end">
+                      <div className="h-10 w-8 rounded bg-foreground/20" />
+                      <div className="h-7 w-12 rounded bg-foreground/15" />
+                      <div className="h-12 w-7 rounded bg-foreground/20" />
+                      <div className="h-8 w-10 rounded bg-foreground/15" />
+                    </div>
+                  </>
+                )}
               </div>
+
               <p className="text-xs text-muted-foreground mt-2">{m.desc}</p>
               <Button
                 size="sm"
