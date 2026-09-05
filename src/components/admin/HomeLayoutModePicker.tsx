@@ -1,23 +1,24 @@
-import { Check, LayoutTemplate, Megaphone } from 'lucide-react';
+import { Check, LayoutGrid, GalleryHorizontalEnd } from 'lucide-react';
 import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { useToast } from '@/hooks/use-toast';
 import { useHomeLayoutMode, useSetHomeLayoutMode, type HomeLayoutMode } from '@/hooks/useHomeLayoutMode';
 
-const MODES: { id: HomeLayoutMode; name: string; desc: string; icon: typeof LayoutTemplate }[] = [
+const MODES: { id: HomeLayoutMode; name: string; desc: string; icon: typeof LayoutGrid }[] = [
   {
     id: 'classic',
-    name: 'الافتتاحية الكلاسيكية',
-    desc: 'اسم المكتبة وشريط البحث وعدد الكتب أولاً، ثم شاشات الإعلانات.',
-    icon: LayoutTemplate,
+    name: 'النمط الأول — الشبكة المربّعة',
+    desc: 'الشكل الأصلي للمكتبة: الافتتاحية وشريط البحث، ثم أغلفة الكتب في شبكة متساوية ومربّعة.',
+    icon: LayoutGrid,
   },
   {
     id: 'ads_first',
-    name: 'الإعلانات أولاً',
-    desc: 'شاشات الإعلانات في الأعلى، ثم الافتتاحية وشريط البحث.',
-    icon: Megaphone,
+    name: 'النمط الثاني — العرض السينمائي',
+    desc: 'شاشات الإعلانات في الأعلى، ثم صفوف أفقية بأحجام أغلفة متنوّعة.',
+    icon: GalleryHorizontalEnd,
   },
 ];
+
 
 export const HomeLayoutModePicker = () => {
   const { data: mode } = useHomeLayoutMode();
@@ -36,12 +37,13 @@ export const HomeLayoutModePicker = () => {
   return (
     <div dir="rtl">
       <div className="flex items-center gap-2 mb-2">
-        <LayoutTemplate className="h-5 w-5 text-primary" />
+        <LayoutGrid className="h-5 w-5 text-primary" />
         <h4 className="font-semibold">شكل الصفحة الرئيسية</h4>
       </div>
       <p className="text-sm text-muted-foreground mb-4">
-        اختر ما يراه الزائر أولاً عند فتح المكتبة.
+        اختر النمط الذي يراه الزائر عند فتح المكتبة.
       </p>
+
       <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
         {MODES.map((m) => {
           const active = mode === m.id;
@@ -61,24 +63,30 @@ export const HomeLayoutModePicker = () => {
               </div>
               {/* Mini visual preview */}
               <div className="rounded-lg border border-border/60 bg-muted/40 p-2 space-y-1.5">
-                {(m.id === 'classic'
-                  ? ['title', 'search', 'stats', 'ad']
-                  : ['ad', 'title', 'search', 'stats']
-                ).map((block, i) => (
-                  <div
-                    key={i}
-                    className={
-                      block === 'ad'
-                        ? 'h-8 rounded bg-primary/25'
-                        : block === 'title'
-                        ? 'h-3 w-1/2 mx-auto rounded bg-foreground/30'
-                        : block === 'search'
-                        ? 'h-4 rounded-full bg-card border border-border'
-                        : 'h-3 w-2/3 mx-auto rounded bg-foreground/15'
-                    }
-                  />
-                ))}
+                {m.id === 'classic' ? (
+                  <>
+                    <div className="h-3 w-1/2 mx-auto rounded bg-foreground/30" />
+                    <div className="h-4 rounded-full bg-card border border-border" />
+                    <div className="grid grid-cols-4 gap-1.5">
+                      {Array.from({ length: 8 }).map((_, i) => (
+                        <div key={i} className="aspect-square rounded bg-foreground/15" />
+                      ))}
+                    </div>
+                  </>
+                ) : (
+                  <>
+                    <div className="h-8 rounded bg-primary/25" />
+                    <div className="h-3 w-1/2 mx-auto rounded bg-foreground/30" />
+                    <div className="flex gap-1.5 items-end">
+                      <div className="h-10 w-8 rounded bg-foreground/20" />
+                      <div className="h-7 w-12 rounded bg-foreground/15" />
+                      <div className="h-12 w-7 rounded bg-foreground/20" />
+                      <div className="h-8 w-10 rounded bg-foreground/15" />
+                    </div>
+                  </>
+                )}
               </div>
+
               <p className="text-xs text-muted-foreground mt-2">{m.desc}</p>
               <Button
                 size="sm"

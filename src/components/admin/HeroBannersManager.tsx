@@ -31,12 +31,27 @@ const SIZES: { id: 'small' | 'medium' | 'large'; label: string; cls: string }[] 
   { id: 'large', label: 'كبير', cls: 'w-20' },
 ];
 
+// Framing formats for the showcase mode (النمط الثاني): each shape has a
+// recommended upload size so the image fits its frame without cropping.
+const FRAMES = [
+  { id: 'wide', label: 'عريض (شاشة كاملة)', ratio: '16 / 9', w: 1920, h: 1080 },
+  { id: 'panorama', label: 'بانورامي (شريط إعلان)', ratio: '21 / 9', w: 1920, h: 820 },
+  { id: 'square', label: 'مربّع', ratio: '1 / 1', w: 1200, h: 1200 },
+  { id: 'portrait', label: 'طولي (غلاف)', ratio: '2 / 3', w: 1000, h: 1500 },
+] as const;
+
+type FrameId = (typeof FRAMES)[number]['id'];
+
 export const HeroBannersManager = () => {
   const { toast } = useToast();
   const qc = useQueryClient();
   const [form, setForm] = useState({ ...emptyForm });
   const [uploading, setUploading] = useState(false);
   const [bookSearch, setBookSearch] = useState('');
+  const [frame, setFrame] = useState<FrameId>('wide');
+  const [imageDims, setImageDims] = useState<{ w: number; h: number } | null>(null);
+  const activeFrame = FRAMES.find((f) => f.id === frame)!;
+
 
   const { data: banners, isLoading } = useQuery({
     queryKey: ['hero_banners', 'admin'],
@@ -117,19 +132,39 @@ export const HeroBannersManager = () => {
   const handleUpload = async (file: File) => {
     setUploading(true);
     try {
+      const dims = await new Promise<{ w: number; h: number } | null>((resolve) => {
+        const img = new Image();
+        const url = URL.createObjectURL(file);
+        img.onload = () => {
+          resolve({ w: img.naturalWidth, h: img.naturalHeight });
+          URL.revokeObjectURL(url);
+        };
+        img.onerror = () => resolve(null);
+        img.src = url;
+      });
       const ext = file.name.split('.').pop() || 'jpg';
       const name = `banner_${Date.now()}_${Math.random().toString(36).slice(2, 8)}.${ext}`;
       const { error } = await supabase.storage.from('covers').upload(`banners/${name}`, file);
       if (error) throw error;
       const { data } = supabase.storage.from('covers').getPublicUrl(`banners/${name}`);
       setForm((f) => ({ ...f, image_url: data.publicUrl }));
-      toast({ title: 'تم رفع الصورة' });
+      setImageDims(dims);
+      const target = activeFrame.w / activeFrame.h;
+      if (dims && Math.abs(dims.w / dims.h - target) > 0.12) {
+        toast({
+          title: 'تم رفع الصورة',
+          description: `أبعاد الصورة ${dims.w}×${dims.h} لا تطابق إطار «${activeFrame.label}» (المقاس المقترح ${activeFrame.w}×${activeFrame.h}) — قد تُقتطع أطرافها.`,
+        });
+      } else {
+        toast({ title: 'تم رفع الصورة' });
+      }
     } catch (e: any) {
       toast({ title: 'خطأ', description: e.message, variant: 'destructive' });
     } finally {
       setUploading(false);
     }
   };
+
 
   return (
     <div className="space-y-6" dir="rtl">
@@ -145,7 +180,32 @@ export const HeroBannersManager = () => {
             <Input value={form.subtitle} onChange={(e) => setForm({ ...form, subtitle: e.target.value })} />
           </div>
           <div className="md:col-span-2">
+            <Label>شكل إطار الصورة (النمط الثاني)</Label>
+            <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 mt-1 mb-3">
+              {FRAMES.map((f) => (
+                <button
+                  key={f.id}
+                  type="button"
+                  onClick={() => setFrame(f.id)}
+                  className={`rounded-lg border p-2 flex flex-col items-center gap-2 hover:bg-accent ${
+                    frame === f.id ? 'ring-2 ring-primary' : ''
+                  }`}
+                >
+                  <div
+                    className="w-full rounded bg-secondary border"
+                    style={{ aspectRatio: f.ratio }}
+                  />
+                  <span className="text-[11px] text-center leading-tight">{f.label}</span>
+                  <span className="text-[10px] text-muted-foreground">
+                    {f.w}×{f.h}
+                  </span>
+                </button>
+              ))}
+            </div>
             <Label>صورة اللافتة</Label>
+            <p className="text-xs text-muted-foreground mb-1">
+              المقاس المقترح لهذا الإطار: {activeFrame.w}×{activeFrame.h} بكسل
+            </p>
             <div className="flex gap-2 items-center">
               <Input
                 placeholder="رابط الصورة أو ارفع ملفاً"
@@ -163,8 +223,21 @@ export const HeroBannersManager = () => {
               </label>
             </div>
             {form.image_url && (
-              <img src={form.image_url} alt="preview" className="mt-2 max-h-32 rounded" />
+              <div className="mt-2 max-w-sm">
+                <div
+                  className="w-full overflow-hidden rounded-lg border bg-secondary"
+                  style={{ aspectRatio: activeFrame.ratio }}
+                >
+                  <img src={form.image_url} alt="preview" className="w-full h-full object-cover" />
+                </div>
+                {imageDims && (
+                  <p className="text-xs text-muted-foreground mt-1">
+                    أبعاد الصورة الحالية: {imageDims.w}×{imageDims.h}
+                  </p>
+                )}
+              </div>
             )}
+
           </div>
           <div>
             <Label>نص الزر</Label>

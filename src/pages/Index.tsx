@@ -6,11 +6,16 @@ import { HeroSection } from '@/components/home/HeroSection';
 import { CategoriesSection } from '@/components/home/CategoriesSection';
 import { RecentlyViewedBooks } from '@/components/home/RecentlyViewedBooks';
 import { BookCarousel } from '@/components/home/BookCarousel';
+import { FeaturedBooks } from '@/components/home/FeaturedBooks';
+import { RecentBooks } from '@/components/home/RecentBooks';
+import { TrendingBooks } from '@/components/home/TrendingBooks';
+import { TopRatedBooks } from '@/components/home/TopRatedBooks';
 import { useBooks } from '@/hooks/useBooks';
 import { useFeaturedBookIds } from '@/hooks/useFeaturedBooks';
 import { useBookStats } from '@/hooks/useBookStats';
 import { allCategories } from '@/hooks/useCategories';
 import { useHomeLayoutMode } from '@/hooks/useHomeLayoutMode';
+
 
 const Index = () => {
   const { data: books = [] } = useBooks();
@@ -60,19 +65,27 @@ const Index = () => {
     return rows;
   }, [books]);
 
+  // Mode 1 (classic): the original home — even, squared cover grids.
+  if (layoutMode === 'classic') {
+    return (
+      <Layout>
+        <HeroSection />
+        <HeroCarousel />
+        <RecentlyViewedBooks />
+        <FeaturedBooks />
+        <CategoriesSection />
+        <RecentBooks />
+        <TrendingBooks />
+        <TopRatedBooks />
+      </Layout>
+    );
+  }
+
+  // Mode 2 (showcase): cinematic carousels with mixed cover framing.
   return (
     <Layout>
-      {layoutMode === 'ads_first' ? (
-        <>
-          <HeroCarousel />
-          <HeroSection />
-        </>
-      ) : (
-        <>
-          <HeroSection />
-          <HeroCarousel />
-        </>
-      )}
+      <HeroCarousel />
+      <HeroSection />
       <RecentlyViewedBooks />
       <BookCarousel
         title="الكتب المختارة"
@@ -112,6 +125,7 @@ const Index = () => {
       ))}
     </Layout>
   );
+
 };
 
 export default Index;
