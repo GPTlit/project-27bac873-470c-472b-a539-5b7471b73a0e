@@ -37,12 +37,13 @@ export const HomeLayoutModePicker = () => {
   return (
     <div dir="rtl">
       <div className="flex items-center gap-2 mb-2">
-        <LayoutTemplate className="h-5 w-5 text-primary" />
+        <LayoutGrid className="h-5 w-5 text-primary" />
         <h4 className="font-semibold">شكل الصفحة الرئيسية</h4>
       </div>
       <p className="text-sm text-muted-foreground mb-4">
-        اختر ما يراه الزائر أولاً عند فتح المكتبة.
+        اختر النمط الذي يراه الزائر عند فتح المكتبة.
       </p>
+
       <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
         {MODES.map((m) => {
           const active = mode === m.id;
