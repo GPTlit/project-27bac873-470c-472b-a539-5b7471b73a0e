@@ -85,7 +85,7 @@ export const BookCarousel = ({ title, icon, books, viewAllHref, pattern = 'mixed
             style={{ animationDelay: `${Math.min(i, 8) * 0.04}s` }}
           >
             <img
-              src={book.cover_url || '/placeholder.svg'}
+              src={coverFor(book, shapeOf(i, pattern))}
               alt={book.title}
               loading="lazy"
               className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105"
