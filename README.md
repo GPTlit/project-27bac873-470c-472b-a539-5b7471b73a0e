@@ -71,3 +71,13 @@ Yes, you can!
 To connect a domain, navigate to Project > Settings > Domains and click Connect Domain.
 
 Read more here: [Setting up a custom domain](https://docs.lovable.dev/features/custom-domain#custom-domain)
+
+## Hosting on GitHub + Netlify
+
+- Build command: `npm run build`, publish directory: `dist` (already set in `netlify.toml`).
+- SPA routing: `netlify.toml` + `public/_redirects` return `index.html` with status 200, so deep links and refreshes never show "Page not found".
+- Environment variables to add in Netlify (Site settings -> Environment variables), copied from `.env`:
+  - `VITE_SUPABASE_URL`
+  - `VITE_SUPABASE_PUBLISHABLE_KEY`
+  - `VITE_SUPABASE_PROJECT_ID`
+- The AI features run as backend functions (not on Netlify) and are called from the browser, with CORS open, so they keep working on any domain once the variables above are set.
