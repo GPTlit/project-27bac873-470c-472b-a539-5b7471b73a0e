@@ -337,7 +337,9 @@ export type Database = {
           author: string
           categories: string[] | null
           category: string
+          cover_tall_url: string | null
           cover_url: string | null
+          cover_wide_url: string | null
           created_at: string | null
           description: string | null
           file_type: string | null
@@ -353,7 +355,9 @@ export type Database = {
           author: string
           categories?: string[] | null
           category: string
+          cover_tall_url?: string | null
           cover_url?: string | null
+          cover_wide_url?: string | null
           created_at?: string | null
           description?: string | null
           file_type?: string | null
@@ -369,7 +373,9 @@ export type Database = {
           author?: string
           categories?: string[] | null
           category?: string
+          cover_tall_url?: string | null
           cover_url?: string | null
+          cover_wide_url?: string | null
           created_at?: string | null
           description?: string | null
           file_type?: string | null
