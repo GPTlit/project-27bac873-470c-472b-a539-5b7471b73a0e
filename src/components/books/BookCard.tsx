@@ -41,6 +41,8 @@ interface BookCardProps {
 export const BookCard = ({ book, index = 0 }: BookCardProps) => {
   const { t } = useLanguage();
   const { isAdmin } = useAuth();
+  const { data: editMenuEnabled = false } = useAdminEditMenu();
+  const showAdminMenu = isAdmin && editMenuEnabled;
   const navigate = useNavigate();
   const { toast } = useToast();
   const queryClient = useQueryClient();
