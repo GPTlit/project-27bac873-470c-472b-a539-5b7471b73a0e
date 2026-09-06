@@ -15,26 +15,32 @@ interface BookCarouselProps {
   pattern?: 'mixed' | 'wide-first' | 'tall-first' | 'uniform';
 }
 
-const sizeClass = (i: number, pattern: BookCarouselProps['pattern'] = 'mixed') => {
-  // Return width + aspect-ratio classes; horizontal scroll shows varied heights
-  if (pattern === 'uniform') return 'w-32 sm:w-36 aspect-[3/4]';
-  if (pattern === 'wide-first') {
-    if (i === 0) return 'w-56 sm:w-72 aspect-[4/3]';
-    return 'w-32 sm:w-36 aspect-[3/4]';
-  }
-  if (pattern === 'tall-first') {
-    if (i === 0) return 'w-40 sm:w-48 aspect-[2/3]';
-    return 'w-32 sm:w-36 aspect-[3/4]';
-  }
-  // mixed: cycle through big / small / tall / wide
+type Shape = 'wide' | 'tall' | 'standard';
+
+const shapeOf = (i: number, pattern: BookCarouselProps['pattern'] = 'mixed'): Shape => {
+  if (pattern === 'uniform') return 'standard';
+  if (pattern === 'wide-first') return i === 0 ? 'wide' : 'standard';
+  if (pattern === 'tall-first') return i === 0 ? 'tall' : 'standard';
   const cycle = i % 6;
-  if (cycle === 0) return 'w-48 sm:w-56 aspect-[2/3]';
-  if (cycle === 1) return 'w-32 sm:w-36 aspect-[3/4]';
-  if (cycle === 2) return 'w-32 sm:w-36 aspect-[3/4]';
-  if (cycle === 3) return 'w-56 sm:w-64 aspect-[4/3]';
-  if (cycle === 4) return 'w-32 sm:w-36 aspect-[3/4]';
-  return 'w-40 sm:w-44 aspect-[3/4]';
+  if (cycle === 0) return 'tall';
+  if (cycle === 3) return 'wide';
+  return 'standard';
 };
+
+const sizeClass = (i: number, pattern: BookCarouselProps['pattern'] = 'mixed') => {
+  const shape = shapeOf(i, pattern);
+  if (shape === 'wide') return i === 0 && pattern === 'wide-first' ? 'w-56 sm:w-72 aspect-[4/3]' : 'w-56 sm:w-64 aspect-[4/3]';
+  if (shape === 'tall') return i === 0 && pattern === 'tall-first' ? 'w-40 sm:w-48 aspect-[2/3]' : 'w-48 sm:w-56 aspect-[2/3]';
+  return 'w-32 sm:w-36 aspect-[3/4]';
+};
+
+/** Pick the cover picture that matches the frame, falling back to the standard one. */
+const coverFor = (book: DbBook, shape: Shape) => {
+  if (shape === 'wide') return book.cover_wide_url || book.cover_url || '/placeholder.svg';
+  if (shape === 'tall') return book.cover_tall_url || book.cover_url || '/placeholder.svg';
+  return book.cover_url || '/placeholder.svg';
+};
+
 
 export const BookCarousel = ({ title, icon, books, viewAllHref, pattern = 'mixed' }: BookCarouselProps) => {
   if (!books || books.length === 0) return null;
@@ -79,7 +85,7 @@ export const BookCarousel = ({ title, icon, books, viewAllHref, pattern = 'mixed
             style={{ animationDelay: `${Math.min(i, 8) * 0.04}s` }}
           >
             <img
-              src={book.cover_url || '/placeholder.svg'}
+              src={coverFor(book, shapeOf(i, pattern))}
               alt={book.title}
               loading="lazy"
               className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105"

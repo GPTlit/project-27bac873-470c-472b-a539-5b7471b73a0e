@@ -10,6 +10,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
 import { useQueryClient } from '@tanstack/react-query';
 import { trackRecentlyViewed } from '@/hooks/useRecentlyViewed';
+import { useAdminEditMenu } from '@/hooks/useAdminEditMenu';
 import {
   AlertDialog,
   AlertDialogAction,
@@ -41,6 +42,8 @@ interface BookCardProps {
 export const BookCard = ({ book, index = 0 }: BookCardProps) => {
   const { t } = useLanguage();
   const { isAdmin } = useAuth();
+  const { data: editMenuEnabled = false } = useAdminEditMenu();
+  const showAdminMenu = isAdmin && editMenuEnabled;
   const navigate = useNavigate();
   const { toast } = useToast();
   const queryClient = useQueryClient();

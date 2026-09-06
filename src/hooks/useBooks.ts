@@ -9,6 +9,8 @@ export interface Book {
   category: string;
   categories: string[] | null;
   cover_url: string | null;
+  cover_wide_url?: string | null;
+  cover_tall_url?: string | null;
   file_url: string;
   file_type: string | null;
   created_at: string;

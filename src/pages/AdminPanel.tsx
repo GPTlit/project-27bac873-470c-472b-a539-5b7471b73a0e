@@ -22,6 +22,7 @@ import { StoreManagement } from '@/components/admin/StoreManagement';
 import { NotificationBroadcast } from '@/components/admin/NotificationBroadcast';
 import { HeroBannersManager } from '@/components/admin/HeroBannersManager';
 import { HomeLayoutModePicker } from '@/components/admin/HomeLayoutModePicker';
+import { AdminEditMenuToggle } from '@/components/admin/AdminEditMenuToggle';
 import { AIBulkUpload } from '@/components/admin/AIBulkUpload';
 import { ThemePresetPicker } from '@/components/admin/ThemePresetPicker';
 import { useFeaturedBookIds, useSetFeaturedBookIds } from '@/hooks/useFeaturedBooks';
@@ -59,6 +60,8 @@ const AdminPanel = () => {
   });
   const [bookFile, setBookFile] = useState<File | null>(null);
   const [coverFile, setCoverFile] = useState<File | null>(null);
+  const [wideCoverFile, setWideCoverFile] = useState<File | null>(null);
+  const [tallCoverFile, setTallCoverFile] = useState<File | null>(null);
   const [uploadProgress, setUploadProgress] = useState<string>('');
   const { data: books, refetch: refetchBooks } = useBooks();
 
@@ -320,25 +323,22 @@ const AdminPanel = () => {
 
       setUploadProgress('جاري رفع صورة الغلاف...');
 
-      let coverUrl = null;
-      if (coverFile) {
-        const coverExtension = coverFile.name.split('.').pop()?.toLowerCase() || 'jpg';
-        const coverFileName = `cover_${Date.now()}_${Math.random().toString(36).substring(2, 8)}.${coverExtension}`;
-        
-        const { error: coverUploadError } = await supabase.storage
-          .from('covers')
-          .upload(coverFileName, coverFile);
-
-        if (coverUploadError) {
-          console.error('Cover upload error:', coverUploadError);
-          // Continue without cover
-        } else {
-          const { data: coverUrlData } = supabase.storage
-            .from('covers')
-            .getPublicUrl(coverFileName);
-          coverUrl = coverUrlData.publicUrl;
+      const uploadCover = async (file: File | null, prefix: string) => {
+        if (!file) return null;
+        const ext = file.name.split('.').pop()?.toLowerCase() || 'jpg';
+        const name = `${prefix}_${Date.now()}_${Math.random().toString(36).substring(2, 8)}.${ext}`;
+        const { error } = await supabase.storage.from('covers').upload(name, file);
+        if (error) {
+          console.error('Cover upload error:', error);
+          return null;
         }
-      }
+        const { data } = supabase.storage.from('covers').getPublicUrl(name);
+        return data.publicUrl;
+      };
+
+      const coverUrl = await uploadCover(coverFile, 'cover');
+      const wideCoverUrl = await uploadCover(wideCoverFile, 'cover_wide');
+      const tallCoverUrl = await uploadCover(tallCoverFile, 'cover_tall');
 
       setUploadProgress('جاري حفظ البيانات...');
 
@@ -354,6 +354,8 @@ const AdminPanel = () => {
           category: formData.categories[0],
           categories: formData.categories,
           cover_url: coverUrl,
+          cover_wide_url: wideCoverUrl,
+          cover_tall_url: tallCoverUrl,
           file_url: bookUrlData.publicUrl,
           file_type: 'pdf',
           page_count: pageCount,
@@ -372,6 +374,8 @@ const AdminPanel = () => {
       setFormData({ title: '', author: '', description: '', categories: [], pageCount: '' });
       setBookFile(null);
       setCoverFile(null);
+      setWideCoverFile(null);
+      setTallCoverFile(null);
       setUploadProgress('');
       refetchBooks();
     } catch (error: any) {
@@ -784,7 +788,7 @@ const AdminPanel = () => {
                     </div>
 
                     <div className="space-y-2">
-                      <Label htmlFor="cover">صورة الغلاف</Label>
+                      <Label htmlFor="cover">صورة الغلاف — الشكل العادي (٣:٤ — ١٢٠٠×١٦٠٠)</Label>
                       <div className="relative">
                         <input
                           type="file"
@@ -811,6 +815,40 @@ const AdminPanel = () => {
                         </label>
                       </div>
                     </div>
+
+                    {([
+                      { id: 'coverWide', label: 'غلاف عريض — للعرض السينمائي (٤:٣ — ١٦٠٠×١٢٠٠)', file: wideCoverFile, set: setWideCoverFile },
+                      { id: 'coverTall', label: 'غلاف طويل — للعرض السينمائي (٢:٣ — ١٠٠٠×١٥٠٠)', file: tallCoverFile, set: setTallCoverFile },
+                    ] as const).map((slot) => (
+                      <div className="space-y-2" key={slot.id}>
+                        <Label htmlFor={slot.id}>{slot.label}</Label>
+                        <div className="relative">
+                          <input
+                            type="file"
+                            id={slot.id}
+                            accept="image/*"
+                            className="hidden"
+                            onChange={(e) => slot.set(e.target.files?.[0] || null)}
+                          />
+                          <label
+                            htmlFor={slot.id}
+                            className="flex items-center justify-center gap-3 h-24 border-2 border-dashed border-border rounded-xl cursor-pointer hover:border-primary/50 hover:bg-secondary/50 transition-colors"
+                          >
+                            {slot.file ? (
+                              <div className="flex items-center gap-3">
+                                <Image className="h-6 w-6 text-primary" />
+                                <span className="text-foreground font-medium">{slot.file.name}</span>
+                              </div>
+                            ) : (
+                              <div className="text-center">
+                                <Image className="h-6 w-6 text-muted-foreground mx-auto mb-2" />
+                                <span className="text-sm text-muted-foreground">اختياري — اضغط للرفع</span>
+                              </div>
+                            )}
+                          </label>
+                        </div>
+                      </div>
+                    ))}
 
                     <div className="space-y-2">
                       <Label htmlFor="bookFile">ملف الكتاب (PDF, TXT, EPUB) *</Label>
@@ -1101,6 +1139,8 @@ const AdminPanel = () => {
             <Card>
               <CardContent className="p-6 space-y-6">
                 <HomeLayoutModePicker />
+                <div className="h-px bg-border" />
+                <AdminEditMenuToggle />
                 <div className="h-px bg-border" />
                 <HeroBannersManager />
               </CardContent>
