@@ -10,6 +10,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
 import { useQueryClient } from '@tanstack/react-query';
 import { trackRecentlyViewed } from '@/hooks/useRecentlyViewed';
+import { useAdminEditMenu } from '@/hooks/useAdminEditMenu';
 import {
   AlertDialog,
   AlertDialogAction,
