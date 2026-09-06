@@ -84,8 +84,9 @@ const Index = () => {
   // Mode 2 (showcase): cinematic carousels with mixed cover framing.
   return (
     <Layout>
-      <HeroCarousel />
       <HeroSection />
+      <HeroCarousel />
+
       <RecentlyViewedBooks />
       <BookCarousel
         title="الكتب المختارة"
