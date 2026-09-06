@@ -135,7 +135,7 @@ export const BookCard = ({ book, index = 0 }: BookCardProps) => {
           )}
 
           {/* Admin Actions */}
-          {isAdmin && (
+          {showAdminMenu && (
             <div
               className="absolute top-2 left-2 flex flex-col items-start gap-1.5 z-10"
               onClick={stop}
