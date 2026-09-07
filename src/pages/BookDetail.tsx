@@ -131,6 +131,34 @@ const BookDetail = () => {
       return;
     }
 
+    // On the web: let the browser handle it, so the download shows in the
+    // browser's own download bar/tab. Inside the installed app (Capacitor):
+    // store the file locally so it can be read offline.
+    const isNativeApp = (() => {
+      try {
+        // @ts-ignore
+        return !!(window as any)?.Capacitor?.isNativePlatform?.();
+      } catch {
+        return false;
+      }
+    })();
+
+    if (!isNativeApp) {
+      const a = document.createElement('a');
+      a.href = book.file_url;
+      a.download = `${book.title}.${book.file_type || 'pdf'}`;
+      a.target = '_blank';
+      a.rel = 'noopener';
+      document.body.appendChild(a);
+      a.click();
+      a.remove();
+      toast({
+        title: t('loading'),
+        description: 'جاري تحميل الكتاب في المتصفح...',
+      });
+      return;
+    }
+
     setIsDownloading(true);
     setDownloadProgress(0);
     
