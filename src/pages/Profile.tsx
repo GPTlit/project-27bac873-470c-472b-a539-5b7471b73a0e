@@ -217,33 +217,38 @@ const Profile = () => {
       <div className="section-padding">
         <div className="container-library max-w-4xl">
           {/* Header */}
-          <div className="flex items-center gap-4 mb-8">
-            <div className="relative group">
-              <Avatar className="h-16 w-16">
-                <AvatarImage src={profile?.avatar_url || undefined} />
-                <AvatarFallback className="gold-gradient text-primary-foreground text-xl">
-                  {profile?.display_name?.slice(0, 2).toUpperCase() || userInitials}
-                </AvatarFallback>
-              </Avatar>
-              <button
-                onClick={() => fileInputRef.current?.click()}
-                className="absolute inset-0 flex items-center justify-center bg-black/50 rounded-full opacity-0 group-hover:opacity-100 transition-opacity"
-              >
-                <Camera className="h-5 w-5 text-white" />
-              </button>
-              <input
-                ref={fileInputRef}
-                type="file"
-                accept="image/*"
-                className="hidden"
-                onChange={handleAvatarUpload}
-              />
-            </div>
-            <div className="flex-1">
-              <h1 className="text-3xl font-bold text-foreground">
-                {profile?.display_name || t('myProfile')}
-              </h1>
-              <p className="text-muted-foreground">{user?.email}</p>
+          <div className="mb-8">
+            <div className="flex items-start gap-4">
+              <div className="relative group shrink-0">
+                <Avatar className="h-16 w-16">
+                  <AvatarImage src={profile?.avatar_url || undefined} />
+                  <AvatarFallback className="gold-gradient text-primary-foreground text-xl">
+                    {profile?.display_name?.slice(0, 2).toUpperCase() || userInitials}
+                  </AvatarFallback>
+                </Avatar>
+                <button
+                  onClick={() => fileInputRef.current?.click()}
+                  className="absolute inset-0 flex items-center justify-center bg-foreground/50 rounded-full opacity-0 group-hover:opacity-100 transition-opacity"
+                >
+                  <Camera className="h-5 w-5 text-background" />
+                </button>
+                <input
+                  ref={fileInputRef}
+                  type="file"
+                  accept="image/*"
+                  className="hidden"
+                  onChange={handleAvatarUpload}
+                />
+              </div>
+              <div className="min-w-0 flex-1">
+                <h1 className="text-2xl md:text-3xl font-bold text-foreground truncate">
+                  {shortenName(profile?.display_name) || t('myProfile')}
+                </h1>
+                <p className="text-muted-foreground text-sm truncate">{user?.email}</p>
+                {profile?.phone && (
+                  <p className="text-muted-foreground text-sm truncate" dir="ltr">{profile.phone}</p>
+                )}
+              </div>
             </div>
             <Button
               variant="outline"
@@ -256,12 +261,13 @@ const Profile = () => {
                 }
                 setIsEditingProfile(true);
               }}
-              className="gap-2"
+              className="gap-2 mt-4 w-full sm:w-auto"
             >
               <Pencil className="h-4 w-4" />
               {t('editProfile')}
             </Button>
           </div>
+
 
           {/* Edit Profile Dialog */}
           <Dialog open={isEditingProfile} onOpenChange={setIsEditingProfile}>
