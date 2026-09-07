@@ -21,6 +21,13 @@ import { useUserProfile, useUpdateProfile, useUploadAvatar } from '@/hooks/useUs
 import { useMyStories } from '@/hooks/useStories';
 import { Badge } from '@/components/ui/badge';
 
+// Names longer than 10 characters are cut to 7 characters followed by "..."
+const shortenName = (name?: string | null) => {
+  const n = (name || '').trim();
+  if (!n) return '';
+  return [...n].length > 10 ? [...n].slice(0, 7).join('') + '...' : n;
+};
+
 const Profile = () => {
   const { user, signOut } = useAuth();
   const { t } = useLanguage();
