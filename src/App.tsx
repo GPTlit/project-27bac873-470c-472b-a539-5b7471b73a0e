@@ -37,7 +37,19 @@ import StoryPage from "./pages/stories/StoryPage";
 import ReadPart from "./pages/stories/ReadPart";
 import AuthorProfile from "./pages/stories/AuthorProfile";
 
-const queryClient = new QueryClient();
+const queryClient = new QueryClient({
+  defaultOptions: {
+    queries: {
+      // Keep everything (books, covers metadata) cached for the whole session
+      staleTime: Infinity,
+      gcTime: Infinity,
+      refetchOnWindowFocus: false,
+      refetchOnMount: false,
+      refetchOnReconnect: false,
+      retry: 1,
+    },
+  },
+});
 
 const App = () => (
   <QueryClientProvider client={queryClient}>
