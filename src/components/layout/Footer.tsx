@@ -1,4 +1,4 @@
-import { Book, Heart } from 'lucide-react';
+import { Book } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { useLanguage } from '@/contexts/LanguageContext';
 
@@ -31,11 +31,6 @@ export const Footer = () => {
             </Link>
           </nav>
 
-          <div className="flex items-center gap-1 text-sm text-muted-foreground">
-            <span>{t('madeWith')}</span>
-            <Heart className="h-4 w-4 text-destructive fill-destructive" />
-            <span>{t('inMauritania')}</span>
-          </div>
         </div>
 
         {/* Legal Links */}
