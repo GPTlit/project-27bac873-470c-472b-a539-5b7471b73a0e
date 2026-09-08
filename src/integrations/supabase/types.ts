@@ -835,6 +835,60 @@ export type Database = {
           },
         ]
       }
+      promo_blocks: {
+        Row: {
+          book_ids: string[]
+          created_at: string
+          enabled: boolean
+          id: string
+          link_label: string | null
+          link_url: string | null
+          media_type: string
+          media_url: string | null
+          slot: number
+          sort_order: number
+          subtitle: string | null
+          thumb_size: string
+          title: string | null
+          updated_at: string
+          youtube_url: string | null
+        }
+        Insert: {
+          book_ids?: string[]
+          created_at?: string
+          enabled?: boolean
+          id?: string
+          link_label?: string | null
+          link_url?: string | null
+          media_type?: string
+          media_url?: string | null
+          slot?: number
+          sort_order?: number
+          subtitle?: string | null
+          thumb_size?: string
+          title?: string | null
+          updated_at?: string
+          youtube_url?: string | null
+        }
+        Update: {
+          book_ids?: string[]
+          created_at?: string
+          enabled?: boolean
+          id?: string
+          link_label?: string | null
+          link_url?: string | null
+          media_type?: string
+          media_url?: string | null
+          slot?: number
+          sort_order?: number
+          subtitle?: string | null
+          thumb_size?: string
+          title?: string | null
+          updated_at?: string
+          youtube_url?: string | null
+        }
+        Relationships: []
+      }
       push_subscriptions: {
         Row: {
           created_at: string
@@ -1342,9 +1396,12 @@ export type Database = {
           id: string
           phone: string | null
           reader_id: number | null
+          reading_seconds: number
           updated_at: string
           user_id: string
           username: string
+          verified: boolean
+          verified_at: string | null
           xp: number
         }
         Insert: {
@@ -1356,9 +1413,12 @@ export type Database = {
           id?: string
           phone?: string | null
           reader_id?: number | null
+          reading_seconds?: number
           updated_at?: string
           user_id: string
           username: string
+          verified?: boolean
+          verified_at?: string | null
           xp?: number
         }
         Update: {
@@ -1370,9 +1430,12 @@ export type Database = {
           id?: string
           phone?: string | null
           reader_id?: number | null
+          reading_seconds?: number
           updated_at?: string
           user_id?: string
           username?: string
+          verified?: boolean
+          verified_at?: string | null
           xp?: number
         }
         Relationships: []
@@ -1468,6 +1531,7 @@ export type Database = {
       }
     }
     Functions: {
+      add_reading_time: { Args: { _seconds: number }; Returns: Json }
       award_quiz_result: {
         Args: { _answers: Json; _book_id: string; _score: number }
         Returns: Json
@@ -1502,6 +1566,10 @@ export type Database = {
       }
       send_admin_notification: {
         Args: { _message: string; _title: string }
+        Returns: undefined
+      }
+      set_verified_badge: {
+        Args: { _user_id: string; _value: boolean }
         Returns: undefined
       }
     }
