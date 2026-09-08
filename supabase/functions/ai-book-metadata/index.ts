@@ -159,11 +159,6 @@ serve(async (req) => {
     return new Response(JSON.stringify({ metadata, model: usedModel }), {
       headers: { ...corsHeaders, "Content-Type": "application/json" },
     });
-
-
-    return new Response(JSON.stringify({ metadata }), {
-      headers: { ...corsHeaders, "Content-Type": "application/json" },
-    });
   } catch (e) {
     console.error(e);
     return new Response(JSON.stringify({ error: e instanceof Error ? e.message : "Unknown" }), {
