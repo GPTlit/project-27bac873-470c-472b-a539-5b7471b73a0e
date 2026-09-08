@@ -163,21 +163,8 @@ export const HeroCarousel = () => {
 
         {slides.length > 1 && (
           <>
-            <button
-              onClick={prev}
-              aria-label="السابق"
-              className="absolute right-3 top-1/2 -translate-y-1/2 h-10 w-10 rounded-full bg-card/80 backdrop-blur border border-border/50 flex items-center justify-center hover:bg-card"
-            >
-              <ChevronRight className="h-5 w-5" />
-            </button>
-            <button
-              onClick={next}
-              aria-label="التالي"
-              className="absolute left-3 top-1/2 -translate-y-1/2 h-10 w-10 rounded-full bg-card/80 backdrop-blur border border-border/50 flex items-center justify-center hover:bg-card"
-            >
-              <ChevronLeft className="h-5 w-5" />
-            </button>
             <div className="absolute bottom-3 left-1/2 -translate-x-1/2 flex gap-1.5">
+
               {slides.map((_, i) => (
                 <button
                   key={i}
