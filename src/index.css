@@ -505,3 +505,15 @@ a[href*="lovable.app"]:not([href*="salem4library"]) {
     display: none;
   }
 }
+
+/* Prevent text copying / long-press selection across the app */
+html, body {
+  -webkit-user-select: none;
+  -ms-user-select: none;
+  user-select: none;
+  -webkit-touch-callout: none;
+}
+input, textarea, [contenteditable="true"], .allow-select {
+  -webkit-user-select: text;
+  user-select: text;
+}
