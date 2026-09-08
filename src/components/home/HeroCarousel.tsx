@@ -1,6 +1,6 @@
 import { useEffect, useState, useMemo } from 'react';
 import { Link } from 'react-router-dom';
-import { ChevronLeft, ChevronRight, Sparkles } from 'lucide-react';
+import { Sparkles } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
 import { useHeroBanners, type HeroBanner } from '@/hooks/useHeroBanners';
@@ -83,10 +83,20 @@ export const HeroCarousel = () => {
   const current = slides[index % slides.length];
   const prev = () => setIndex((i) => (i - 1 + slides.length) % slides.length);
   const next = () => setIndex((i) => (i + 1) % slides.length);
+  let touchX = 0;
+  const onTouchStart = (e: React.TouchEvent) => { touchX = e.touches[0].clientX; };
+  const onTouchEnd = (e: React.TouchEvent) => {
+    const dx = e.changedTouches[0].clientX - touchX;
+    if (Math.abs(dx) > 45) (dx < 0 ? next() : prev());
+  };
 
   return (
     <section className="relative overflow-hidden">
-      <div className="relative h-[280px] sm:h-[380px] md:h-[460px] w-full">
+      <div
+        className="relative h-[280px] sm:h-[380px] md:h-[460px] w-full touch-pan-y"
+        onTouchStart={onTouchStart}
+        onTouchEnd={onTouchEnd}
+      >
         {slides.map((s, i) => (
           <div
             key={s.id}
@@ -163,21 +173,8 @@ export const HeroCarousel = () => {
 
         {slides.length > 1 && (
           <>
-            <button
-              onClick={prev}
-              aria-label="السابق"
-              className="absolute right-3 top-1/2 -translate-y-1/2 h-10 w-10 rounded-full bg-card/80 backdrop-blur border border-border/50 flex items-center justify-center hover:bg-card"
-            >
-              <ChevronRight className="h-5 w-5" />
-            </button>
-            <button
-              onClick={next}
-              aria-label="التالي"
-              className="absolute left-3 top-1/2 -translate-y-1/2 h-10 w-10 rounded-full bg-card/80 backdrop-blur border border-border/50 flex items-center justify-center hover:bg-card"
-            >
-              <ChevronLeft className="h-5 w-5" />
-            </button>
             <div className="absolute bottom-3 left-1/2 -translate-x-1/2 flex gap-1.5">
+
               {slides.map((_, i) => (
                 <button
                   key={i}

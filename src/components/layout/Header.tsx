@@ -17,9 +17,9 @@ import {
 } from '@/components/ui/dropdown-menu';
 
 const languages = [
-  { code: 'ar' as const, name: 'العربية', flag: '🇲🇷' },
-  { code: 'en' as const, name: 'English', flag: '🇬🇧' },
-  { code: 'fr' as const, name: 'Français', flag: '🇫🇷' },
+  { code: 'ar' as const, name: 'العربية' },
+  { code: 'en' as const, name: 'English' },
+  { code: 'fr' as const, name: 'Français' },
 ];
 
 export const Header = () => {
@@ -96,11 +96,7 @@ export const Header = () => {
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
                 <Button variant="ghost" size="icon" className="relative">
-                  <Globe className="h-5 w-5" />
-                  <span className="absolute -bottom-1 -right-1 text-xs">
-                    {currentLanguage?.flag}
-                  </span>
-                </Button>
+                  <Globe className="h-5 w-5" />                </Button>
               </DropdownMenuTrigger>
               <DropdownMenuContent align="end">
                 {languages.map((lang) => (
@@ -109,7 +105,6 @@ export const Header = () => {
                     onClick={() => setLanguage(lang.code)}
                     className={language === lang.code ? 'bg-accent' : ''}
                   >
-                    <span className="ml-2">{lang.flag}</span>
                     {lang.name}
                   </DropdownMenuItem>
                 ))}
@@ -147,11 +142,7 @@ export const Header = () => {
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
                 <Button variant="ghost" size="icon" className="relative">
-                  <Globe className="h-5 w-5" />
-                  <span className="absolute -bottom-1 -right-1 text-xs">
-                    {currentLanguage?.flag}
-                  </span>
-                </Button>
+                  <Globe className="h-5 w-5" />                </Button>
               </DropdownMenuTrigger>
               <DropdownMenuContent align="end">
                 {languages.map((lang) => (
@@ -160,7 +151,6 @@ export const Header = () => {
                     onClick={() => setLanguage(lang.code)}
                     className={language === lang.code ? 'bg-accent' : ''}
                   >
-                    <span className="ml-2">{lang.flag}</span>
                     {lang.name}
                   </DropdownMenuItem>
                 ))}

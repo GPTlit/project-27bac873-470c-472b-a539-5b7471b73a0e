@@ -9,9 +9,9 @@ import {
 import { useLanguage } from '@/contexts/LanguageContext';
 
 const languages = [
-  { code: 'ar', name: 'العربية', flag: '🇲🇷' },
-  { code: 'en', name: 'English', flag: '🇬🇧' },
-  { code: 'fr', name: 'Français', flag: '🇫🇷' },
+  { code: 'ar', name: 'العربية' },
+  { code: 'en', name: 'English' },
+  { code: 'fr', name: 'Français' },
 ] as const;
 
 export const LanguageSelector = () => {
@@ -23,11 +23,7 @@ export const LanguageSelector = () => {
     <DropdownMenu>
       <DropdownMenuTrigger asChild>
         <Button variant="ghost" size="icon" className="relative">
-          <Globe className="h-5 w-5" />
-          <span className="absolute -bottom-1 -right-1 text-xs">
-            {currentLanguage?.flag}
-          </span>
-        </Button>
+          <Globe className="h-5 w-5" />        </Button>
       </DropdownMenuTrigger>
       <DropdownMenuContent align="end">
         {languages.map((lang) => (
@@ -36,7 +32,6 @@ export const LanguageSelector = () => {
             onClick={() => setLanguage(lang.code)}
             className={language === lang.code ? 'bg-accent' : ''}
           >
-            <span className="ml-2">{lang.flag}</span>
             {lang.name}
           </DropdownMenuItem>
         ))}
