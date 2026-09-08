@@ -46,71 +46,120 @@ serve(async (req) => {
 
     const userPrompt = `اسم الملف: ${filename}\n\nمقتطف من محتوى الكتاب:\n${sample}`;
 
-    const aiResp = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
-      method: "POST",
-      headers: {
-        Authorization: `Bearer ${LOVABLE_API_KEY}`,
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify({
-        model: "google/gemini-2.5-flash",
-        messages: [
-          { role: "system", content: systemPrompt },
-          { role: "user", content: userPrompt },
-        ],
-        tools: [{
-          type: "function",
-          function: {
-            name: "save_book_metadata",
-            description: "Save extracted book metadata",
-            parameters: {
-              type: "object",
-              properties: {
-                title: { type: "string" },
-                author: { type: "string" },
-                description: { type: "string" },
-                categories: {
-                  type: "array",
-                  items: { type: "string", enum: ALLOWED_CATEGORIES },
-                  minItems: 1,
-                  maxItems: 3,
+    // Fallback chain: each model takes over only when the previous one is
+    // out of credits / rate limited / failing.
+    const MODEL_CHAIN = [
+      "google/gemini-2.5-flash",
+      "google/gemini-3.7-flash",
+      "google/gemini-2.5-flash-lite",
+      "google/gemini-3.1-flash-lite",
+    ];
+
+    const callModel = (model: string) =>
+      fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
+        method: "POST",
+        headers: {
+          Authorization: `Bearer ${LOVABLE_API_KEY}`,
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          model,
+          messages: [
+            { role: "system", content: systemPrompt },
+            { role: "user", content: userPrompt },
+          ],
+          tools: [{
+            type: "function",
+            function: {
+              name: "save_book_metadata",
+              description: "Save extracted book metadata",
+              parameters: {
+                type: "object",
+                properties: {
+                  title: { type: "string" },
+                  author: { type: "string" },
+                  description: { type: "string" },
+                  categories: {
+                    type: "array",
+                    items: { type: "string", enum: ALLOWED_CATEGORIES },
+                    minItems: 1,
+                    maxItems: 3,
+                  },
                 },
+                required: ["title", "author", "description", "categories"],
+                additionalProperties: false,
               },
-              required: ["title", "author", "description", "categories"],
-              additionalProperties: false,
             },
-          },
-        }],
-        tool_choice: { type: "function", function: { name: "save_book_metadata" } },
-      }),
+          }],
+          tool_choice: { type: "function", function: { name: "save_book_metadata" } },
+        }),
+      });
+
+    let metadata: unknown = null;
+    let usedModel = "";
+    let lastStatus = 0;
+    let lastError = "";
+
+    for (const model of MODEL_CHAIN) {
+      let aiResp: Response;
+      try {
+        aiResp = await callModel(model);
+      } catch (err) {
+        lastStatus = 503;
+        lastError = err instanceof Error ? err.message : "network error";
+        console.warn(`[${model}] network failure, trying next model`);
+        continue;
+      }
+
+      if (!aiResp.ok) {
+        lastStatus = aiResp.status;
+        lastError = await aiResp.text();
+        // 402 credits exhausted, 429 rate limited, 5xx upstream -> next model
+        if (aiResp.status === 402 || aiResp.status === 429 || aiResp.status >= 500) {
+          console.warn(`[${model}] ${aiResp.status} -> falling back to next model`);
+          continue;
+        }
+        console.error(`[${model}] terminal error`, aiResp.status, lastError);
+        break;
+      }
+
+      const data = await aiResp.json();
+      const toolCall = data?.choices?.[0]?.message?.tool_calls?.[0];
+      if (!toolCall) {
+        lastStatus = 502;
+        lastError = "no tool call returned";
+        console.warn(`[${model}] no metadata returned -> next model`);
+        continue;
+      }
+      try {
+        metadata = JSON.parse(toolCall.function.arguments);
+        usedModel = model;
+        break;
+      } catch {
+        lastStatus = 502;
+        lastError = "bad metadata JSON";
+        continue;
+      }
+    }
+
+    if (!metadata) {
+      const status = lastStatus === 402 ? 402 : lastStatus === 429 ? 429 : 500;
+      const message =
+        status === 402
+          ? "انتهى رصيد جميع نماذج الذكاء الاصطناعي، يرجى إضافة رصيد"
+          : status === 429
+          ? "تم تجاوز الحد المسموح في جميع النماذج، حاول لاحقاً"
+          : "فشل استخراج البيانات من جميع النماذج";
+      console.error("all models failed", lastStatus, lastError);
+      return new Response(JSON.stringify({ error: message }), {
+        status, headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
+    }
+
+    return new Response(JSON.stringify({ metadata, model: usedModel }), {
+      headers: { ...corsHeaders, "Content-Type": "application/json" },
     });
 
-    if (!aiResp.ok) {
-      if (aiResp.status === 429) {
-        return new Response(JSON.stringify({ error: "تم تجاوز الحد المسموح، حاول لاحقاً" }), {
-          status: 429, headers: { ...corsHeaders, "Content-Type": "application/json" },
-        });
-      }
-      if (aiResp.status === 402) {
-        return new Response(JSON.stringify({ error: "يرجى إضافة رصيد إلى مساحة العمل" }), {
-          status: 402, headers: { ...corsHeaders, "Content-Type": "application/json" },
-        });
-      }
-      const t = await aiResp.text();
-      console.error("AI error", aiResp.status, t);
-      return new Response(JSON.stringify({ error: "AI gateway error" }), {
-        status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" },
-      });
-    }
-
-    const data = await aiResp.json();
-    const toolCall = data?.choices?.[0]?.message?.tool_calls?.[0];
-    if (!toolCall) {
-      return new Response(JSON.stringify({ error: "No metadata returned" }), {
-        status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" },
-      });
-    }
-    const metadata = JSON.parse(toolCall.function.arguments);
 
     return new Response(JSON.stringify({ metadata }), {
       headers: { ...corsHeaders, "Content-Type": "application/json" },
