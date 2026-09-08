@@ -1,6 +1,6 @@
 import { useEffect, useState, useMemo } from 'react';
 import { Link } from 'react-router-dom';
-import { ChevronLeft, ChevronRight, Sparkles } from 'lucide-react';
+import { Sparkles } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
 import { useHeroBanners, type HeroBanner } from '@/hooks/useHeroBanners';
@@ -83,10 +83,20 @@ export const HeroCarousel = () => {
   const current = slides[index % slides.length];
   const prev = () => setIndex((i) => (i - 1 + slides.length) % slides.length);
   const next = () => setIndex((i) => (i + 1) % slides.length);
+  let touchX = 0;
+  const onTouchStart = (e: React.TouchEvent) => { touchX = e.touches[0].clientX; };
+  const onTouchEnd = (e: React.TouchEvent) => {
+    const dx = e.changedTouches[0].clientX - touchX;
+    if (Math.abs(dx) > 45) (dx < 0 ? next() : prev());
+  };
 
   return (
     <section className="relative overflow-hidden">
-      <div className="relative h-[280px] sm:h-[380px] md:h-[460px] w-full">
+      <div
+        className="relative h-[280px] sm:h-[380px] md:h-[460px] w-full touch-pan-y"
+        onTouchStart={onTouchStart}
+        onTouchEnd={onTouchEnd}
+      >
         {slides.map((s, i) => (
           <div
             key={s.id}
