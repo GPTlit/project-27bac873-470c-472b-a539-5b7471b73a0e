@@ -14,6 +14,7 @@ import { toast } from 'sonner';
 import { AmbientPlayer } from '@/components/books/AmbientPlayer';
 import { AskTheBook } from '@/components/books/AskTheBook';
 import { useReadingPresence } from '@/hooks/useReadingPresence';
+import { useReadingTime } from '@/hooks/useReadingTime';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
 import { Sparkles } from 'lucide-react';
@@ -25,6 +26,7 @@ const BookReader = () => {
   const { data: book, isLoading } = useBook(id || '');
   const { getOfflineBookUrl } = useOfflineBooks();
   const { user } = useAuth();
+  useReadingTime(true);
   useReadingPresence(id);
   const [numPages, setNumPages] = useState<number>(0);
   const [scale, setScale] = useState(1.0);

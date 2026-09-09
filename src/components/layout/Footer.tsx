@@ -1,6 +1,6 @@
-import { Book } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { useLanguage } from '@/contexts/LanguageContext';
+import bookLogo from '@/assets/book-logo.png.asset.json';
 
 export const Footer = () => {
   const { t } = useLanguage();
@@ -10,9 +10,11 @@ export const Footer = () => {
       <div className="container-library py-8">
         <div className="flex flex-col md:flex-row items-center justify-between gap-4">
           <div className="flex items-center gap-3">
-            <div className="flex h-8 w-8 items-center justify-center rounded-lg gold-gradient">
-              <Book className="h-4 w-4 text-primary-foreground" />
-            </div>
+            <img
+              src={bookLogo.url}
+              alt={t('libraryName')}
+              className="h-9 w-9 rounded-lg object-cover"
+            />
             <span className="font-bold text-gradient">{t('libraryName')}</span>
           </div>
 

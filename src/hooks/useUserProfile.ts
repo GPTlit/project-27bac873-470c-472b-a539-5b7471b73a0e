@@ -12,6 +12,11 @@ export interface UserProfile {
   phone: string | null;
   created_at: string;
   updated_at: string;
+  verified?: boolean;
+  reading_seconds?: number;
+  reader_id?: number | null;
+  xp?: number;
+  badge_rank?: number;
 }
 
 export const useUserProfile = () => {

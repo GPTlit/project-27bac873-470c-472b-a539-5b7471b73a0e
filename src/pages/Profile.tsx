@@ -18,6 +18,7 @@ import { useToast } from '@/hooks/use-toast';
 import { useQuery } from '@tanstack/react-query';
 import { useNotes, useAddNote, useUpdateNote, useDeleteNote, Note } from '@/hooks/useNotes';
 import { useUserProfile, useUpdateProfile, useUploadAvatar } from '@/hooks/useUserProfile';
+import { VerifiedBadge } from '@/components/VerifiedBadge';
 import { useMyStories } from '@/hooks/useStories';
 import { Badge } from '@/components/ui/badge';
 
@@ -248,9 +249,15 @@ const Profile = () => {
                 />
               </div>
               <div className="min-w-0 flex-1">
-                <h1 className="text-2xl md:text-3xl font-bold text-foreground truncate">
-                  {shortenName(profile?.display_name) || t('myProfile')}
+                <h1 className="flex items-center gap-2 text-2xl md:text-3xl font-bold text-foreground truncate">
+                  <span className="truncate">{shortenName(profile?.display_name) || t('myProfile')}</span>
+                  {profile?.verified && <VerifiedBadge className="h-6 w-6 shrink-0" />}
                 </h1>
+                {!profile?.verified && (
+                  <p className="text-xs text-muted-foreground">
+                    {Math.floor((profile?.reading_seconds ?? 0) / 3600)}/10 ساعات للحصول على شارة القارئ الموثّق
+                  </p>
+                )}
                 <p className="text-muted-foreground text-sm truncate">{user?.email}</p>
                 {profile?.phone && (
                   <p className="text-muted-foreground text-sm truncate" dir="ltr">{profile.phone}</p>

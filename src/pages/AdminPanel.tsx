@@ -23,6 +23,8 @@ import { NotificationBroadcast } from '@/components/admin/NotificationBroadcast'
 import { HeroBannersManager } from '@/components/admin/HeroBannersManager';
 import { HomeLayoutModePicker } from '@/components/admin/HomeLayoutModePicker';
 import { AdminEditMenuToggle } from '@/components/admin/AdminEditMenuToggle';
+import { PromoBlocksManager } from '@/components/admin/PromoBlocksManager';
+import { VerifiedBadgeManager } from '@/components/admin/VerifiedBadgeManager';
 import { AIBulkUpload } from '@/components/admin/AIBulkUpload';
 import { ThemePresetPicker } from '@/components/admin/ThemePresetPicker';
 import { useFeaturedBookIds, useSetFeaturedBookIds } from '@/hooks/useFeaturedBooks';
@@ -1143,6 +1145,10 @@ const AdminPanel = () => {
                 <AdminEditMenuToggle />
                 <div className="h-px bg-border" />
                 <HeroBannersManager />
+                <div className="h-px bg-border" />
+                <PromoBlocksManager />
+                <div className="h-px bg-border" />
+                <VerifiedBadgeManager />
               </CardContent>
             </Card>
           </TabsContent>
