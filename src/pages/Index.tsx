@@ -4,6 +4,7 @@ import { Layout } from '@/components/layout/Layout';
 import { HeroCarousel } from '@/components/home/HeroCarousel';
 import { HeroSection } from '@/components/home/HeroSection';
 import { CategoriesSection } from '@/components/home/CategoriesSection';
+import { PromoBlocks } from '@/components/home/PromoBlocks';
 import { RecentlyViewedBooks } from '@/components/home/RecentlyViewedBooks';
 import { BookCarousel } from '@/components/home/BookCarousel';
 import { FeaturedBooks } from '@/components/home/FeaturedBooks';
@@ -73,10 +74,14 @@ const Index = () => {
         <HeroCarousel />
         <RecentlyViewedBooks />
         <FeaturedBooks />
+        <PromoBlocks slot={1} />
         <CategoriesSection />
+        <PromoBlocks slot={2} />
         <RecentBooks />
+        <PromoBlocks slot={3} />
         <TrendingBooks />
         <TopRatedBooks />
+        <PromoBlocks slot={4} />
       </Layout>
     );
   }
@@ -95,7 +100,9 @@ const Index = () => {
         viewAllHref="/categories"
         pattern="mixed"
       />
+      <PromoBlocks slot={1} />
       <CategoriesSection />
+      <PromoBlocks slot={2} />
       <BookCarousel
         title="الأكثر رواجاً"
         icon={<Flame className="h-5 w-5" />}
@@ -114,6 +121,7 @@ const Index = () => {
         books={recent}
         pattern="mixed"
       />
+      <PromoBlocks slot={3} />
       {categoryRows.map((row, i) => (
         <BookCarousel
           key={row.name}
@@ -124,6 +132,7 @@ const Index = () => {
           pattern={(['mixed', 'wide-first', 'tall-first', 'mixed'] as const)[i % 4]}
         />
       ))}
+      <PromoBlocks slot={4} />
     </Layout>
   );
 
